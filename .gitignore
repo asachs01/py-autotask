@@ -166,6 +166,6 @@ plans/
 ww2*
 memory*
 claude*
-CLAUDE*
+CLAUDE_*
 agent*
 reference_docs*
