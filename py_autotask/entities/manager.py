@@ -61,6 +61,22 @@ from .resource_allocation import ResourceAllocationEntity
 from .project_budgets import ProjectBudgetsEntity
 from .task_dependencies import TaskDependenciesEntity
 from .project_reports import ProjectReportsEntity
+# Week 5 entities - Security & Compliance
+from .security_policies import SecurityPoliciesEntity
+from .compliance_frameworks import ComplianceFrameworksEntity
+from .custom_fields import CustomFieldsEntity
+from .business_rules import BusinessRulesEntity
+from .notification_rules import NotificationRulesEntity
+from .change_requests import ChangeRequestsEntity
+from .vendor_types import VendorTypesEntity
+from .incident_types import IncidentTypesEntity
+from .configuration_item_types import ConfigurationItemTypesEntity
+from .workflow_rules import WorkflowRulesEntity as WorkflowRulesEntityActual
+from .workflows import WorkflowRulesEntity as WorkflowsEntity
+# Week 6 entities - System Management
+from .system_health import SystemHealthEntity
+from .system_configuration import SystemConfigurationEntity
+from .dashboards import DashboardsEntity
 
 if TYPE_CHECKING:
     from ..client import AutotaskClient
@@ -136,12 +152,31 @@ class EntityManager:
         "ProjectMilestones": ProjectMilestonesEntity,
         "AllocationCodes": AllocationCodesEntity,
         "HolidaySets": HolidaySetsEntity,
-        "WorkflowRules": WorkflowRulesEntity,
+        "WorkflowRules": WorkflowRulesEntityActual,
+        "Workflows": WorkflowsEntity,
         "ProjectTemplates": ProjectTemplatesEntity,
         "ResourceAllocation": ResourceAllocationEntity,
         "ProjectBudgets": ProjectBudgetsEntity,
         "TaskDependencies": TaskDependenciesEntity,
         "ProjectReports": ProjectReportsEntity,
+        
+        # Additional Service Delivery & Operations entities
+        "ChangeRequests": ChangeRequestsEntity,
+        "VendorTypes": VendorTypesEntity,
+        "IncidentTypes": IncidentTypesEntity,
+        "ConfigurationItemTypes": ConfigurationItemTypesEntity,
+        
+        # Security & Compliance entities (Week 5)
+        "SecurityPolicies": SecurityPoliciesEntity,
+        "ComplianceFrameworks": ComplianceFrameworksEntity,
+        "CustomFields": CustomFieldsEntity,
+        "BusinessRules": BusinessRulesEntity,
+        "NotificationRules": NotificationRulesEntity,
+        
+        # System Management entities (Week 6)
+        "SystemHealth": SystemHealthEntity,
+        "SystemConfiguration": SystemConfigurationEntity,
+        "Dashboards": DashboardsEntity,
     }
     
     def __init__(self, client: "AutotaskClient") -> None:
@@ -426,6 +461,74 @@ class EntityManager:
     def project_reports(self) -> ProjectReportsEntity:
         """Access to Project Reports entity operations."""
         return self.get_entity("ProjectReports")
+    
+    @property
+    def workflows(self) -> WorkflowsEntity:
+        """Access to Workflows entity operations."""
+        return self.get_entity("Workflows")
+    
+    # Additional Service Delivery & Operations entities
+    @property
+    def change_requests(self) -> ChangeRequestsEntity:
+        """Access to Change Requests entity operations."""
+        return self.get_entity("ChangeRequests")
+    
+    @property
+    def vendor_types(self) -> VendorTypesEntity:
+        """Access to Vendor Types entity operations."""
+        return self.get_entity("VendorTypes")
+    
+    @property
+    def incident_types(self) -> IncidentTypesEntity:
+        """Access to Incident Types entity operations."""
+        return self.get_entity("IncidentTypes")
+    
+    @property
+    def configuration_item_types(self) -> ConfigurationItemTypesEntity:
+        """Access to Configuration Item Types entity operations."""
+        return self.get_entity("ConfigurationItemTypes")
+    
+    # Security & Compliance entities (Week 5)
+    @property
+    def security_policies(self) -> SecurityPoliciesEntity:
+        """Access to Security Policies entity operations."""
+        return self.get_entity("SecurityPolicies")
+    
+    @property
+    def compliance_frameworks(self) -> ComplianceFrameworksEntity:
+        """Access to Compliance Frameworks entity operations."""
+        return self.get_entity("ComplianceFrameworks")
+    
+    @property
+    def custom_fields(self) -> CustomFieldsEntity:
+        """Access to Custom Fields entity operations."""
+        return self.get_entity("CustomFields")
+    
+    @property
+    def business_rules(self) -> BusinessRulesEntity:
+        """Access to Business Rules entity operations."""
+        return self.get_entity("BusinessRules")
+    
+    @property
+    def notification_rules(self) -> NotificationRulesEntity:
+        """Access to Notification Rules entity operations."""
+        return self.get_entity("NotificationRules")
+    
+    # System Management entities (Week 6)
+    @property
+    def system_health(self) -> SystemHealthEntity:
+        """Access to System Health entity operations."""
+        return self.get_entity("SystemHealth")
+    
+    @property
+    def system_configuration(self) -> SystemConfigurationEntity:
+        """Access to System Configuration entity operations."""
+        return self.get_entity("SystemConfiguration")
+    
+    @property
+    def dashboards(self) -> DashboardsEntity:
+        """Access to Dashboards entity operations."""
+        return self.get_entity("Dashboards")
     
     def list_available_entities(self) -> list:
         """

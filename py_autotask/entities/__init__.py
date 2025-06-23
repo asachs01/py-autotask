@@ -57,6 +57,18 @@ from .incident_types import IncidentTypesEntity
 from .vendor_types import VendorTypesEntity
 from .configuration_item_types import ConfigurationItemTypesEntity
 
+# Security & Compliance entities (Week 5)
+from .security_policies import SecurityPoliciesEntity
+from .compliance_frameworks import ComplianceFrameworksEntity
+from .custom_fields import CustomFieldsEntity
+from .business_rules import BusinessRulesEntity
+from .notification_rules import NotificationRulesEntity
+
+# System Management entities (Week 6)
+from .system_health import SystemHealthEntity
+from .system_configuration import SystemConfigurationEntity
+from .dashboards import DashboardsEntity
+
 # Operational entities
 from .configuration_items import ConfigurationItemsEntity
 from .service_calls import ServiceCallsEntity
@@ -68,7 +80,8 @@ from .project_phases import ProjectPhasesEntity
 from .project_milestones import ProjectMilestonesEntity
 from .allocation_codes import AllocationCodesEntity
 from .holiday_sets import HolidaySetsEntity
-from .workflows import WorkflowRulesEntity
+from .workflow_rules import WorkflowRulesEntity
+from .workflows import WorkflowRulesEntity as WorkflowsEntity
 from .project_templates import ProjectTemplatesEntity
 from .resource_allocation import ResourceAllocationEntity
 from .project_budgets import ProjectBudgetsEntity
@@ -140,11 +153,24 @@ __all__ = [
     "AllocationCodesEntity",
     "HolidaySetsEntity",
     "WorkflowRulesEntity",
+    "WorkflowsEntity",
     "ProjectTemplatesEntity",
     "ResourceAllocationEntity",
     "ProjectBudgetsEntity",
     "TaskDependenciesEntity",
     "ProjectReportsEntity",
+    
+    # Security & Compliance entities (Week 5)
+    "SecurityPoliciesEntity",
+    "ComplianceFrameworksEntity",
+    "CustomFieldsEntity",
+    "BusinessRulesEntity",
+    "NotificationRulesEntity",
+    
+    # System Management entities (Week 6)
+    "SystemHealthEntity",
+    "SystemConfigurationEntity",
+    "DashboardsEntity",
     
     # Manager
     "EntityManager",

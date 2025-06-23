@@ -164,3 +164,7 @@ prompt_logs/
 plans/ 
 
 ww2*
+memory*
+claude*
+agent*
+reference_docs*
