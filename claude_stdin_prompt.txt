@@ -1,0 +1,66 @@
+TASK: Continue py-autotask Phase 6 Entity Expansion - Week 4: Project Management & Workflow
+
+STATUS: Week 3 COMPLETED (21/50 entities done). Week 4 IN PROGRESS (0/10 entities).
+
+COMPLETED: Financial (5), HR/Resource Mgmt (6), Service Delivery/Operations (10)
+
+WEEK 4 TARGETS (10 entities):
+1. ProjectPhasesEntity - project phase mgmt & milestone tracking
+2. ProjectMilestonesEntity - key achievement & deadline tracking  
+3. AllocationCodesEntity - resource allocation & time categorization
+4. HolidaySetsEntity - holiday calendar mgmt for resource planning
+5. WorkflowRulesEntity - workflow automation rules & triggers
+6. ProjectTemplatesEntity - project template mgmt & instantiation
+7. ResourceAllocationEntity - resource assignment & capacity planning
+8. ProjectBudgetsEntity - project budget tracking & variance analysis
+9. TaskDependenciesEntity - task relationship & dependency mgmt
+10. ProjectReportsEntity - project reporting & analytics framework
+
+IMPLEMENTATION STANDARDS:
+- Inherit from BaseEntity (see py_autotask/entities/base.py)
+- 10-15 business methods per entity beyond CRUD
+- Full docstrings, type hints (Dict, List, Optional, Any, Union)
+- Use Decimal for financial calcs, datetime imports
+- Include: create_*, get_*, activate_*, deactivate_*, clone_*, get_*_summary(), bulk_*
+- File location: py_autotask/entities/[entity_name].py
+
+TEMPLATE:
+```python
+"""
+EntityName Entity for py-autotask
+
+Brief description of entity purpose and business value.
+"""
+
+from decimal import Decimal
+from typing import Dict, List, Optional, Any, Union
+from datetime import datetime, date
+from .base import BaseEntity
+
+class EntityNameEntity(BaseEntity):
+    """Manages Autotask EntityName - brief description."""
+    entity_name = "EntityName"
+    
+    def create_entity(self, ...): """Create with business logic."""
+    def get_entities_by_status(self, ...): """Get by status."""
+    def activate_entity(self, ...): """Activate entity."""
+    # ... 10-15 more business methods
+```
+
+INTEGRATION REQUIRED:
+1. Add to py_autotask/entities/__init__.py:
+   - Import: from .entity_name import EntityNameEntity
+   - Export: "EntityNameEntity" in __all__
+2. Add to py_autotask/entities/manager.py:
+   - Property: @property def entity_name(self) -> EntityNameEntity
+3. Test: python -c "from py_autotask.entities import EntityNameEntity; print('OK')"
+
+EXAMINE PATTERNS: Check existing entities like WorkflowsEntity, SubscriptionsEntity, ProductsEntity for implementation patterns.
+
+TARGET: ~380+ lines per entity, total ~3800+ lines for Week 4.
+
+REFERENCES: plans/PHASE_6_ENTITY_EXPANSION_PLAN.md, CHANGELOG.md, existing entity files.
+
+START WITH: AllocationCodesEntity or HolidaySetsEntity (simpler), then ProjectPhasesEntity, ProjectTemplatesEntity (complex).
+
+CRITICAL: Maintain quality standards from Weeks 1-3. Each entity needs comprehensive business methods, proper error handling, bulk operations. 

@@ -162,3 +162,5 @@ cython_debug/
 # Project-specific directories as per user rules
 prompt_logs/
 plans/ 
+
+ww2*

@@ -119,6 +119,12 @@ class CreateResponse(BaseModel):
     item_id: int = Field(..., alias="itemId", description="ID of created item")
 
 
+class UpdateResponse(BaseModel):
+    """Response from entity update operations."""
+    
+    item_id: int = Field(..., alias="itemId", description="ID of updated item")
+
+
 class ZoneInfo(BaseModel):
     """Information about an Autotask zone."""
     
@@ -156,4 +162,48 @@ CompanyData = EntityDict
 ContactData = EntityDict
 ProjectData = EntityDict
 ResourceData = EntityDict
-ContractData = EntityDict 
+ContractData = EntityDict
+TimeEntryData = EntityDict
+
+# Time Entry Related Types
+class TimeEntryData(BaseModel):
+    """Data structure for time entries."""
+    id: Optional[int] = None
+    resource_id: Optional[int] = None
+    ticket_id: Optional[int] = None
+    project_id: Optional[int] = None
+    task_id: Optional[int] = None
+    start_date_time: Optional[str] = None
+    end_date_time: Optional[str] = None
+    hours_worked: Optional[float] = None
+    hours_to_bill: Optional[float] = None
+    billable_to_account: Optional[bool] = None
+    non_billable: Optional[bool] = None
+    description: Optional[str] = None
+    internal_notes: Optional[str] = None
+    summary_notes: Optional[str] = None
+    type: Optional[int] = None
+    created_date_time: Optional[str] = None
+    last_modified_date_time: Optional[str] = None
+    created_by: Optional[int] = None
+    last_modified_by: Optional[int] = None
+
+# Attachment Related Types
+class AttachmentData(BaseModel):
+    """Data structure for file attachments."""
+    id: Optional[int] = None
+    parent_type: Optional[str] = None
+    parent_id: Optional[int] = None
+    title: Optional[str] = None
+    file_name: Optional[str] = None
+    file_size: Optional[int] = None
+    content_type: Optional[str] = None
+    description: Optional[str] = None
+    created_date_time: Optional[str] = None
+    created_by: Optional[int] = None
+    last_modified_date_time: Optional[str] = None
+    last_modified_by: Optional[int] = None
+    
+    class Config:
+        allow_population_by_field_name = True
+        alias_generator = None 

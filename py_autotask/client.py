@@ -89,9 +89,10 @@ class AutotaskClient:
     @classmethod
     def create(
         cls,
-        username: str,
-        integration_code: str,
-        secret: str,
+        credentials: Optional[AuthCredentials] = None,
+        username: Optional[str] = None,
+        integration_code: Optional[str] = None,
+        secret: Optional[str] = None,
         api_url: Optional[str] = None,
         config: Optional[RequestConfig] = None,
     ) -> "AutotaskClient":
@@ -99,21 +100,25 @@ class AutotaskClient:
         Create a new client with credentials.
         
         Args:
-            username: API username
-            integration_code: Integration code from Autotask
-            secret: API secret
+            credentials: Pre-configured credentials object
+            username: API username (alternative to credentials)
+            integration_code: Integration code from Autotask (alternative to credentials)
+            secret: API secret (alternative to credentials)
             api_url: Override API URL (optional, will auto-detect)
             config: Request configuration
             
         Returns:
             Configured AutotaskClient instance
         """
-        credentials = AuthCredentials(
-            username=username,
-            integration_code=integration_code,
-            secret=secret,
-            api_url=api_url,
-        )
+        if credentials is None:
+            if not all([username, integration_code, secret]):
+                raise ValueError("Must provide either credentials object or username/integration_code/secret")
+            credentials = AuthCredentials(
+                username=username,
+                integration_code=integration_code,
+                secret=secret,
+                api_url=api_url,
+            )
         
         auth = AutotaskAuth(credentials)
         return cls(auth, config)
@@ -175,6 +180,16 @@ class AutotaskClient:
     def contracts(self):
         """Access to Contracts entity operations."""
         return self.entities.contracts
+    
+    @property
+    def time_entries(self):
+        """Access to TimeEntries entity operations."""
+        return self.entities.time_entries
+    
+    @property
+    def attachments(self):
+        """Access to Attachments entity operations."""
+        return self.entities.attachments
     
     def get(self, entity: str, entity_id: int) -> Optional[EntityDict]:
         """
@@ -253,7 +268,7 @@ class AutotaskClient:
         except requests.exceptions.HTTPError as e:
             handle_api_error(response)
     
-    def create(self, entity: str, entity_data: EntityDict) -> CreateResponse:
+    def create_entity(self, entity: str, entity_data: EntityDict) -> CreateResponse:
         """
         Create a new entity.
         
@@ -447,4 +462,182 @@ class AutotaskClient:
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
-        self.close() 
+        self.close()
+    
+    # Batch Operations for Phase 4
+    def batch_create(
+        self, 
+        entity: str, 
+        entities_data: List[EntityDict],
+        batch_size: int = 200
+    ) -> List[CreateResponse]:
+        """
+        Create multiple entities in batches.
+        
+        Args:
+            entity: Entity name
+            entities_data: List of entity data to create
+            batch_size: Maximum entities per batch (API limit is 200)
+            
+        Returns:
+            List of create responses
+        """
+        if batch_size > 200:
+            raise ValueError("Batch size cannot exceed 200 (API limit)")
+            
+        results = []
+        total_batches = (len(entities_data) + batch_size - 1) // batch_size
+        
+        for i in range(0, len(entities_data), batch_size):
+            batch = entities_data[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            
+            logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} entities)")
+            
+            url = f"{self.auth.api_url}/v1.0/{entity}/batch"
+            
+            try:
+                response = self.session.post(
+                    url,
+                    json=batch,
+                    timeout=self.config.timeout
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                # Handle batch response format
+                if isinstance(data, list):
+                    batch_results = [CreateResponse(**item) for item in data]
+                else:
+                    batch_results = [CreateResponse(**data)]
+                
+                results.extend(batch_results)
+                
+            except requests.exceptions.Timeout:
+                raise AutotaskTimeoutError(f"Batch {batch_num} timed out")
+            except requests.exceptions.ConnectionError as e:
+                raise AutotaskConnectionError(f"Batch {batch_num} connection error: {e}")
+            except requests.exceptions.HTTPError as e:
+                logger.error(f"Batch {batch_num} failed with HTTP error")
+                handle_api_error(response)
+                
+        return results
+    
+    def batch_update(
+        self, 
+        entity: str, 
+        entities_data: List[EntityDict],
+        batch_size: int = 200
+    ) -> List[EntityDict]:
+        """
+        Update multiple entities in batches.
+        
+        Args:
+            entity: Entity name
+            entities_data: List of entity data to update (must include 'id' field)
+            batch_size: Maximum entities per batch (API limit is 200)
+            
+        Returns:
+            List of updated entity data
+        """
+        if batch_size > 200:
+            raise ValueError("Batch size cannot exceed 200 (API limit)")
+            
+        # Validate all entities have ID
+        for i, entity_data in enumerate(entities_data):
+            if not entity_data.get("id"):
+                raise ValueError(f"Entity at index {i} missing 'id' field for batch update")
+        
+        results = []
+        total_batches = (len(entities_data) + batch_size - 1) // batch_size
+        
+        for i in range(0, len(entities_data), batch_size):
+            batch = entities_data[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            
+            logger.info(f"Processing update batch {batch_num}/{total_batches} ({len(batch)} entities)")
+            
+            url = f"{self.auth.api_url}/v1.0/{entity}/batch"
+            
+            try:
+                response = self.session.patch(
+                    url,
+                    json=batch,
+                    timeout=self.config.timeout
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                # Handle batch response format
+                if isinstance(data, list):
+                    results.extend(data)
+                else:
+                    results.append(data)
+                    
+            except requests.exceptions.Timeout:
+                raise AutotaskTimeoutError(f"Update batch {batch_num} timed out")
+            except requests.exceptions.ConnectionError as e:
+                raise AutotaskConnectionError(f"Update batch {batch_num} connection error: {e}")
+            except requests.exceptions.HTTPError as e:
+                logger.error(f"Update batch {batch_num} failed with HTTP error")
+                handle_api_error(response)
+                
+        return results
+    
+    def batch_delete(
+        self, 
+        entity: str, 
+        entity_ids: List[int],
+        batch_size: int = 200
+    ) -> List[bool]:
+        """
+        Delete multiple entities in batches.
+        
+        Args:
+            entity: Entity name
+            entity_ids: List of entity IDs to delete
+            batch_size: Maximum entities per batch (API limit is 200)
+            
+        Returns:
+            List of success indicators
+        """
+        if batch_size > 200:
+            raise ValueError("Batch size cannot exceed 200 (API limit)")
+            
+        results = []
+        total_batches = (len(entity_ids) + batch_size - 1) // batch_size
+        
+        for i in range(0, len(entity_ids), batch_size):
+            batch = entity_ids[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            
+            logger.info(f"Processing delete batch {batch_num}/{total_batches} ({len(batch)} entities)")
+            
+            url = f"{self.auth.api_url}/v1.0/{entity}/batch"
+            
+            try:
+                response = self.session.delete(
+                    url,
+                    json={"ids": batch},
+                    timeout=self.config.timeout
+                )
+                
+                response.raise_for_status()
+                
+                # Successful deletion for all items in batch
+                batch_results = [True] * len(batch)
+                results.extend(batch_results)
+                
+            except requests.exceptions.Timeout:
+                raise AutotaskTimeoutError(f"Delete batch {batch_num} timed out")
+            except requests.exceptions.ConnectionError as e:
+                raise AutotaskConnectionError(f"Delete batch {batch_num} connection error: {e}")
+            except requests.exceptions.HTTPError as e:
+                logger.error(f"Delete batch {batch_num} failed with HTTP error")
+                # For deletions, we might want to continue with other batches
+                batch_results = [False] * len(batch)
+                results.extend(batch_results)
+                
+        return results 

@@ -178,7 +178,7 @@ class TicketsEntity(BaseEntity):
             update_data['LastActivityPersonType'] = 1  # Internal note
             update_data['LastActivityBy'] = note
         
-        return self.update(ticket_id, update_data)
+        return self.update_by_id(ticket_id, update_data)
     
     def assign_ticket(
         self, 
@@ -202,7 +202,7 @@ class TicketsEntity(BaseEntity):
         if queue_id:
             update_data['QueueID'] = queue_id
         
-        return self.update(ticket_id, update_data)
+        return self.update_by_id(ticket_id, update_data)
     
     def get_ticket_notes(self, ticket_id: int) -> List[Dict[str, Any]]:
         """
@@ -219,7 +219,7 @@ class TicketsEntity(BaseEntity):
         from ..client import AutotaskClient
         
         filters = [QueryFilter(field='TicketID', op='eq', value=ticket_id)]
-        return self._client.query('TicketNotes', filters=filters)
+        return self.client.query('TicketNotes', filters=filters)
     
     def add_ticket_note(
         self, 
@@ -249,7 +249,7 @@ class TicketsEntity(BaseEntity):
         if title:
             note_data['Title'] = title
         
-        return self._client.create('TicketNotes', note_data)
+        return self.client.create_entity('TicketNotes', note_data)
     
     def get_ticket_time_entries(self, ticket_id: int) -> List[Dict[str, Any]]:
         """
@@ -262,7 +262,7 @@ class TicketsEntity(BaseEntity):
             List of time entries
         """
         filters = [QueryFilter(field='TicketID', op='eq', value=ticket_id)]
-        return self._client.query('TimeEntries', filters=filters)
+        return self.client.query('TimeEntries', filters=filters)
     
     def bulk_update_status(
         self, 
@@ -286,6 +286,154 @@ class TicketsEntity(BaseEntity):
                 results.append(result)
             except Exception as e:
                 # Log error but continue with other tickets
-                self._client.logger.error(f"Failed to update ticket {ticket_id}: {e}")
+                self.logger.error(f"Failed to update ticket {ticket_id}: {e}")
         
-        return results 
+        return results
+    
+    def get_tickets_by_queue(
+        self,
+        queue_id: int,
+        status_filter: Optional[str] = None,
+        limit: Optional[int] = None
+    ) -> List[TicketData]:
+        """
+        Get all tickets in a specific queue.
+        
+        Args:
+            queue_id: Queue ID to filter by
+            status_filter: Optional status filter ('open', 'closed', etc.)
+            limit: Maximum number of tickets to return
+            
+        Returns:
+            List of tickets in the queue
+        """
+        filters = [QueryFilter(field='QueueID', op='eq', value=queue_id)]
+        
+        if status_filter:
+            status_map = {
+                'open': [1, 8, 9, 10, 11],
+                'closed': [5],
+                'new': [1],
+                'in_progress': [8, 9, 10, 11]
+            }
+            
+            if status_filter.lower() in status_map:
+                status_ids = status_map[status_filter.lower()]
+                if len(status_ids) == 1:
+                    filters.append(QueryFilter(field='Status', op='eq', value=status_ids[0]))
+                else:
+                    filters.append(QueryFilter(field='Status', op='in', value=status_ids))
+        
+        return self.query(filters=filters, max_records=limit)
+    
+    def get_tickets_by_priority(
+        self,
+        priority: int,
+        include_completed: bool = False,
+        limit: Optional[int] = None
+    ) -> List[TicketData]:
+        """
+        Get tickets by priority level.
+        
+        Args:
+            priority: Priority level (1=Critical, 2=High, 3=Medium, 4=Low)
+            include_completed: Whether to include completed tickets
+            limit: Maximum number of tickets to return
+            
+        Returns:
+            List of tickets with the specified priority
+        """
+        filters = [QueryFilter(field='Priority', op='eq', value=priority)]
+        
+        if not include_completed:
+            filters.append(QueryFilter(field='Status', op='ne', value=5))
+        
+        return self.query(filters=filters, max_records=limit)
+    
+    def escalate_ticket(
+        self,
+        ticket_id: int,
+        escalation_level: int,
+        escalation_note: Optional[str] = None
+    ) -> TicketData:
+        """
+        Escalate a ticket to a higher level.
+        
+        Args:
+            ticket_id: ID of ticket to escalate
+            escalation_level: New escalation level
+            escalation_note: Optional escalation note
+            
+        Returns:
+            Updated ticket data
+        """
+        update_data = {'EscalationLevel': escalation_level}
+        
+        if escalation_note:
+            # Add escalation note
+            self.add_ticket_note(
+                ticket_id,
+                f"Ticket escalated to level {escalation_level}: {escalation_note}",
+                note_type=1  # Internal note
+            )
+        
+        return self.update_by_id(ticket_id, update_data)
+    
+    def close_ticket(
+        self,
+        ticket_id: int,
+        resolution: Optional[str] = None,
+        close_note: Optional[str] = None
+    ) -> TicketData:
+        """
+        Close a ticket with optional resolution.
+        
+        Args:
+            ticket_id: ID of ticket to close
+            resolution: Resolution description
+            close_note: Optional closing note
+            
+        Returns:
+            Updated ticket data
+        """
+        update_data = {'Status': 5}  # Closed/Complete status
+        
+        if resolution:
+            update_data['Resolution'] = resolution
+        
+        if close_note:
+            self.add_ticket_note(
+                ticket_id,
+                close_note,
+                note_type=1,  # Internal note
+                title="Ticket Closed"
+            )
+        
+        return self.update_by_id(ticket_id, update_data)
+    
+    def reopen_ticket(
+        self,
+        ticket_id: int,
+        reopen_reason: Optional[str] = None
+    ) -> TicketData:
+        """
+        Reopen a closed ticket.
+        
+        Args:
+            ticket_id: ID of ticket to reopen
+            reopen_reason: Optional reason for reopening
+            
+        Returns:
+            Updated ticket data
+        """
+        update_data = {'Status': 1}  # New status
+        
+        if reopen_reason:
+            self.add_ticket_note(
+                ticket_id,
+                f"Ticket reopened: {reopen_reason}",
+                note_type=1,  # Internal note
+                title="Ticket Reopened"
+            )
+        
+        return self.update_by_id(ticket_id, update_data) 

@@ -1,0 +1,314 @@
+{
+  "timestamp": "2025-06-23T22:09:06.588Z",
+  "version": "1.0",
+  "entries": [
+    {
+      "id": "entry_mc9n85km_tmrua3wlz",
+      "key": "swarm-auto-centralized-1750716058662/analyst/analysis_overview",
+      "value": "\"Entity Analysis Overview:\\n\\nESTABLISHED PATTERNS:\\n1. BaseEntity inheritance with CRUD operations\\n2. Constructor: __init__(self, client, entity_name)\\n3. Business methods: 10-15+ specialized methods beyond CRUD\\n4. Field naming: Autotask CamelCase (AccountID, ProjectName)\\n5. Filters: Use QueryFilter for complex queries\\n6. Types: Dict, List, Optional, Any, Union from typing\\n7. Return types: EntityDict, List[EntityDict], or typed data\\n8. Relationships: Standard field naming (projectID, accountID)\\n9. Dates: ISO format strings\\n10. Status filtering: Map status names to IDs\\n\\nREQUIRED IMPORTS:\\n- from typing import Dict, List, Optional, Any, Union\\n- from datetime import datetime\\n- from decimal import Decimal (for financial calculations)\\n- from ..types import EntityDict, QueryFilter\\n- from .base import BaseEntity\\n\\nWEEK 4 ENTITIES TO ANALYZE:\\n1. ProjectPhasesEntity - project phase mgmt & milestone tracking\\n2. ProjectMilestonesEntity - key achievement & deadline tracking\\n3. AllocationCodesEntity - resource allocation & time categorization\\n4. HolidaySetsEntity - holiday calendar mgmt for resource planning\\n5. WorkflowRulesEntity - workflow automation rules & triggers\\n6. ProjectTemplatesEntity - project template mgmt & instantiation\\n7. ResourceAllocationEntity - resource assignment & capacity planning\\n8. ProjectBudgetsEntity - project budget tracking & variance analysis\\n9. TaskDependenciesEntity - task relationship & dependency mgmt\\n10. ProjectReportsEntity - project reporting & analytics framework\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:03:25.366Z",
+      "updatedAt": "2025-06-23T22:03:25.366Z",
+      "lastAccessedAt": "2025-06-23T22:03:25.366Z",
+      "version": 1,
+      "size": 1601,
+      "compressed": true,
+      "checksum": "e684c311386523399f48a8adf3663349a3d7ed3596255ecc2f633baca9892357",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9n8mq4_v7ect7dhg",
+      "key": "swarm-auto-centralized-1750716058662/analyst/project_phases_entity",
+      "value": "\"ProjectPhasesEntity Analysis:\\n\\nPURPOSE: Project phase management & milestone tracking\\n\\nCORE BUSINESS METHODS (15):\\n1. create_project_phase(project_id, phase_name, start_date, end_date, **kwargs) -> EntityDict\\n2. get_phases_by_project(project_id, status_filter=None, limit=None) -> List[EntityDict]\\n3. get_phase_by_name(project_id, phase_name) -> Optional[EntityDict]\\n4. update_phase_status(phase_id, status, completion_percentage=None) -> EntityDict\\n5. complete_phase(phase_id, actual_end_date=None, completion_notes=None) -> EntityDict\\n6. get_active_phases(project_id=None, limit=None) -> List[EntityDict] \\n7. get_overdue_phases(project_id=None, limit=None) -> List[EntityDict]\\n8. get_phases_by_status(status, project_id=None, limit=None) -> List[EntityDict]\\n9. assign_phase_resources(phase_id, resource_ids) -> List[EntityDict]\\n10. get_phase_milestones(phase_id) -> List[EntityDict]\\n11. calculate_phase_progress(phase_id) -> Dict[str, Any]\\n12. get_predecessor_phases(phase_id) -> List[EntityDict]\\n13. get_successor_phases(phase_id) -> List[EntityDict]\\n14. bulk_update_phase_status(phase_ids, status) -> List[EntityDict]\\n15. clone_phase_template(template_phase_id, target_project_id, **overrides) -> EntityDict\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- projectID: int (Foreign Key to Projects)\\n- phaseName: str (Required, max 255)\\n- description: Optional[str] (max 2000)\\n- startDate: str ISO format (Required)\\n- endDate: str ISO format (Required)\\n- actualStartDate: Optional[str] ISO format\\n- actualEndDate: Optional[str] ISO format\\n- status: int (1=Planned, 2=Active, 3=On Hold, 4=Complete, 5=Cancelled)\\n- completionPercentage: Optional[Decimal] (0-100)\\n- estimatedHours: Optional[Decimal]\\n- actualHours: Optional[Decimal]\\n- phaseOrder: int (Sequence within project)\\n- predecessorPhaseID: Optional[int] (Self-reference)\\n- milestoneCount: Optional[int] (Calculated)\\n- resourceCount: Optional[int] (Calculated)\\n- budgetAmount: Optional[Decimal]\\n- actualCost: Optional[Decimal]\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nRELATIONSHIPS:\\n- Parent: Projects (projectID)\\n- Children: ProjectMilestones (phaseID), Tasks (phaseID), TimeEntries (phaseID)\\n- Self-Reference: predecessorPhaseID for phase dependencies\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime\\nfrom decimal import Decimal\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- phaseName must be unique within project\\n- startDate must be <= endDate\\n- actualStartDate must be >= startDate if provided\\n- actualEndDate must be >= actualStartDate if provided  \\n- completionPercentage must be 0-100\\n- status transitions follow business rules\\n- phaseOrder must be unique within project\\n- predecessorPhaseID cannot create circular dependencies\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:03:47.596Z",
+      "updatedAt": "2025-06-23T22:03:47.596Z",
+      "lastAccessedAt": "2025-06-23T22:03:47.596Z",
+      "version": 1,
+      "size": 3079,
+      "compressed": true,
+      "checksum": "9ffc7dd4181cacf2a41fb06ea4e105f30552f1c7aa2f1b93cbdd484b51730354",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9n97kg_i62sf5j5q",
+      "key": "swarm-auto-centralized-1750716058662/analyst/project_milestones_entity",
+      "value": "\"ProjectMilestonesEntity Analysis:\\n\\nPURPOSE: Key achievement & deadline tracking\\n\\nCORE BUSINESS METHODS (15):\\n1. create_milestone(project_id, milestone_name, due_date, phase_id=None, **kwargs) -> EntityDict\\n2. get_milestones_by_project(project_id, status_filter=None, limit=None) -> List[EntityDict]\\n3. get_milestones_by_phase(phase_id, status_filter=None, limit=None) -> List[EntityDict]\\n4. update_milestone_status(milestone_id, status, completion_date=None) -> EntityDict\\n5. complete_milestone(milestone_id, actual_completion_date=None, completion_notes=None) -> EntityDict\\n6. get_upcoming_milestones(days_ahead=30, project_id=None, limit=None) -> List[EntityDict]\\n7. get_overdue_milestones(project_id=None, limit=None) -> List[EntityDict]\\n8. get_critical_path_milestones(project_id) -> List[EntityDict]\\n9. get_milestones_by_resource(resource_id, include_completed=False, limit=None) -> List[EntityDict]\\n10. calculate_milestone_variance(milestone_id) -> Dict[str, Any]\\n11. get_milestone_dependencies(milestone_id) -> List[EntityDict]\\n12. bulk_update_milestone_dates(milestone_ids, date_offset_days) -> List[EntityDict]\\n13. get_milestone_timeline(project_id, include_phases=True) -> List[EntityDict]\\n14. check_milestone_feasibility(milestone_id) -> Dict[str, Any]\\n15. clone_milestone_from_template(template_milestone_id, target_project_id, **overrides) -> EntityDict\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- projectID: int (Foreign Key to Projects, Required)\\n- phaseID: Optional[int] (Foreign Key to ProjectPhases)\\n- milestoneName: str (Required, max 255)\\n- description: Optional[str] (max 2000)\\n- dueDate: str ISO format (Required)\\n- actualCompletionDate: Optional[str] ISO format\\n- status: int (1=Planned, 2=In Progress, 3=Complete, 4=On Hold, 5=Cancelled)\\n- priority: int (1=Critical, 2=High, 3=Medium, 4=Low)\\n- milestoneType: int (1=Deliverable, 2=Review, 3=Approval, 4=Payment, 5=Go-Live)\\n- assignedResourceID: Optional[int] (Foreign Key to Resources)\\n- completionCriteria: Optional[str] (max 1000)\\n- deliverableDescription: Optional[str] (max 2000)\\n- isClientVisible: bool (Default: True)\\n- isCriticalPath: bool (Default: False)\\n- estimatedEffort: Optional[Decimal] (in hours)\\n- actualEffort: Optional[Decimal] (in hours)\\n- budgetAmount: Optional[Decimal]\\n- actualCost: Optional[Decimal]\\n- dependencyCount: Optional[int] (Calculated)\\n- riskLevel: int (1=Low, 2=Medium, 3=High, 4=Critical)\\n- completionPercentage: Optional[Decimal] (0-100)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nRELATIONSHIPS:\\n- Parent: Projects (projectID)\\n- Parent: ProjectPhases (phaseID) - Optional\\n- Reference: Resources (assignedResourceID)\\n- Children: Tasks (milestoneID), MilestoneDependencies (milestoneID)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta\\nfrom decimal import Decimal\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- milestoneName must be unique within project\\n- dueDate must be within project date range\\n- actualCompletionDate must be >= project start date if provided\\n- completionPercentage must be 0-100\\n- priority must be 1-4\\n- milestoneType must be 1-5\\n- status transitions follow milestone lifecycle rules\\n- If phaseID provided, milestone must fall within phase dates\\n- estimatedEffort and actualEffort must be positive\\n- budgetAmount and actualCost must be positive\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:04:14.608Z",
+      "updatedAt": "2025-06-23T22:04:14.608Z",
+      "lastAccessedAt": "2025-06-23T22:04:14.608Z",
+      "version": 1,
+      "size": 3688,
+      "compressed": true,
+      "checksum": "9c2d55ecba8a214d651607fde50455e0bba203aa80310b7e918f3d7755f8efac",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9n9rcb_k32p4s4lv",
+      "key": "swarm-auto-centralized-1750716058662/analyst/allocation_codes_entity",
+      "value": "\"AllocationCodesEntity Analysis:\\n\\nPURPOSE: Resource allocation & time categorization\\n\\nCORE BUSINESS METHODS (15):\\n1. create_allocation_code(code_name, description, allocation_type, **kwargs) -> EntityDict\\n2. get_allocation_codes_by_type(allocation_type, is_active=True, limit=None) -> List[EntityDict]\\n3. get_active_allocation_codes(limit=None) -> List[EntityDict]\\n4. get_allocation_code_by_name(code_name) -> Optional[EntityDict]\\n5. update_allocation_code_status(code_id, is_active) -> EntityDict\\n6. get_allocation_usage_stats(code_id, date_range=None) -> Dict[str, Any]\\n7. get_allocation_codes_by_department(department_id, limit=None) -> List[EntityDict]\\n8. get_billable_allocation_codes(limit=None) -> List[EntityDict]\\n9. get_non_billable_allocation_codes(limit=None) -> List[EntityDict]\\n10. assign_allocation_code_to_project(code_id, project_id) -> EntityDict\\n11. get_project_allocation_codes(project_id, limit=None) -> List[EntityDict]\\n12. calculate_allocation_utilization(code_id, date_range) -> Dict[str, Any]\\n13. get_allocation_codes_by_resource(resource_id, date_range=None, limit=None) -> List[EntityDict]\\n14. bulk_update_allocation_rates(code_ids, rate_multiplier) -> List[EntityDict]\\n15. clone_allocation_code(source_code_id, new_name, **overrides) -> EntityDict\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- allocationCodeName: str (Required, max 100, Unique)\\n- description: Optional[str] (max 500)\\n- allocationType: int (1=Direct, 2=Indirect, 3=Overhead, 4=Administrative)\\n- isActive: bool (Default: True)\\n- isBillable: bool (Default: True)\\n- isDefault: bool (Default: False)\\n- departmentID: Optional[int] (Foreign Key to Departments)\\n- costCenter: Optional[str] (max 50)\\n- glAccount: Optional[str] (max 50, General Ledger Account)\\n- hourlyRate: Optional[Decimal] (Override default rates)\\n- rateMultiplier: Optional[Decimal] (Default: 1.0)\\n- minimumHours: Optional[Decimal] (Minimum time increment)\\n- maximumHours: Optional[Decimal] (Maximum daily hours)\\n- requiresApproval: bool (Default: False)\\n- approverResourceID: Optional[int] (Foreign Key to Resources)\\n- projectID: Optional[int] (Foreign Key to Projects, if project-specific)\\n- contractID: Optional[int] (Foreign Key to Contracts, if contract-specific)\\n- externalCode: Optional[str] (max 50, External system reference)\\n- sortOrder: int (Default: 0)\\n- usageCount: Optional[int] (Calculated field)\\n- totalHours: Optional[Decimal] (Calculated field)\\n- lastUsedDate: Optional[str] ISO format (Calculated field)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nRELATIONSHIPS:\\n- Parent: Departments (departmentID) - Optional\\n- Parent: Projects (projectID) - Optional\\n- Parent: Contracts (contractID) - Optional\\n- Reference: Resources (approverResourceID) - Optional\\n- Children: TimeEntries (allocationCodeID), ProjectCharges (allocationCodeID)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta\\nfrom decimal import Decimal\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- allocationCodeName must be unique across all allocation codes\\n- allocationType must be 1-4\\n- hourlyRate must be positive if provided\\n- rateMultiplier must be positive (typically 0.5-3.0)\\n- minimumHours must be <= maximumHours if both provided\\n- Only one allocation code can be isDefault=True per type\\n- If requiresApproval=True, approverResourceID must be provided\\n- If projectID provided, allocation code is project-specific\\n- If contractID provided, allocation code is contract-specific\\n- sortOrder used for display ordering\\n- glAccount must match valid GL account format if provided\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:04:40.235Z",
+      "updatedAt": "2025-06-23T22:04:40.235Z",
+      "lastAccessedAt": "2025-06-23T22:04:40.235Z",
+      "version": 1,
+      "size": 3930,
+      "compressed": true,
+      "checksum": "a6951434ae7e14cc11c7b6575f45beeb20e85c73cd7b362021bd1867b0f6bb49",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9nacs8_97svaivxk",
+      "key": "swarm-auto-centralized-1750716058662/analyst/holiday_sets_entity",
+      "value": "\"HolidaySetsEntity Analysis:\\n\\nPURPOSE: Holiday calendar management for resource planning\\n\\nCORE BUSINESS METHODS (15):\\n1. create_holiday_set(set_name, description, country_code=None, **kwargs) -> EntityDict\\n2. add_holiday_to_set(set_id, holiday_name, holiday_date, is_recurring=False, **kwargs) -> EntityDict\\n3. remove_holiday_from_set(set_id, holiday_id) -> bool\\n4. get_holiday_sets_by_country(country_code, is_active=True, limit=None) -> List[EntityDict]\\n5. get_holidays_in_set(set_id, year=None, limit=None) -> List[EntityDict]\\n6. get_holidays_by_date_range(set_id, start_date, end_date) -> List[EntityDict]\\n7. check_if_holiday(set_id, check_date) -> bool\\n8. get_next_business_day(set_id, from_date) -> str\\n9. calculate_business_days(set_id, start_date, end_date) -> int\\n10. assign_holiday_set_to_resource(set_id, resource_id) -> EntityDict\\n11. get_resources_by_holiday_set(set_id, limit=None) -> List[EntityDict]\\n12. clone_holiday_set(source_set_id, new_name, target_year=None) -> EntityDict\\n13. import_holiday_template(template_name, year, country_code) -> EntityDict\\n14. get_upcoming_holidays(set_id, days_ahead=30) -> List[EntityDict]\\n15. bulk_update_holiday_dates(set_id, year_offset) -> List[EntityDict]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- holidaySetName: str (Required, max 100)\\n- description: Optional[str] (max 500)\\n- countryCode: Optional[str] (max 3, ISO country code)\\n- isActive: bool (Default: True)\\n- isDefault: bool (Default: False)\\n- timeZone: Optional[str] (max 50, IANA timezone)\\n- yearApplicable: Optional[int] (Specific year, or null for all years)\\n- includeWeekends: bool (Default: True)\\n- customWorkWeek: Optional[str] (JSON format: weekday overrides)\\n- holidayCount: Optional[int] (Calculated field)\\n- resourceCount: Optional[int] (Calculated field)\\n- lastUsedDate: Optional[str] ISO format (Calculated field)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nHOLIDAY DETAIL FIELDS (Related entity):\\n- holidayID: int (Primary Key)\\n- holidaySetID: int (Foreign Key)\\n- holidayName: str (Required, max 100)\\n- holidayDate: str ISO format (Required)\\n- isRecurring: bool (Default: False)\\n- recurrencePattern: Optional[str] (JSON format for recurring rules)\\n- holidayType: int (1=National, 2=Regional, 3=Religious, 4=Corporate, 5=Personal)\\n- isFloating: bool (Default: False, for holidays that change dates)\\n- observedDate: Optional[str] ISO format (Actual observed date if different)\\n- description: Optional[str] (max 500)\\n\\nRELATIONSHIPS:\\n- Children: HolidayDetails (holidaySetID)\\n- Reference: Resources (via ResourceHolidaySet junction table)\\n- Reference: Countries (countryCode)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta, date\\nfrom decimal import Decimal\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- holidaySetName must be unique\\n- countryCode must be valid ISO 3166-1 alpha-3 code if provided\\n- Only one holiday set can be isDefault=True per country\\n- timeZone must be valid IANA timezone identifier\\n- yearApplicable must be current year or future if provided\\n- holidayDate must be valid date\\n- recurrencePattern must be valid JSON if provided\\n- isRecurring holidays require valid recurrencePattern\\n- Holiday names must be unique within a holiday set\\n- observedDate must be within reasonable range of holidayDate\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:05:08.024Z",
+      "updatedAt": "2025-06-23T22:05:08.024Z",
+      "lastAccessedAt": "2025-06-23T22:05:08.024Z",
+      "version": 1,
+      "size": 3661,
+      "compressed": true,
+      "checksum": "cdeba0d23236a48289600f5dde752a15a76a1ca432b6ec965ff9a9398aaae801",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9nb0kx_10txpxmzw",
+      "key": "swarm-auto-centralized-1750716058662/analyst/workflow_rules_entity",
+      "value": "\"WorkflowRulesEntity Analysis:\\n\\nPURPOSE: Workflow automation rules & triggers\\n\\nCORE BUSINESS METHODS (15):\\n1. create_workflow_rule(rule_name, entity_type, trigger_event, **kwargs) -> EntityDict\\n2. add_rule_condition(rule_id, field_name, operator, value, **kwargs) -> EntityDict\\n3. add_rule_action(rule_id, action_type, action_config, **kwargs) -> EntityDict\\n4. activate_workflow_rule(rule_id) -> EntityDict\\n5. deactivate_workflow_rule(rule_id) -> EntityDict\\n6. get_workflow_rules_by_entity(entity_type, is_active=True, limit=None) -> List[EntityDict]\\n7. get_workflow_rules_by_trigger(trigger_event, entity_type=None, limit=None) -> List[EntityDict]\\n8. test_workflow_rule(rule_id, test_data) -> Dict[str, Any]\\n9. execute_workflow_rule(rule_id, entity_id, context_data=None) -> Dict[str, Any]\\n10. get_rule_execution_history(rule_id, limit=100) -> List[EntityDict]\\n11. get_workflow_rule_conditions(rule_id) -> List[EntityDict]\\n12. get_workflow_rule_actions(rule_id) -> List[EntityDict]\\n13. clone_workflow_rule(source_rule_id, new_name, **overrides) -> EntityDict\\n14. bulk_activate_rules(rule_ids) -> List[EntityDict]\\n15. get_failed_workflow_executions(date_range=None, limit=100) -> List[EntityDict]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- workflowRuleName: str (Required, max 100)\\n- description: Optional[str] (max 1000)\\n- entityType: str (Required, max 50, e.g., 'Tickets', 'Projects')\\n- triggerEvent: str (Required, max 50, e.g., 'Create', 'Update', 'StatusChange')\\n- isActive: bool (Default: False)\\n- priority: int (1-10, higher number = higher priority, Default: 5)\\n- executionOrder: int (For rules with same priority, Default: 0)\\n- conditionLogic: str (Default: 'AND', Options: 'AND', 'OR', 'CUSTOM')\\n- customLogicExpression: Optional[str] (max 500, for complex condition logic)\\n- executeOnce: bool (Default: False, prevent multiple executions)\\n- maxExecutions: Optional[int] (Limit executions per entity)\\n- executionTimeout: int (Seconds, Default: 30)\\n- isRecursive: bool (Default: False, allow recursive triggers)\\n- lastExecutedDateTime: Optional[str] ISO format (Calculated)\\n- executionCount: Optional[int] (Calculated)\\n- successCount: Optional[int] (Calculated)\\n- failureCount: Optional[int] (Calculated)\\n- avgExecutionTime: Optional[Decimal] (Milliseconds, Calculated)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nRULE CONDITION FIELDS (Related entity):\\n- conditionID: int (Primary Key)\\n- workflowRuleID: int (Foreign Key)\\n- fieldName: str (Required, max 100)\\n- operator: str (Required, max 20, e.g., 'equals', 'contains', 'greater_than')\\n- value: Optional[str] (max 500, condition value)\\n- valueType: str (Default: 'static', Options: 'static', 'field', 'function')\\n- conditionGroup: int (Default: 1, for grouping conditions)\\n- isNegated: bool (Default: False)\\n- sortOrder: int (Default: 0)\\n\\nRULE ACTION FIELDS (Related entity):\\n- actionID: int (Primary Key)\\n- workflowRuleID: int (Foreign Key)\\n- actionType: str (Required, max 50, e.g., 'UpdateField', 'SendEmail', 'CreateTask')\\n- actionConfig: str (Required, JSON format configuration)\\n- executeOrder: int (Default: 0)\\n- isEnabled: bool (Default: True)\\n- retryCount: int (Default: 0)\\n- maxRetries: int (Default: 3)\\n\\nRELATIONSHIPS:\\n- Children: WorkflowRuleConditions (workflowRuleID), WorkflowRuleActions (workflowRuleID), WorkflowExecutionLog (workflowRuleID)\\n- Reference: Various entities based on entityType\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta\\nfrom decimal import Decimal\\nimport json\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- workflowRuleName must be unique\\n- entityType must be valid Autotask entity name\\n- triggerEvent must be valid for the entity type\\n- priority must be 1-10\\n- conditionLogic must be 'AND', 'OR', or 'CUSTOM'\\n- If conditionLogic='CUSTOM', customLogicExpression is required\\n- executionTimeout must be 1-300 seconds\\n- operator must be valid for field data type\\n- actionConfig must be valid JSON\\n- executeOrder determines action sequence\\n- Recursive workflows must have safeguards against infinite loops\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:05:38.865Z",
+      "updatedAt": "2025-06-23T22:05:38.865Z",
+      "lastAccessedAt": "2025-06-23T22:05:38.865Z",
+      "version": 1,
+      "size": 4451,
+      "compressed": true,
+      "checksum": "0c24aa88a270831d5547675be0ec719f59032c902ef56c7bc8381bf67319834d",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9nbrw2_a11qgfeea",
+      "key": "swarm-auto-centralized-1750716058662/analyst/project_templates_entity",
+      "value": "\"ProjectTemplatesEntity Analysis:\\n\\nPURPOSE: Project template management & instantiation\\n\\nCORE BUSINESS METHODS (15):\\n1. create_project_template(template_name, template_type, description=None, **kwargs) -> EntityDict\\n2. instantiate_project_from_template(template_id, project_name, account_id, **overrides) -> EntityDict\\n3. get_project_templates_by_type(template_type, is_active=True, limit=None) -> List[EntityDict]\\n4. get_template_phases(template_id) -> List[EntityDict]\\n5. get_template_milestones(template_id) -> List[EntityDict]\\n6. get_template_tasks(template_id) -> List[EntityDict]\\n7. add_phase_to_template(template_id, phase_name, duration_days, **kwargs) -> EntityDict\\n8. add_milestone_to_template(template_id, milestone_name, days_from_start, **kwargs) -> EntityDict\\n9. add_task_to_template(template_id, task_name, estimated_hours, **kwargs) -> EntityDict\\n10. clone_project_template(source_template_id, new_name, **overrides) -> EntityDict\\n11. get_template_usage_stats(template_id) -> Dict[str, Any]\\n12. validate_template_structure(template_id) -> Dict[str, Any]\\n13. export_template_definition(template_id) -> Dict[str, Any]\\n14. import_template_definition(template_data) -> EntityDict\\n15. get_popular_templates(limit=10) -> List[EntityDict]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- templateName: str (Required, max 100)\\n- description: Optional[str] (max 2000)\\n- templateType: int (1=Standard, 2=Agile, 3=Waterfall, 4=Maintenance, 5=Custom)\\n- templateCategory: str (Optional, max 50, e.g., 'IT', 'Marketing', 'Engineering')\\n- isActive: bool (Default: True)\\n- isPublic: bool (Default: False, visible to all users)\\n- ownerResourceID: int (Foreign Key to Resources, Required)\\n- defaultDuration: int (Days, estimated project duration)\\n- defaultBudget: Optional[Decimal] (Template budget estimate)\\n- phaseCount: Optional[int] (Calculated)\\n- milestoneCount: Optional[int] (Calculated)\\n- taskCount: Optional[int] (Calculated)\\n- resourceRoleCount: Optional[int] (Calculated)\\n- usageCount: Optional[int] (How many times template was used)\\n- lastUsedDate: Optional[str] ISO format\\n- avgProjectSuccess: Optional[Decimal] (Success rate percentage)\\n- estimatedEffort: Optional[Decimal] (Total estimated hours)\\n- complexity: int (1=Simple, 2=Medium, 3=Complex, 4=Enterprise)\\n- industryTags: Optional[str] (Comma-separated tags)\\n- skillRequirements: Optional[str] (JSON format skill requirements)\\n- riskLevel: int (1=Low, 2=Medium, 3=High, 4=Critical)\\n- complianceRequirements: Optional[str] (JSON format compliance needs)\\n- templateVersion: str (Default: '1.0')\\n- parentTemplateID: Optional[int] (Self-reference for template versions)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nTEMPLATE PHASE FIELDS (Related entity):\\n- templatePhaseID: int (Primary Key)\\n- projectTemplateID: int (Foreign Key)\\n- phaseName: str (Required, max 100)\\n- description: Optional[str] (max 1000)\\n- phaseOrder: int (Sequence in template)\\n- durationDays: int (Phase duration)\\n- predecessorPhaseID: Optional[int] (Self-reference)\\n- isOptional: bool (Default: False)\\n- resourceRoles: Optional[str] (JSON format role requirements)\\n\\nTEMPLATE MILESTONE FIELDS (Related entity):\\n- templateMilestoneID: int (Primary Key)\\n- projectTemplateID: int (Foreign Key)\\n- templatePhaseID: Optional[int] (Foreign Key)\\n- milestoneName: str (Required, max 100)\\n- description: Optional[str] (max 1000)\\n- daysFromStart: int (Days from project start)\\n- milestoneType: int (1=Deliverable, 2=Review, 3=Approval, 4=Payment)\\n- isCritical: bool (Default: False)\\n- deliverableTemplate: Optional[str] (JSON format deliverable spec)\\n\\nTEMPLATE TASK FIELDS (Related entity):\\n- templateTaskID: int (Primary Key)\\n- projectTemplateID: int (Foreign Key)\\n- templatePhaseID: Optional[int] (Foreign Key)\\n- templateMilestoneID: Optional[int] (Foreign Key)\\n- taskName: str (Required, max 100)\\n- description: Optional[str] (max 1000)\\n- estimatedHours: Decimal (Required)\\n- taskType: int (1=Development, 2=Testing, 3=Documentation, 4=Review)\\n- skillRequired: Optional[str] (Required skill/role)\\n- predecessorTaskID: Optional[int] (Self-reference)\\n- isOptional: bool (Default: False)\\n\\nRELATIONSHIPS:\\n- Parent: Resources (ownerResourceID)\\n- Self-Reference: parentTemplateID (for versioning)\\n- Children: ProjectTemplatePhases, ProjectTemplateMilestones, ProjectTemplateTasks\\n- Usage: Projects (via templateID field in Projects)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta\\nfrom decimal import Decimal\\nimport json\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- templateName must be unique per owner\\n- templateType must be 1-5\\n- complexity must be 1-4\\n- riskLevel must be 1-4\\n- defaultDuration must be positive\\n- defaultBudget must be positive if provided\\n- phaseOrder must be unique within template\\n- durationDays must be positive\\n- daysFromStart must be >= 0\\n- estimatedHours must be positive\\n- Template structure must be logically consistent (phases, milestones, tasks)\\n- Predecessor relationships cannot create circular dependencies\\n- skillRequirements and complianceRequirements must be valid JSON\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:06:14.258Z",
+      "updatedAt": "2025-06-23T22:06:14.258Z",
+      "lastAccessedAt": "2025-06-23T22:06:14.258Z",
+      "version": 1,
+      "size": 5522,
+      "compressed": true,
+      "checksum": "121e8e3588cb391fd75ba70c696f15027ffa8fe11b95a0d9d3f409f2dc9828dc",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9nciay_mdzvjfyts",
+      "key": "swarm-auto-centralized-1750716058662/analyst/resource_allocation_entity",
+      "value": "\"ResourceAllocationEntity Analysis:\\n\\nPURPOSE: Resource assignment & capacity planning\\n\\nCORE BUSINESS METHODS (15):\\n1. create_resource_allocation(resource_id, project_id, allocation_percentage, start_date, end_date, **kwargs) -> EntityDict\\n2. update_allocation_percentage(allocation_id, new_percentage) -> EntityDict\\n3. get_resource_allocations(resource_id, date_range=None, limit=None) -> List[EntityDict]\\n4. get_project_allocations(project_id, date_range=None, limit=None) -> List[EntityDict]\\n5. check_resource_availability(resource_id, date_range, required_percentage) -> Dict[str, Any]\\n6. calculate_resource_utilization(resource_id, date_range) -> Dict[str, Any]\\n7. get_overallocated_resources(date_range=None, threshold=100, limit=None) -> List[EntityDict]\\n8. get_underallocated_resources(date_range=None, threshold=80, limit=None) -> List[EntityDict]\\n9. suggest_resource_reallocation(project_id, required_skills=None) -> List[Dict[str, Any]]\\n10. bulk_update_allocations(allocation_ids, percentage_change) -> List[EntityDict]\\n11. get_allocation_conflicts(resource_id=None, date_range=None) -> List[EntityDict]\\n12. forecast_resource_demand(date_range, department_id=None) -> Dict[str, Any]\\n13. optimize_resource_allocation(project_id, constraints=None) -> Dict[str, Any]\\n14. get_allocation_history(resource_id, limit=100) -> List[EntityDict]\\n15. clone_allocation_pattern(source_project_id, target_project_id, date_offset) -> List[EntityDict]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- resourceID: int (Foreign Key to Resources, Required)\\n- projectID: int (Foreign Key to Projects, Required)\\n- phaseID: Optional[int] (Foreign Key to ProjectPhases)\\n- taskID: Optional[int] (Foreign Key to Tasks)\\n- allocationPercentage: Decimal (Required, 0-200, typically 0-100)\\n- startDate: str ISO format (Required)\\n- endDate: str ISO format (Required)\\n- actualStartDate: Optional[str] ISO format\\n- actualEndDate: Optional[str] ISO format\\n- status: int (1=Planned, 2=Active, 3=On Hold, 4=Complete, 5=Cancelled)\\n- roleID: Optional[int] (Foreign Key to ResourceRoles)\\n- hourlyRate: Optional[Decimal] (Override default rate)\\n- estimatedHours: Optional[Decimal] (Total estimated hours)\\n- actualHours: Optional[Decimal] (Actual hours worked)\\n- budgetedCost: Optional[Decimal] (Budgeted cost for allocation)\\n- actualCost: Optional[Decimal] (Actual cost incurred)\\n- priority: int (1=Critical, 2=High, 3=Medium, 4=Low, Default: 3)\\n- isConfirmed: bool (Default: False, resource confirmed availability)\\n- isBillable: bool (Default: True)\\n- allocationSource: str (Default: 'Manual', Options: 'Manual', 'Template', 'AI', 'Import')\\n- workLocation: Optional[str] (max 50, 'Remote', 'Office', 'Client Site')\\n- timeZone: Optional[str] (max 50, IANA timezone)\\n- skillsRequired: Optional[str] (JSON format skill requirements)\\n- allocationNotes: Optional[str] (max 1000)\\n- approvalStatus: int (1=Pending, 2=Approved, 3=Rejected, Default: 1)\\n- approvedBy: Optional[int] (Foreign Key to Resources)\\n- approvedDateTime: Optional[str] ISO format\\n- utilizationScore: Optional[Decimal] (Calculated efficiency score)\\n- conflictCount: Optional[int] (Calculated overlapping allocations)\\n- lastModifiedReason: Optional[str] (max 255, reason for last change)\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nRELATIONSHIPS:\\n- Parent: Resources (resourceID)\\n- Parent: Projects (projectID)\\n- Parent: ProjectPhases (phaseID) - Optional\\n- Parent: Tasks (taskID) - Optional\\n- Parent: ResourceRoles (roleID) - Optional  \\n- Reference: Resources (approvedBy) - Optional\\n- Children: TimeEntries (allocationID), AllocationHistory (allocationID)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta, date\\nfrom decimal import Decimal\\nimport json\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- resourceID and projectID combination should typically be unique per date range\\n- allocationPercentage must be 0-200 (over 100% indicates overtime)\\n- startDate must be <= endDate\\n- actualStartDate must be >= startDate if provided\\n- actualEndDate must be >= actualStartDate if provided\\n- If phaseID provided, allocation dates must be within phase dates\\n- If taskID provided, allocation dates must be within task dates\\n- hourlyRate must be positive if provided\\n- estimatedHours must be positive if provided\\n- priority must be 1-4\\n- approvalStatus must be 1-3\\n- skillsRequired must be valid JSON if provided\\n- Total allocation percentage for a resource should not exceed reasonable limits (e.g., 200%)\\n- Date ranges should not have gaps in critical allocations\\n- Resource must be active during allocation period\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:06:48.490Z",
+      "updatedAt": "2025-06-23T22:06:48.490Z",
+      "lastAccessedAt": "2025-06-23T22:06:48.490Z",
+      "version": 1,
+      "size": 4958,
+      "compressed": true,
+      "checksum": "17defe3f06ee09a3416706f86873b8128fe4621197ac0f1784817329a7395ed5",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9ndapb_j0ehp5p44",
+      "key": "swarm-auto-centralized-1750716058662/analyst/project_budgets_entity",
+      "value": "\"ProjectBudgetsEntity Analysis:\\n\\nPURPOSE: Project budget tracking & variance analysis\\n\\nCORE BUSINESS METHODS (15):\\n1. create_project_budget(project_id, budget_type, budgeted_amount, **kwargs) -> EntityDict\\n2. update_budget_amount(budget_id, new_amount, reason=None) -> EntityDict\\n3. get_project_budgets(project_id, budget_type=None, limit=None) -> List[EntityDict]\\n4. calculate_budget_variance(budget_id) -> Dict[str, Any]\\n5. get_budget_utilization(budget_id) -> Dict[str, Any]\\n6. get_over_budget_projects(threshold_percentage=10, limit=None) -> List[EntityDict]\\n7. get_under_budget_projects(threshold_percentage=10, limit=None) -> List[EntityDict]\\n8. forecast_budget_burn_rate(budget_id, projection_days=30) -> Dict[str, Any]\\n9. allocate_budget_to_phase(budget_id, phase_id, amount) -> EntityDict\\n10. get_budget_breakdown_by_category(budget_id) -> Dict[str, Any]\\n11. compare_budgets_across_projects(project_ids, budget_type=None) -> Dict[str, Any]\\n12. get_budget_approval_history(budget_id, limit=50) -> List[EntityDict]\\n13. bulk_update_budget_allocations(budget_id, allocation_updates) -> List[EntityDict]\\n14. generate_budget_forecast(project_id, forecast_months=6) -> Dict[str, Any]\\n15. get_budget_alerts(severity=None, limit=100) -> List[EntityDict]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- projectID: int (Foreign Key to Projects, Required)\\n- budgetName: str (Required, max 100)\\n- budgetType: int (1=Labor, 2=Materials, 3=Travel, 4=Other, 5=Total, 6=Contingency)\\n- budgetedAmount: Decimal (Required, Original approved budget)\\n- currentBudgetAmount: Decimal (Current approved budget, may differ from original)\\n- spentAmount: Decimal (Default: 0, Actual spent amount)\\n- committedAmount: Decimal (Default: 0, Committed/obligated amount)\\n- availableAmount: Decimal (Calculated: currentBudgetAmount - spentAmount - committedAmount)\\n- varianceAmount: Decimal (Calculated: currentBudgetAmount - spentAmount)\\n- variancePercentage: Decimal (Calculated: (varianceAmount / currentBudgetAmount) * 100)\\n- budgetPeriodStart: str ISO format (Required)\\n- budgetPeriodEnd: str ISO format (Required)\\n- currency: str (max 3, ISO currency code, Default: 'USD')\\n- exchangeRate: Decimal (Default: 1.0, for currency conversion)\\n- approvalStatus: int (1=Draft, 2=Pending, 3=Approved, 4=Rejected, 5=Revised)\\n- approvedBy: Optional[int] (Foreign Key to Resources)\\n- approvedDateTime: Optional[str] ISO format\\n- revisionNumber: int (Default: 1, Budget revision tracking)\\n- parentBudgetID: Optional[int] (Self-reference for budget revisions)\\n- costCenter: Optional[str] (max 50, Accounting cost center)\\n- glAccount: Optional[str] (max 50, General ledger account)\\n- fundingSource: Optional[str] (max 100, Source of funding)\\n- burnRateDaily: Optional[Decimal] (Calculated average daily spend)\\n- burnRateWeekly: Optional[Decimal] (Calculated average weekly spend)\\n- burnRateMonthly: Optional[Decimal] (Calculated average monthly spend)\\n- forecastedCompletionAmount: Optional[Decimal] (Projected final cost)\\n- budgetAlertThreshold: Decimal (Default: 90.0, Alert when % spent reaches this)\\n- isActive: bool (Default: True)\\n- isLocked: bool (Default: False, Prevent modifications)\\n- lastRecalculatedDateTime: Optional[str] ISO format\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nBUDGET ALLOCATION FIELDS (Related entity):\\n- allocationID: int (Primary Key)\\n- projectBudgetID: int (Foreign Key)\\n- phaseID: Optional[int] (Foreign Key to ProjectPhases)\\n- categoryName: str (Required, max 100, e.g., 'Development', 'Testing')\\n- allocatedAmount: Decimal (Required)\\n- spentAmount: Decimal (Default: 0)\\n- allocationPercentage: Decimal (Calculated)\\n- description: Optional[str] (max 500)\\n\\nBUDGET REVISION HISTORY (Related entity):\\n- revisionID: int (Primary Key)\\n- projectBudgetID: int (Foreign Key)\\n- revisionDate: str ISO format (Required)\\n- oldAmount: Decimal (Previous budget amount)\\n- newAmount: Decimal (New budget amount)\\n- changeReason: str (Required, max 500)\\n- approvedBy: int (Foreign Key to Resources)\\n- revisionType: int (1=Increase, 2=Decrease, 3=Reallocation, 4=Currency Adjustment)\\n\\nRELATIONSHIPS:\\n- Parent: Projects (projectID)\\n- Reference: Resources (approvedBy)\\n- Self-Reference: parentBudgetID (for revisions)\\n- Children: BudgetAllocations (projectBudgetID), BudgetRevisionHistory (projectBudgetID), BudgetAlerts (projectBudgetID)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta, date\\nfrom decimal import Decimal, ROUND_HALF_UP\\nimport json\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- budgetedAmount must be positive\\n- currentBudgetAmount must be positive\\n- spentAmount must be >= 0\\n- committedAmount must be >= 0\\n- budgetType must be 1-6\\n- budgetPeriodStart must be <= budgetPeriodEnd\\n- currency must be valid ISO 4217 code\\n- exchangeRate must be positive\\n- approvalStatus must be 1-5\\n- revisionNumber must be >= 1\\n- budgetAlertThreshold must be 0-100\\n- variancePercentage calculated as (currentBudgetAmount - spentAmount) / currentBudgetAmount * 100\\n- Total budget allocations should not exceed budget amount\\n- Budget revisions must maintain audit trail\\n- Currency conversions must use current exchange rates\\n- Budget locks prevent unauthorized modifications\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:07:25.295Z",
+      "updatedAt": "2025-06-23T22:07:25.295Z",
+      "lastAccessedAt": "2025-06-23T22:07:25.295Z",
+      "version": 1,
+      "size": 5631,
+      "compressed": true,
+      "checksum": "6cf36c2d40a585b3f6291b073229b680d8713a4162d2a189ffe442778400dd4b",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9ne1cm_su20jc6zd",
+      "key": "swarm-auto-centralized-1750716058662/analyst/task_dependencies_entity",
+      "value": "\"TaskDependenciesEntity Analysis:\\n\\nPURPOSE: Task relationship & dependency management\\n\\nCORE BUSINESS METHODS (15):\\n1. create_task_dependency(predecessor_task_id, successor_task_id, dependency_type, **kwargs) -> EntityDict\\n2. remove_task_dependency(dependency_id) -> bool\\n3. get_task_dependencies(task_id, direction='both', limit=None) -> List[EntityDict]\\n4. get_task_predecessors(task_id, limit=None) -> List[EntityDict]\\n5. get_task_successors(task_id, limit=None) -> List[EntityDict]\\n6. calculate_critical_path(project_id) -> List[EntityDict]\\n7. detect_circular_dependencies(project_id) -> List[EntityDict]\\n8. get_dependency_chain(task_id, direction='forward', max_depth=10) -> List[EntityDict]\\n9. update_dependency_lag(dependency_id, lag_days) -> EntityDict\\n10. bulk_create_dependencies(dependency_data_list) -> List[EntityDict]\\n11. get_blocked_tasks(project_id=None, limit=None) -> List[EntityDict]\\n12. get_tasks_ready_to_start(project_id=None, limit=None) -> List[EntityDict]\\n13. validate_dependency_logic(project_id) -> Dict[str, Any]\\n14. get_dependency_impact_analysis(task_id, date_change) -> Dict[str, Any]\\n15. optimize_task_schedule(project_id, constraints=None) -> Dict[str, Any]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- predecessorTaskID: int (Foreign Key to Tasks, Required)\\n- successorTaskID: int (Foreign Key to Tasks, Required)\\n- dependencyType: int (1=Finish-to-Start, 2=Start-to-Start, 3=Finish-to-Finish, 4=Start-to-Finish)\\n- lagDays: Decimal (Default: 0, Can be negative for lead time)\\n- lagHours: Decimal (Default: 0, Fine-grained lag in hours)\\n- isActive: bool (Default: True)\\n- isCritical: bool (Default: False, Part of critical path)\\n- priority: int (1=Critical, 2=High, 3=Medium, 4=Low, Default: 3)\\n- dependencyReason: Optional[str] (max 500, Why this dependency exists)\\n- canBeParallel: bool (Default: False, Can tasks run in parallel)\\n- resourceConstraint: bool (Default: False, Dependency due to resource constraint)\\n- externalConstraint: bool (Default: False, Dependency due to external factor)\\n- constraintDescription: Optional[str] (max 500, Description of constraint)\\n- validatedDate: Optional[str] ISO format (When dependency was last validated)\\n- validatedBy: Optional[int] (Foreign Key to Resources)\\n- scheduleImpact: Optional[str] (JSON format impact analysis)\\n- riskLevel: int (1=Low, 2=Medium, 3=High, 4=Critical, Default: 2)\\n- automatedCreation: bool (Default: False, Created by system vs manual)\\n- creationSource: str (Default: 'Manual', Options: 'Manual', 'Template', 'AI', 'Import')\\n- lastImpactAnalysis: Optional[str] ISO format (Last impact analysis date)\\n- violationCount: Optional[int] (How many times this dependency was violated)\\n- averageLagActual: Optional[Decimal] (Historical average actual lag)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nDEPENDENCY VIOLATION FIELDS (Related entity):\\n- violationID: int (Primary Key)\\n- taskDependencyID: int (Foreign Key)\\n- violationDate: str ISO format (Required)\\n- violationType: int (1=Predecessor Late, 2=Successor Early, 3=Resource Conflict, 4=Logic Error)\\n- impactDays: Decimal (Impact on schedule)\\n- resolutionAction: Optional[str] (max 500, How violation was resolved)\\n- resolvedDate: Optional[str] ISO format\\n- resolvedBy: Optional[int] (Foreign Key to Resources)\\n\\nCRITICAL PATH ANALYSIS (Related entity):\\n- pathID: int (Primary Key)\\n- projectID: int (Foreign Key to Projects)\\n- analysisDate: str ISO format (Required)\\n- totalDuration: Decimal (Critical path duration in days)\\n- taskCount: int (Number of tasks in critical path)\\n- pathTasks: str (JSON array of task IDs in sequence)\\n- floatDays: Decimal (Available float/slack time)\\n- riskScore: Decimal (Overall path risk assessment)\\n\\nRELATIONSHIPS:\\n- Parent: Tasks (predecessorTaskID, successorTaskID)\\n- Reference: Resources (validatedBy)\\n- Children: DependencyViolations (taskDependencyID)\\n- Related: CriticalPathAnalysis (project-level analysis)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union, Tuple\\nfrom datetime import datetime, timedelta, date\\nfrom decimal import Decimal\\nimport json\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- predecessorTaskID cannot equal successorTaskID (no self-dependencies)\\n- dependencyType must be 1-4\\n- Both predecessor and successor tasks must exist and be in same project\\n- Cannot create circular dependencies in the task network\\n- lagDays and lagHours can be negative (lead time) or positive (lag time)\\n- priority must be 1-4\\n- riskLevel must be 1-4\\n- Finish-to-Start (1) is most common dependency type\\n- Start-to-Start (2) allows parallel work with offset\\n- Finish-to-Finish (3) requires synchronous completion\\n- Start-to-Finish (4) is rare but valid for specific scenarios\\n- Resource constraints should be tracked separately from logical dependencies\\n- Critical path analysis requires up-to-date dependency network\\n- Dependency changes should trigger schedule recalculation\\n- Multiple dependencies between same tasks should be consolidated\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:07:59.830Z",
+      "updatedAt": "2025-06-23T22:07:59.830Z",
+      "lastAccessedAt": "2025-06-23T22:07:59.830Z",
+      "version": 1,
+      "size": 5355,
+      "compressed": true,
+      "checksum": "0955713b0c598082819a87c611d2a27ccef94eacef2879e6b589d002d0103d1d",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9new52_6xlvnt45c",
+      "key": "swarm-auto-centralized-1750716058662/analyst/project_reports_entity",
+      "value": "\"ProjectReportsEntity Analysis:\\n\\nPURPOSE: Project reporting & analytics framework\\n\\nCORE BUSINESS METHODS (15):\\n1. create_project_report(report_name, report_type, project_id=None, **kwargs) -> EntityDict\\n2. generate_report_data(report_id, parameters=None) -> Dict[str, Any]\\n3. schedule_report(report_id, schedule_config) -> EntityDict\\n4. get_reports_by_type(report_type, is_active=True, limit=None) -> List[EntityDict]\\n5. get_project_reports(project_id, report_type=None, limit=None) -> List[EntityDict]\\n6. export_report(report_id, format='PDF', parameters=None) -> Dict[str, Any]\\n7. get_report_execution_history(report_id, limit=50) -> List[EntityDict]\\n8. duplicate_report(source_report_id, new_name, **overrides) -> EntityDict\\n9. get_dashboard_reports(dashboard_type='executive', limit=10) -> List[EntityDict]\\n10. calculate_project_kpis(project_id, kpi_set='standard') -> Dict[str, Any]\\n11. get_trending_metrics(metric_name, project_id=None, days=30) -> Dict[str, Any]\\n12. generate_comparison_report(project_ids, comparison_type='performance') -> Dict[str, Any]\\n13. get_report_templates(category=None, limit=None) -> List[EntityDict]\\n14. validate_report_configuration(report_config) -> Dict[str, Any]\\n15. get_automated_insights(project_id, insight_type='all') -> List[Dict[str, Any]]\\n\\nFIELD DEFINITIONS:\\n- id: int (Primary Key)\\n- reportName: str (Required, max 100)\\n- description: Optional[str] (max 1000)\\n- reportType: int (1=Status, 2=Financial, 3=Resource, 4=Performance, 5=Risk, 6=Quality, 7=Custom)\\n- reportCategory: str (max 50, e.g., 'Executive', 'Operational', 'Financial')\\n- projectID: Optional[int] (Foreign Key to Projects, null for multi-project reports)\\n- isActive: bool (Default: True)\\n- isPublic: bool (Default: False, Available to all users)\\n- ownerResourceID: int (Foreign Key to Resources, Required)\\n- reportConfig: str (JSON format report configuration)\\n- dataFilters: Optional[str] (JSON format data filtering rules)\\n- chartConfig: Optional[str] (JSON format chart/visualization settings)\\n- schedulConfig: Optional[str] (JSON format scheduling configuration)\\n- outputFormat: str (Default: 'PDF', Options: 'PDF', 'Excel', 'CSV', 'HTML', 'JSON')\\n- templateID: Optional[int] (Foreign Key to report templates)\\n- refreshFrequency: Optional[int] (Minutes between auto-refresh, null for manual)\\n- lastExecuted: Optional[str] ISO format (Last execution timestamp)\\n- lastExecutionDuration: Optional[Decimal] (Seconds to generate report)\\n- executionCount: Optional[int] (Total times report has been run)\\n- avgExecutionTime: Optional[Decimal] (Average execution time in seconds)\\n- successRate: Optional[Decimal] (Percentage of successful executions)\\n- dataSize: Optional[int] (Size of last report data in bytes)\\n- cacheEnabled: bool (Default: True)\\n- cacheExpiry: Optional[int] (Cache expiry in minutes)\\n- accessLevel: int (1=Private, 2=Team, 3=Department, 4=Company, Default: 2)\\n- recipients: Optional[str] (JSON array of recipient resource IDs)\\n- deliveryMethod: int (1=Manual, 2=Email, 3=Dashboard, 4=API, Default: 1)\\n- emailSettings: Optional[str] (JSON format email delivery settings)\\n- alertThresholds: Optional[str] (JSON format alert/notification thresholds)\\n- customFields: Optional[str] (JSON format custom field definitions)\\n- version: str (Default: '1.0', Report version)\\n- parentReportID: Optional[int] (Self-reference for report versions)\\n- tags: Optional[str] (Comma-separated tags for categorization)\\n- notes: Optional[str]\\n- createdDateTime: str ISO format\\n- lastModifiedDateTime: str ISO format\\n- createdBy: int (Resource ID)\\n- lastModifiedBy: int (Resource ID)\\n\\nREPORT EXECUTION LOG (Related entity):\\n- executionID: int (Primary Key)\\n- projectReportID: int (Foreign Key)\\n- executionDateTime: str ISO format (Required)\\n- executionDuration: Decimal (Seconds)\\n- status: int (1=Success, 2=Failed, 3=Timeout, 4=Cancelled)\\n- recordCount: Optional[int] (Number of records in report)\\n- errorMessage: Optional[str] (max 1000, Error details if failed)\\n- parameters: Optional[str] (JSON format execution parameters)\\n- outputSize: Optional[int] (Generated report size in bytes)\\n- executedBy: int (Foreign Key to Resources)\\n\\nREPORT METRICS (Related entity):\\n- metricID: int (Primary Key)\\n- projectReportID: int (Foreign Key)\\n- metricName: str (Required, max 100)\\n- metricValue: Decimal (Required)\\n- metricUnit: Optional[str] (max 20, e.g., 'hours', 'dollars', 'percent')\\n- measurementDate: str ISO format (Required)\\n- comparisonValue: Optional[Decimal] (Previous period value)\\n- targetValue: Optional[Decimal] (Target/goal value)\\n- thresholdStatus: int (1=Good, 2=Warning, 3=Critical)\\n- calculationMethod: Optional[str] (max 255, How metric was calculated)\\n\\nRELATIONSHIPS:\\n- Parent: Projects (projectID) - Optional\\n- Parent: Resources (ownerResourceID)\\n- Reference: ReportTemplates (templateID) - Optional\\n- Self-Reference: parentReportID (for versioning)\\n- Children: ReportExecutionLog (projectReportID), ReportMetrics (projectReportID), ReportSubscriptions (projectReportID)\\n\\nDATA TYPES:\\nfrom typing import Dict, List, Optional, Any, Union\\nfrom datetime import datetime, timedelta, date\\nfrom decimal import Decimal\\nimport json\\nimport base64\\nfrom ..types import EntityDict, QueryFilter\\nfrom .base import BaseEntity\\n\\nVALIDATION REQUIREMENTS:\\n- reportName must be unique per owner\\n- reportType must be 1-7\\n- accessLevel must be 1-4\\n- deliveryMethod must be 1-4\\n- reportConfig must be valid JSON\\n- dataFilters must be valid JSON if provided\\n- chartConfig must be valid JSON if provided\\n- refreshFrequency must be >= 5 minutes if provided\\n- outputFormat must be supported format\\n- recipients must be valid JSON array if provided\\n- emailSettings must be valid JSON if provided\\n- alertThresholds must be valid JSON if provided\\n- Report configuration must match report type requirements\\n- Scheduled reports require valid schedule configuration\\n- Public reports must have appropriate access controls\\n- Template-based reports must reference valid templates\\n- Custom reports require valid field definitions\\n- Cache settings must be reasonable for data freshness needs\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:08:39.734Z",
+      "updatedAt": "2025-06-23T22:08:39.734Z",
+      "lastAccessedAt": "2025-06-23T22:08:39.734Z",
+      "version": 1,
+      "size": 6345,
+      "compressed": true,
+      "checksum": "dd6fdf8a336188bac120d570b1ad8f4d31208e66203b75cb7d9150e73440f8b3",
+      "references": [],
+      "dependencies": []
+    },
+    {
+      "id": "entry_mc9nfguy_qtnvhegof",
+      "key": "swarm-auto-centralized-1750716058662/analyst/complete_analysis_summary",
+      "value": "\"COMPLETE WEEK 4 ENTITY ANALYSIS SUMMARY\\n\\n==================================================\\nREQUIREMENTS ANALYST DELIVERABLES - PHASE 6 WEEK 4\\n==================================================\\n\\nANALYSIS COMPLETE FOR 10 ENTITIES:\\n✅ ProjectPhasesEntity - project phase mgmt & milestone tracking\\n✅ ProjectMilestonesEntity - key achievement & deadline tracking  \\n✅ AllocationCodesEntity - resource allocation & time categorization\\n✅ HolidaySetsEntity - holiday calendar mgmt for resource planning\\n✅ WorkflowRulesEntity - workflow automation rules & triggers\\n✅ ProjectTemplatesEntity - project template mgmt & instantiation\\n✅ ResourceAllocationEntity - resource assignment & capacity planning\\n✅ ProjectBudgetsEntity - project budget tracking & variance analysis\\n✅ TaskDependenciesEntity - task relationship & dependency mgmt\\n✅ ProjectReportsEntity - project reporting & analytics framework\\n\\nTOTAL BUSINESS METHODS DEFINED: 150 (15 per entity)\\nTOTAL FIELD DEFINITIONS: 300+ fields across all entities\\nTOTAL RELATIONSHIPS MAPPED: 50+ parent-child and reference relationships\\n\\nKEY TECHNICAL PATTERNS ESTABLISHED:\\n1. BaseEntity inheritance with __init__(self, client, entity_name)\\n2. Consistent typing: Dict, List, Optional, Any, Union\\n3. Decimal for financial calculations\\n4. ISO datetime strings for all date fields\\n5. JSON storage for complex configuration data\\n6. Standard field naming conventions (CamelCase)\\n7. Comprehensive validation requirements\\n8. Parent-child relationship management\\n9. Status field standardization (1-5 range typically)\\n10. Audit trail fields (created/modified by/date)\\n\\nENTITY COMPLEXITY DISTRIBUTION:\\n- High Complexity (5): WorkflowRulesEntity, ProjectTemplatesEntity, ProjectReportsEntity, ProjectBudgetsEntity, ResourceAllocationEntity\\n- Medium Complexity (3): TaskDependenciesEntity, ProjectPhasesEntity, ProjectMilestonesEntity  \\n- Standard Complexity (2): AllocationCodesEntity, HolidaySetsEntity\\n\\nCRITICAL VALIDATION RULES IDENTIFIED:\\n- Circular dependency prevention (TaskDependencies, ProjectPhases)\\n- Date range consistency validation\\n- Financial amount positivity constraints\\n- JSON configuration validation\\n- Unique constraint enforcement\\n- Status transition business rules\\n- Percentage range validation (0-100 or 0-200)\\n- Foreign key relationship integrity\\n\\nNEXT PHASE READINESS:\\nAll 10 entities have been thoroughly analyzed with:\\n- Complete business method specifications\\n- Detailed field definitions and types\\n- Comprehensive relationship mappings\\n- Technical validation requirements\\n- Implementation-ready method signatures\\n\\nMEMORY STORAGE LOCATIONS:\\n- swarm-auto-centralized-1750716058662/analyst/analysis_overview\\n- swarm-auto-centralized-1750716058662/analyst/project_phases_entity\\n- swarm-auto-centralized-1750716058662/analyst/project_milestones_entity\\n- swarm-auto-centralized-1750716058662/analyst/allocation_codes_entity\\n- swarm-auto-centralized-1750716058662/analyst/holiday_sets_entity\\n- swarm-auto-centralized-1750716058662/analyst/workflow_rules_entity\\n- swarm-auto-centralized-1750716058662/analyst/project_templates_entity\\n- swarm-auto-centralized-1750716058662/analyst/resource_allocation_entity\\n- swarm-auto-centralized-1750716058662/analyst/project_budgets_entity\\n- swarm-auto-centralized-1750716058662/analyst/task_dependencies_entity\\n- swarm-auto-centralized-1750716058662/analyst/project_reports_entity\\n\\nSTATUS: REQUIREMENTS ANALYSIS PHASE COMPLETE ✅\\nREADY FOR: Development Phase Implementation\"",
+      "type": "string",
+      "namespace": "default",
+      "tags": [],
+      "metadata": {},
+      "owner": "system",
+      "accessLevel": "shared",
+      "createdAt": "2025-06-23T22:09:06.586Z",
+      "updatedAt": "2025-06-23T22:09:06.586Z",
+      "lastAccessedAt": "2025-06-23T22:09:06.586Z",
+      "version": 1,
+      "size": 3629,
+      "compressed": true,
+      "checksum": "4a73872603d97ec8dc9d4baaefe2d0e83495a75bcc79b9fc463b6b2ede5e9711",
+      "references": [],
+      "dependencies": []
+    }
+  ],
+  "statistics": {
+    "overview": {
+      "totalEntries": 12,
+      "totalSize": 51850,
+      "compressedEntries": 12,
+      "compressionRatio": 0,
+      "indexSize": 600,
+      "memoryUsage": 10243328,
+      "diskUsage": 0
+    },
+    "distribution": {
+      "byNamespace": {
+        "default": {
+          "count": 12,
+          "size": 51850
+        }
+      },
+      "byType": {
+        "string": {
+          "count": 12,
+          "size": 51850
+        }
+      },
+      "byOwner": {
+        "system": {
+          "count": 12,
+          "size": 51850
+        }
+      },
+      "byAccessLevel": {
+        "shared": {
+          "count": 12,
+          "size": 51850
+        }
+      }
+    },
+    "temporal": {
+      "entriesCreatedLast24h": 12,
+      "entriesUpdatedLast24h": 12,
+      "entriesAccessedLast24h": 12,
+      "oldestEntry": "2025-06-23T22:03:25.366Z",
+      "newestEntry": "2025-06-23T22:09:06.586Z"
+    },
+    "performance": {
+      "averageQueryTime": 0,
+      "averageWriteTime": 1,
+      "cacheHitRatio": 0,
+      "indexEfficiency": 0.95
+    },
+    "health": {
+      "expiredEntries": 0,
+      "orphanedReferences": 0,
+      "duplicateKeys": 0,
+      "corruptedEntries": 0,
+      "recommendedCleanup": false
+    },
+    "optimization": {
+      "suggestions": [],
+      "potentialSavings": {
+        "compression": 0,
+        "cleanup": 0,
+        "deduplication": 0
+      },
+      "indexOptimization": [
+        "Consider periodic index rebuilding for optimal performance"
+      ]
+    }
+  }
+}

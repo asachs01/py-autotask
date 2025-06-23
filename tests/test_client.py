@@ -111,6 +111,7 @@ class TestAutotaskClient:
         mock_get.return_value = mock_response
         
         mock_auth.api_url = "https://test.autotask.net"
+        mock_auth.get_session.return_value.get = mock_get
         
         client = AutotaskClient(mock_auth)
         result = client.get("Tickets", 12345)
@@ -126,6 +127,7 @@ class TestAutotaskClient:
         mock_get.return_value = mock_response
         
         mock_auth.api_url = "https://test.autotask.net"
+        mock_auth.get_session.return_value.get = mock_get
         
         client = AutotaskClient(mock_auth)
         result = client.get("Tickets", 99999)
@@ -142,9 +144,10 @@ class TestAutotaskClient:
         mock_post.return_value = mock_response
         
         mock_auth.api_url = "https://test.autotask.net"
+        mock_auth.get_session.return_value.post = mock_post
         
         client = AutotaskClient(mock_auth)
-        result = client.create("Tickets", sample_ticket_data)
+        result = client.create_entity("Tickets", sample_ticket_data)
         
         assert result.item_id == 12345
         mock_post.assert_called_once()
@@ -152,6 +155,9 @@ class TestAutotaskClient:
     @patch('requests.Session.patch')
     def test_update_entity_success(self, mock_patch, mock_auth, sample_ticket_data):
         """Test successful entity update."""
+        # Add ID to sample data for update
+        sample_ticket_data["id"] = 12345
+        
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"item": sample_ticket_data}
@@ -159,6 +165,7 @@ class TestAutotaskClient:
         mock_patch.return_value = mock_response
         
         mock_auth.api_url = "https://test.autotask.net"
+        mock_auth.get_session.return_value.patch = mock_patch
         
         client = AutotaskClient(mock_auth)
         result = client.update("Tickets", sample_ticket_data)
@@ -175,6 +182,7 @@ class TestAutotaskClient:
         mock_delete.return_value = mock_response
         
         mock_auth.api_url = "https://test.autotask.net"
+        mock_auth.get_session.return_value.delete = mock_delete
         
         client = AutotaskClient(mock_auth)
         result = client.delete("Tickets", 12345)

@@ -170,7 +170,7 @@ class CompaniesEntity(BaseEntity):
             List of contacts for the company
         """
         filters = [QueryFilter(field='CompanyID', op='eq', value=company_id)]
-        return self._client.query('Contacts', filters=filters)
+        return self.client.query('Contacts', filters=filters)
     
     def get_company_tickets(
         self, 
@@ -207,7 +207,7 @@ class CompaniesEntity(BaseEntity):
                 else:
                     filters.append(QueryFilter(field='Status', op='in', value=status_ids))
         
-        return self._client.query('Tickets', filters=filters, max_records=limit)
+        return self.client.query('Tickets', filters=filters, max_records=limit)
     
     def get_company_projects(
         self, 
@@ -231,7 +231,7 @@ class CompaniesEntity(BaseEntity):
         if active_only:
             filters.append(QueryFilter(field='Status', op='ne', value=5))  # Not Complete
         
-        return self._client.query('Projects', filters=filters, max_records=limit)
+        return self.client.query('Projects', filters=filters, max_records=limit)
     
     def get_company_contracts(
         self, 
@@ -255,7 +255,7 @@ class CompaniesEntity(BaseEntity):
         if active_only:
             filters.append(QueryFilter(field='Status', op='eq', value=1))  # Active
         
-        return self._client.query('Contracts', filters=filters, max_records=limit)
+        return self.client.query('Contracts', filters=filters, max_records=limit)
     
     def update_company_address(
         self,
@@ -297,7 +297,7 @@ class CompaniesEntity(BaseEntity):
         if country is not None:
             update_data['Country'] = country
         
-        return self.update(company_id, update_data)
+        return self.update_by_id(company_id, update_data)
     
     def activate_company(self, company_id: int) -> CompanyData:
         """
@@ -309,7 +309,7 @@ class CompaniesEntity(BaseEntity):
         Returns:
             Updated company data
         """
-        return self.update(company_id, {'Active': True})
+        return self.update_by_id(company_id, {'Active': True})
     
     def deactivate_company(self, company_id: int) -> CompanyData:
         """
@@ -321,7 +321,7 @@ class CompaniesEntity(BaseEntity):
         Returns:
             Updated company data
         """
-        return self.update(company_id, {'Active': False})
+        return self.update_by_id(company_id, {'Active': False})
     
     def get_companies_by_location(
         self,

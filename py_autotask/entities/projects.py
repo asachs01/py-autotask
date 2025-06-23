@@ -138,7 +138,7 @@ class ProjectsEntity(BaseEntity):
         Returns:
             Updated project data
         """
-        return self.update(project_id, {'Status': status})
+        return self.update_by_id(project_id, {'Status': status})
     
     def get_project_tasks(self, project_id: int) -> List[Dict[str, Any]]:
         """
@@ -151,7 +151,7 @@ class ProjectsEntity(BaseEntity):
             List of tasks for the project
         """
         filters = [QueryFilter(field='ProjectID', op='eq', value=project_id)]
-        return self._client.query('Tasks', filters=filters)
+        return self.client.query('Tasks', filters=filters)
     
     def get_project_time_entries(self, project_id: int) -> List[Dict[str, Any]]:
         """
@@ -164,4 +164,160 @@ class ProjectsEntity(BaseEntity):
             List of time entries for the project
         """
         filters = [QueryFilter(field='ProjectID', op='eq', value=project_id)]
-        return self._client.query('TimeEntries', filters=filters) 
+        return self.client.query('TimeEntries', filters=filters)
+    
+    def get_projects_by_status(
+        self,
+        status: int,
+        account_id: Optional[int] = None,
+        limit: Optional[int] = None
+    ) -> List[ProjectData]:
+        """
+        Get projects by status.
+        
+        Args:
+            status: Project status ID
+            account_id: Optional account filter
+            limit: Maximum number of projects to return
+            
+        Returns:
+            List of projects with the specified status
+        """
+        filters = [QueryFilter(field='Status', op='eq', value=status)]
+        
+        if account_id:
+            filters.append(QueryFilter(field='AccountID', op='eq', value=account_id))
+        
+        return self.query(filters=filters, max_records=limit)
+    
+    def get_active_projects(
+        self,
+        account_id: Optional[int] = None,
+        limit: Optional[int] = None
+    ) -> List[ProjectData]:
+        """
+        Get active projects (not complete, cancelled, or on hold).
+        
+        Args:
+            account_id: Optional account filter
+            limit: Maximum number of projects to return
+            
+        Returns:
+            List of active projects
+        """
+        # Exclude common inactive statuses: Complete(5), Cancelled(7), On Hold(3)
+        filters = [
+            QueryFilter(field='Status', op='not_in', value=[3, 5, 7])
+        ]
+        
+        if account_id:
+            filters.append(QueryFilter(field='AccountID', op='eq', value=account_id))
+        
+        return self.query(filters=filters, max_records=limit)
+    
+    def get_overdue_projects(
+        self,
+        account_id: Optional[int] = None,
+        limit: Optional[int] = None
+    ) -> List[ProjectData]:
+        """
+        Get projects that are past their end date.
+        
+        Args:
+            account_id: Optional account filter
+            limit: Maximum number of projects to return
+            
+        Returns:
+            List of overdue projects
+        """
+        from datetime import datetime
+        
+        filters = [
+            QueryFilter(field='EndDate', op='lt', value=datetime.now().isoformat()),
+            QueryFilter(field='Status', op='ne', value=5)  # Not complete
+        ]
+        
+        if account_id:
+            filters.append(QueryFilter(field='AccountID', op='eq', value=account_id))
+        
+        return self.query(filters=filters, max_records=limit)
+    
+    def get_project_tickets(
+        self,
+        project_id: int,
+        status_filter: Optional[str] = None,
+        limit: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all tickets associated with a project.
+        
+        Args:
+            project_id: ID of the project
+            status_filter: Optional status filter ('open', 'closed', etc.)
+            limit: Maximum number of tickets to return
+            
+        Returns:
+            List of project tickets
+        """
+        filters = [QueryFilter(field='ProjectID', op='eq', value=project_id)]
+        
+        if status_filter:
+            status_map = {
+                'open': [1, 8, 9, 10, 11],
+                'closed': [5],
+                'new': [1]
+            }
+            
+            if status_filter.lower() in status_map:
+                status_ids = status_map[status_filter.lower()]
+                if len(status_ids) == 1:
+                    filters.append(QueryFilter(field='Status', op='eq', value=status_ids[0]))
+                else:
+                    filters.append(QueryFilter(field='Status', op='in', value=status_ids))
+        
+        return self.client.query('Tickets', filters=filters, max_records=limit)
+    
+    def complete_project(
+        self,
+        project_id: int,
+        completion_note: Optional[str] = None
+    ) -> ProjectData:
+        """
+        Mark a project as complete.
+        
+        Args:
+            project_id: ID of project to complete
+            completion_note: Optional completion note
+            
+        Returns:
+            Updated project data
+        """
+        from datetime import datetime
+        
+        update_data = {
+            'Status': 5,  # Complete status
+            'EndDate': datetime.now().isoformat()
+        }
+        
+        if completion_note:
+            update_data['StatusDetail'] = completion_note
+        
+        return self.update_by_id(project_id, update_data)
+    
+    def assign_project_manager(
+        self,
+        project_id: int,
+        manager_id: int
+    ) -> ProjectData:
+        """
+        Assign a project manager to a project.
+        
+        Args:
+            project_id: ID of project to update
+            manager_id: Resource ID of the project manager
+            
+        Returns:
+            Updated project data
+        """
+        update_data = {'ProjectManagerResourceID': manager_id}
+        return self.update_by_id(project_id, update_data) 

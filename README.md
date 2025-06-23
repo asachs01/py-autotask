@@ -12,7 +12,10 @@ A comprehensive Python client library for the Autotask REST API with feature par
 - **🚀 Easy to Use** - Intuitive API that follows Python best practices
 - **🔐 Automatic Authentication** - Handles zone detection and authentication seamlessly  
 - **📊 Full CRUD Operations** - Create, Read, Update, Delete for all Autotask entities
-- **🔍 Advanced Querying** - Powerful filtering and pagination support
+- **🔍 Advanced Query Builder** - Fluent API for complex filtering and relationship queries
+- **🏗️ Parent-Child Relationships** - Built-in support for entity relationships and hierarchies
+- **⚡ Batch Operations** - Efficient bulk operations for create, update, delete, and retrieve
+- **📄 Enhanced Pagination** - Automatic pagination with safety limits and cursor support
 - **⚡ Performance Optimized** - Intelligent retry logic and connection pooling
 - **🛡️ Type Safe** - Full type hints for better IDE support and code reliability
 - **🧪 Well Tested** - Comprehensive test suite with >90% coverage
@@ -109,24 +112,149 @@ py-autotask supports all major Autotask entities:
 
 ## Advanced Features
 
-### Filtering and Pagination
+### Advanced Query Builder
 
 ```python
-# Complex filtering
-tickets = client.tickets.query({
-    "filter": [
-        {"op": "eq", "field": "status", "value": "1"},
-        {"op": "gte", "field": "priority", "value": "3"},
-        {"op": "contains", "field": "title", "value": "urgent"}
-    ],
-    "includeFields": ["id", "title", "status", "priority"],
-    "maxRecords": 100
-})
+from py_autotask.entities import FilterOperator
 
-# Automatic pagination
-all_companies = client.companies.query_all({
-    "filter": [{"op": "eq", "field": "isActive", "value": "true"}]
-})
+# Fluent query building with method chaining
+tickets = (client.tickets.query_builder()
+    .where("status", FilterOperator.EQUAL, "1")
+    .where("priority", FilterOperator.GREATER_THAN_OR_EQUAL, 3)
+    .where("title", FilterOperator.CONTAINS, "urgent")
+    .select(["id", "title", "status", "priority"])
+    .limit(100)
+    .order_by("createDateTime", "desc")
+    .execute_all())
+
+# Date range queries
+recent_tickets = (client.tickets.query_builder()
+    .where_date_range("createDateTime", "2023-01-01T00:00:00Z", "2023-12-31T23:59:59Z")
+    .where_in("status", ["1", "2", "3"])
+    .execute())
+
+# Relationship-based queries
+tickets_for_acme = (client.tickets.query_builder()
+    .where_related("Companies", "companyName", "contains", "Acme")
+    .execute_all())
+```
+
+### Parent-Child Relationships
+
+```python
+# Get all tickets for a company
+company_tickets = client.companies.get_children(12345, "Tickets")
+
+# Get all active tickets for a project  
+active_tickets = client.projects.get_children(
+    67890, 
+    "Tickets", 
+    filters={"field": "status", "op": "eq", "value": "1"}
+)
+
+# Get parent company for a ticket
+company = client.tickets.get_parent(12345, "Companies")
+
+# Link entities
+client.tickets.link_to_parent(ticket_id=1001, parent_id=123, parent_entity="Companies")
+
+# Batch link multiple tickets to a company
+client.companies.batch_link_children(12345, [1001, 1002, 1003], "Tickets")
+```
+
+### Batch Operations
+
+```python
+# Batch create multiple tickets
+tickets_data = [
+    {"title": "Issue 1", "accountID": 123, "status": 1},
+    {"title": "Issue 2", "accountID": 123, "status": 1},
+    {"title": "Issue 3", "accountID": 456, "status": 1},
+]
+results = client.tickets.batch_create(tickets_data)
+
+# Batch update
+updates = [
+    {"id": 1001, "priority": 4},
+    {"id": 1002, "priority": 3},
+    {"id": 1003, "status": 2},
+]
+updated = client.tickets.batch_update(updates)
+
+# Batch retrieve
+tickets = client.tickets.batch_get([1001, 1002, 1003])
+
+# Batch delete with results
+result = client.tickets.batch_delete([1001, 1002, 1003])
+print(f"Deleted: {result['success_count']}, Failed: {result['failure_count']}")
+```
+
+### Enhanced Pagination
+
+```python
+# Automatic pagination with safety limits
+all_companies = client.companies.query_all(
+    filters={"field": "isActive", "op": "eq", "value": "true"},
+    max_total_records=10000,  # Safety limit
+    page_size=500  # Records per page
+)
+
+# Check if records exist without retrieving them
+has_urgent_tickets = (client.tickets.query_builder()
+    .where("priority", "gte", 4)
+    .exists())
+
+# Get just the first matching record
+first_urgent = (client.tickets.query_builder()
+    .where("priority", "gte", 4)
+    .order_by("createDateTime", "desc")
+    .first())
+```
+
+### Time Entry Management
+
+Track time against tickets, projects, and tasks with comprehensive time management features:
+
+```python
+# Create time entries
+time_entry = client.time_entries.create_time_entry(
+    resource_id=123,
+    ticket_id=12345,
+    start_date_time="2023-08-01T09:00:00",
+    end_date_time="2023-08-01T17:00:00",
+    hours_worked=8.0,
+    hours_to_bill=8.0,
+    description="Development work on feature X",
+    billable_to_account=True
+)
+
+# Get time entries for a resource
+time_entries = client.time_entries.get_time_entries_by_resource(
+    resource_id=123,
+    start_date="2023-08-01",
+    end_date="2023-08-31"
+)
+
+# Get billable time for invoicing
+billable_time = client.time_entries.get_billable_time_entries(
+    account_id=456,
+    start_date="2023-08-01",
+    end_date="2023-08-31"
+)
+
+# Time analytics and reporting
+time_summary = client.time_entries.get_time_summary_by_resource(
+    resource_id=123,
+    start_date="2023-08-01",
+    end_date="2023-08-31"
+)
+print(f"Total hours: {time_summary['total_hours']}")
+print(f"Billable hours: {time_summary['billable_hours']}")
+print(f"Utilization: {time_summary['utilization_rate']}%")
+
+# Time entry workflow management
+client.time_entries.submit_time_entry(time_entry_id=789)
+client.time_entries.approve_time_entry(time_entry_id=789, approver_notes="Approved for billing")
 ```
 
 ### Error Handling
@@ -330,3 +458,216 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Disclaimer**: This library is not officially affiliated with Datto/Autotask. It is an independent implementation of the Autotask REST API. 
+
+## Phase 4: Advanced Features
+
+### Batch Operations
+
+Efficiently process multiple entities with built-in batch support:
+
+```python
+# Batch create tickets
+tickets_data = [
+    {
+        "title": "Server Down - Critical",
+        "description": "Production server unresponsive",
+        "accountID": 123,
+        "priority": 1,
+        "status": 1
+    },
+    {
+        "title": "Email Issues",
+        "description": "Users unable to send email",
+        "accountID": 123,
+        "priority": 2,
+        "status": 1
+    }
+]
+
+# Create multiple tickets in batches
+results = client.tickets.batch_create(tickets_data, batch_size=200)
+for result in results:
+    if result.item_id:
+        print(f"Created ticket: {result.item_id}")
+    else:
+        print(f"Failed to create ticket: {result.errors}")
+
+# Batch update multiple entities
+updates = [
+    {"id": 12345, "priority": 1, "status": 8},  # Set to high priority, in progress
+    {"id": 12346, "priority": 3, "status": 5}   # Set to medium priority, complete
+]
+
+updated_tickets = client.tickets.batch_update(updates)
+print(f"Updated {len(updated_tickets)} tickets")
+
+# Batch delete entities (with confirmation)
+ticket_ids = [12347, 12348, 12349]
+deletion_results = client.tickets.batch_delete(ticket_ids)
+successful_deletions = sum(deletion_results)
+print(f"Deleted {successful_deletions}/{len(ticket_ids)} tickets")
+
+# Batch operations work with all entities
+company_updates = [
+    {"id": 1001, "isActive": True},
+    {"id": 1002, "isActive": False}
+]
+client.companies.batch_update(company_updates)
+
+# Low-level batch operations (direct client access)
+results = client.batch_create("Projects", project_data_list, batch_size=100)
+updated = client.batch_update("Contracts", contract_updates, batch_size=50)
+deleted = client.batch_delete("TimeEntries", time_entry_ids, batch_size=200)
+```
+
+### File Attachment Management
+
+Upload, download, and manage file attachments for any entity:
+
+```python
+# Upload a file to a ticket
+attachment = client.attachments.upload_file(
+    parent_type="Ticket",
+    parent_id=12345,
+    file_path="/path/to/screenshot.png",
+    title="Error Screenshot",
+    description="Screenshot showing the error state"
+)
+print(f"Uploaded attachment with ID: {attachment.id}")
+
+# Upload from memory/data
+with open("/path/to/document.pdf", "rb") as f:
+    file_data = f.read()
+
+attachment = client.attachments.upload_from_data(
+    parent_type="Project",
+    parent_id=67890,
+    file_data=file_data,
+    filename="project_spec.pdf",
+    content_type="application/pdf",
+    title="Project Specification",
+    description="Detailed project requirements"
+)
+
+# Download attachments
+file_data = client.attachments.download_file(
+    attachment_id=attachment.id,
+    output_path="/path/to/downloads/project_spec.pdf"
+)
+
+# List all attachments for an entity
+attachments = client.attachments.get_attachments_for_entity(
+    parent_type="Ticket",
+    parent_id=12345
+)
+
+for attachment in attachments:
+    print(f"ID: {attachment.id}")
+    print(f"  File: {attachment.file_name}")
+    print(f"  Size: {attachment.file_size} bytes")
+    print(f"  Type: {attachment.content_type}")
+    print(f"  Title: {attachment.title}")
+
+# Batch upload multiple files
+file_paths = [
+    "/path/to/log1.txt",
+    "/path/to/log2.txt", 
+    "/path/to/config.xml"
+]
+
+uploaded_attachments = client.attachments.batch_upload(
+    parent_type="Ticket",
+    parent_id=12345,
+    file_paths=file_paths,
+    batch_size=5  # Upload 5 files concurrently
+)
+
+print(f"Successfully uploaded {len(uploaded_attachments)} files")
+
+# Delete attachments
+client.attachments.delete_attachment(attachment_id=12345)
+
+# Get attachment metadata only (without downloading)
+attachment_info = client.attachments.get_attachment_info(attachment_id=12345)
+if attachment_info:
+    print(f"Attachment exists: {attachment_info.file_name}")
+```
+
+### Enhanced CLI Interface
+
+The CLI now supports batch operations and attachment management:
+
+```bash
+# Batch operations
+py-autotask batch create Tickets tickets.json --batch-size 100
+py-autotask batch update Companies company_updates.json --output summary
+py-autotask batch delete Tickets --ids-file ticket_ids.txt --confirm
+
+# With inline IDs
+py-autotask batch delete Projects 1001 1002 1003 --confirm
+
+# Attachment operations
+py-autotask attachments upload Ticket 12345 /path/to/file.pdf --title "Documentation"
+py-autotask attachments download 67890 /path/to/downloads/file.pdf
+py-autotask attachments list Ticket 12345 --output table
+py-autotask attachments delete-attachment 67890 --confirm
+
+# Batch create example with JSON file
+echo '[
+  {"title": "Issue 1", "description": "First issue", "accountID": 123},
+  {"title": "Issue 2", "description": "Second issue", "accountID": 123}
+]' > tickets.json
+
+py-autotask batch create Tickets tickets.json
+```
+
+## Performance Optimization
+
+Phase 4 includes several performance improvements:
+
+### Intelligent Batching
+- Automatic batch size optimization (up to API limit of 200)
+- Parallel processing where possible
+- Progress tracking for large operations
+- Graceful error handling with partial success reporting
+
+### Connection Pooling
+- HTTP session reuse for multiple requests
+- Configurable connection timeouts and retries
+- Built-in rate limiting awareness
+
+### Memory Efficiency
+- Streaming file uploads/downloads for large attachments
+- Lazy loading of entity relationships
+- Efficient pagination for large result sets
+
+```python
+# Configure performance settings
+from py_autotask.types import RequestConfig
+
+config = RequestConfig(
+    timeout=30,           # Request timeout in seconds
+    max_retries=3,        # Maximum retry attempts
+    retry_backoff=1.0,    # Backoff factor for retries
+    max_records=1000      # Default pagination limit
+)
+
+client = AutotaskClient.create(
+    username="user@example.com",
+    integration_code="YOUR_CODE", 
+    secret="YOUR_SECRET",
+    config=config
+)
+
+# Batch operations automatically optimize performance
+large_dataset = client.tickets.query({
+    "filter": [{"op": "gte", "field": "createDate", "value": "2023-01-01"}]
+})  # Handles pagination automatically
+
+# Stream large file uploads
+large_attachment = client.attachments.upload_file(
+    parent_type="Project",
+    parent_id=12345,
+    file_path="/path/to/large_file.zip"  # Efficient streaming upload
+)
+``` 

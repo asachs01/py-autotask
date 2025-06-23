@@ -247,7 +247,7 @@ class ContactsEntity(BaseEntity):
         if not update_data:
             raise ValueError("At least one field must be provided for update")
         
-        return self.update(contact_id, update_data)
+        return self.update_by_id(contact_id, update_data)
     
     def activate_contact(self, contact_id: int) -> ContactData:
         """
@@ -259,7 +259,7 @@ class ContactsEntity(BaseEntity):
         Returns:
             Updated contact data
         """
-        return self.update(contact_id, {'Active': True})
+        return self.update_by_id(contact_id, {'Active': True})
     
     def deactivate_contact(self, contact_id: int) -> ContactData:
         """
@@ -271,7 +271,7 @@ class ContactsEntity(BaseEntity):
         Returns:
             Updated contact data
         """
-        return self.update(contact_id, {'Active': False})
+        return self.update_by_id(contact_id, {'Active': False})
     
     def set_primary_contact(
         self, 
@@ -288,7 +288,7 @@ class ContactsEntity(BaseEntity):
         Returns:
             Updated contact data
         """
-        return self.update(contact_id, {'PrimaryContact': is_primary})
+        return self.update_by_id(contact_id, {'PrimaryContact': is_primary})
     
     def get_contacts_by_role(
         self,
@@ -340,7 +340,7 @@ class ContactsEntity(BaseEntity):
         results = []
         for contact_id in contact_ids:
             try:
-                result = self.update(contact_id, {'CompanyID': new_company_id})
+                result = self.update_by_id(contact_id, {'CompanyID': new_company_id})
                 results.append(result)
             except Exception as e:
                 # Log error but continue with other contacts

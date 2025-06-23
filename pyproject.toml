@@ -1,18 +1,22 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "py-autotask"
-version = "0.1.0"
-description = "A comprehensive Python client library for the Autotask REST API"
+dynamic = ["version"]
+description = "Python library for Autotask PSA REST API integration"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Aaron Sachs", email = "asachs@wyre.engineering"}
+    {name = "Your Name", email = "your.email@example.com"}
 ]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["autotask", "psa", "api", "rest", "integration"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -24,47 +28,70 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Office/Business",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "requests>=2.31.0",
-    "pydantic>=2.0.0",
+    "requests>=2.25.0",
+    "pydantic>=1.8.0",
     "click>=8.0.0",
-    "python-dotenv>=1.0.0",
-    "tenacity>=8.0.0",
-    "httpx>=0.24.0",
-    "typing-extensions>=4.0.0",
+    "rich>=10.0.0",
+    "typing-extensions>=4.0.0; python_version<'3.10'",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-mock>=3.10.0",
-    "pytest-asyncio>=0.21.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
-    "mypy>=1.0.0",
-    "pre-commit>=3.0.0",
-    "responses>=0.23.0",
+    "pytest>=6.0",
+    "pytest-cov>=2.10",
+    "pytest-mock>=3.0",
+    "pytest-asyncio>=0.15",
+    "pytest-benchmark>=3.4",
+    "black>=22.0",
+    "isort>=5.10",
+    "flake8>=4.0",
+    "mypy>=0.950",
+    "bandit>=1.7",
+    "safety>=2.0",
+    "pre-commit>=2.15",
 ]
+docs = [
+    "sphinx>=4.0",
+    "sphinx-rtd-theme>=1.0",
+    "myst-parser>=0.17",
+    "sphinx-autodoc-typehints>=1.12",
+]
+test = [
+    "pytest>=6.0",
+    "pytest-cov>=2.10",
+    "pytest-mock>=3.0",
+    "pytest-asyncio>=0.15",
+    "pytest-benchmark>=3.4",
+    "responses>=0.18",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/py-autotask"
+Documentation = "https://py-autotask.readthedocs.io/"
+Repository = "https://github.com/yourusername/py-autotask.git"
+Issues = "https://github.com/yourusername/py-autotask/issues"
+Changelog = "https://github.com/yourusername/py-autotask/blob/main/CHANGELOG.md"
 
 [project.scripts]
 py-autotask = "py_autotask.cli:main"
 
-[project.urls]
-Homepage = "https://github.com/asachs01/py-autotask"
-Repository = "https://github.com/asachs01/py-autotask"
-Documentation = "https://github.com/asachs01/py-autotask"
-Issues = "https://github.com/asachs01/py-autotask/issues"
+[tool.setuptools]
+packages = ["py_autotask"]
 
-[tool.setuptools.packages.find]
-include = ["py_autotask*"]
+[tool.setuptools.dynamic]
+version = {attr = "py_autotask.__version__"}
 
+[tool.setuptools_scm]
+write_to = "py_autotask/_version.py"
+
+# Black configuration
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -80,48 +107,50 @@ extend-exclude = '''
 )/
 '''
 
+# isort configuration
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
 line_length = 88
+known_first_party = ["py_autotask"]
+known_third_party = ["requests", "pydantic", "click", "rich"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
-
+# pytest configuration
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config"
-testpaths = [
-    "tests",
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=py_autotask",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
 ]
+testpaths = ["tests"]
 markers = [
-    "unit: marks tests as unit tests",
-    "integration: marks tests as integration tests",
-    "slow: marks tests as slow",
+    "unit: Unit tests",
+    "integration: Integration tests requiring API credentials",
+    "performance: Performance benchmark tests",
+    "slow: Slow running tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
 ]
 
+# Coverage configuration
 [tool.coverage.run]
 source = ["py_autotask"]
 omit = [
     "*/tests/*",
     "*/test_*",
-    "setup.py",
+    "*/__init__.py",
+    "*/setup.py",
+    "*/conftest.py",
+    "*/_version.py",
 ]
 
 [tool.coverage.report]
@@ -136,4 +165,42 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
-] 
+]
+show_missing = true
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "requests.*",
+    "click.*",
+    "rich.*",
+]
+ignore_missing_imports = true
+
+# Bandit configuration
+[tool.bandit]
+exclude_dirs = ["tests", "build", "dist"]
+skips = ["B101", "B601"]
+
+# Flake8 configuration (in setup.cfg since flake8 doesn't support pyproject.toml)
+# See setup.cfg for flake8 configuration 
