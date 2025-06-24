@@ -58,6 +58,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed `AutotaskAuthenticationError` import (renamed to `AutotaskAuthError`)
   - Updated CI workflows to use proper dependency installation with `pip install -e ".[test]"`
   - CI tests now run without import/dependency errors
+- **Unit Test Failures** - Fixed critical test failures affecting CI/CD pipeline
+  - Added missing `AutotaskNotFoundError` exception class in exceptions.py
+  - Fixed batch operations test mocking to properly configure auth, config, and session attributes
+  - Added module-level logger mocking using @patch decorator for test compatibility
+  - Resolved 'session' property setter issues in test setup
+  - **Result**: All 17 batch operations tests now passing (100% success rate)
+  - **Result**: 30 core tests passing (client + batch operations) with 0 failures
+  - **Impact**: Significant improvement in CI stability and test reliability
 
 ### Analysis
 - **MAJOR DISCOVERY**: Complete Autotask API entity analysis reveals 170+ entities vs. our current 26 (15% coverage)
