@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Pre-release testing and quality checks
   - Dry-run capability for testing release process
   - Branch protection and uncommitted changes detection
+- **CI Optimization** - Streamlined CI pipeline for faster development
+  - Reduced CI jobs from 23 to 10 (57% reduction in compute time)
+  - Strategic test matrix covering essential platforms and Python versions
+  - Extended test workflow for comprehensive testing on demand
+  - Performance and security tests moved to weekly schedule
 
 ### Changed
 - **Project Metadata** - Updated pyproject.toml with correct repository information
@@ -35,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Corrected GitHub repository URLs (asachs01/py-autotask)
   - Enhanced project metadata for PyPI publication
   - Configured setuptools_scm for automatic versioning
+- **Test Dependencies** - Enhanced test dependency management
+  - Added `psutil>=5.8.0` for performance testing
+  - Comprehensive test dependency specification in pyproject.toml
+  - Proper CI dependency installation using `.[test]` and `.[dev]` extras
 
 ### Fixed
 - **GitHub Actions Workflows** - Updated deprecated v3 artifact actions to v4
@@ -43,6 +52,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved workflow performance with up to 98% faster upload/download speeds
   - Maintained compatibility with existing workflow functionality
   - References: [GitHub Blog - Deprecation Notice](https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/)
+- **CI Dependency Issues** - Resolved missing dependencies causing test failures
+  - Fixed missing `responses` package import in CI tests
+  - Added `psutil` dependency for performance tests
+  - Fixed `AutotaskAuthenticationError` import (renamed to `AutotaskAuthError`)
+  - Updated CI workflows to use proper dependency installation with `pip install -e ".[test]"`
+  - CI tests now run without import/dependency errors
 
 ### Analysis
 - **MAJOR DISCOVERY**: Complete Autotask API entity analysis reveals 170+ entities vs. our current 26 (15% coverage)
