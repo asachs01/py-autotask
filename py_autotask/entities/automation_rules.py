@@ -9,12 +9,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from ..types import CreateResponse, EntityDict
 from .base import BaseEntity

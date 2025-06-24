@@ -9,12 +9,7 @@ optimization recommendations, and detailed reporting.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict, EntityList
 from .base import BaseEntity

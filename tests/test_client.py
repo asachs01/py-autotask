@@ -7,7 +7,6 @@ entity access, HTTP operations, and client configuration.
 
 from unittest.mock import Mock, patch
 
-
 from py_autotask.client import AutotaskClient
 from py_autotask.types import RequestConfig
 

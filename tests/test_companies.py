@@ -53,7 +53,7 @@ class TestCompaniesEntity:
 
         call_args = mock_client.create_entity.call_args
         assert call_args[0][0] == "Companies"  # entity_type
-        company_data = call_args[1]
+        company_data = call_args[0][1]  # entity_data is the second positional argument
         assert company_data["CompanyName"] == "Acme Corp"
 
     def test_create_company_with_address(self, companies_entity, mock_client):
@@ -71,7 +71,7 @@ class TestCompaniesEntity:
         )
 
         call_args = mock_client.create_entity.call_args
-        company_data = call_args[1]
+        company_data = call_args[0][1]  # entity_data is the second positional argument
         assert company_data["Phone"] == "555-1234"
         assert company_data["Address1"] == "123 Main St"
         assert company_data["City"] == "Anytown"
@@ -88,10 +88,14 @@ class TestCompaniesEntity:
         companies_entity.search_companies_by_name("Acme Corp", exact_match=True)
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        # query() is called with entity_name and QueryRequest object
+        assert call_args[0][0] == "Companies"
+        query_request = call_args[0][1]
+        assert hasattr(query_request, "filter")
+        filters = query_request.filter
         assert len(filters) == 1
         assert filters[0].field == "CompanyName"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == "Acme Corp"
 
     def test_search_companies_by_name_partial(self, companies_entity, mock_client):
@@ -103,10 +107,12 @@ class TestCompaniesEntity:
         companies_entity.search_companies_by_name("Acme", exact_match=False)
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Companies"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 1
         assert filters[0].field == "CompanyName"
-        assert filters[0].op.value == "contains"
+        assert filters[0].op == "contains"
         assert filters[0].value == "Acme"
 
     def test_get_companies_by_type(self, companies_entity, mock_client):
@@ -118,7 +124,9 @@ class TestCompaniesEntity:
         companies_entity.get_companies_by_type(1, active_only=True)
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Companies"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 2
         assert filters[0].field == "CompanyType"
         assert filters[0].value == 1
@@ -134,7 +142,9 @@ class TestCompaniesEntity:
         companies_entity.get_customer_companies(active_only=True)
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Companies"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         # Should call get_companies_by_type with type 1 (Customer)
         assert filters[0].field == "CompanyType"
         assert filters[0].value == 1
@@ -148,7 +158,9 @@ class TestCompaniesEntity:
         companies_entity.get_prospect_companies(active_only=False)
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Companies"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         # Should call get_companies_by_type with type 3 (Prospect)
         assert filters[0].field == "CompanyType"
         assert filters[0].value == 3
@@ -161,10 +173,11 @@ class TestCompaniesEntity:
 
         call_args = mock_client.query.call_args
         assert call_args[0][0] == "Contacts"
+        assert "filters" in call_args[1]
         filters = call_args[1]["filters"]
         assert len(filters) == 1
         assert filters[0].field == "CompanyID"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == 12345
 
     def test_get_company_tickets(self, companies_entity, mock_client):
@@ -175,13 +188,14 @@ class TestCompaniesEntity:
 
         call_args = mock_client.query.call_args
         assert call_args[0][0] == "Tickets"
+        assert "filters" in call_args[1]
         filters = call_args[1]["filters"]
         assert len(filters) == 2
         assert filters[0].field == "AccountID"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == 12345
         assert filters[1].field == "Status"
-        assert filters[1].op.value == "in"
+        assert filters[1].op == "in"
         assert filters[1].value == [1, 8, 9, 10, 11]
 
     def test_get_company_projects(self, companies_entity, mock_client):
@@ -192,13 +206,14 @@ class TestCompaniesEntity:
 
         call_args = mock_client.query.call_args
         assert call_args[0][0] == "Projects"
+        assert "filters" in call_args[1]
         filters = call_args[1]["filters"]
         assert len(filters) == 2
         assert filters[0].field == "AccountID"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == 12345
         assert filters[1].field == "Status"
-        assert filters[1].op.value == "ne"
+        assert filters[1].op == "ne"
         assert filters[1].value == 5  # Not Complete
 
     def test_get_company_contracts(self, companies_entity, mock_client):
@@ -209,13 +224,14 @@ class TestCompaniesEntity:
 
         call_args = mock_client.query.call_args
         assert call_args[0][0] == "Contracts"
+        assert "filters" in call_args[1]
         filters = call_args[1]["filters"]
         assert len(filters) == 2
         assert filters[0].field == "AccountID"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == 12345
         assert filters[1].field == "Status"
-        assert filters[1].op.value == "eq"
+        assert filters[1].op == "eq"
         assert filters[1].value == 1  # Active
 
     def test_update_company_address(self, companies_entity, mock_client):
@@ -233,12 +249,12 @@ class TestCompaniesEntity:
         mock_client.update.assert_called_once()
         call_args = mock_client.update.call_args
         assert call_args[0][0] == "Companies"  # entity_type
-        assert call_args[0][1] == 12345  # entity_id
-        update_data = call_args[0][2]  # data
-        assert update_data["Address1"] == "456 Oak St"
-        assert update_data["City"] == "New City"
-        assert update_data["State"] == "CA"
-        assert update_data["PostalCode"] == "90210"
+        entity_data = call_args[0][1]  # entity_data is second positional argument
+        assert entity_data["id"] == 12345
+        assert entity_data["Address1"] == "456 Oak St"
+        assert entity_data["City"] == "New City"
+        assert entity_data["State"] == "CA"
+        assert entity_data["PostalCode"] == "90210"
 
     def test_activate_company(self, companies_entity, mock_client):
         """Test activating a company."""
@@ -248,8 +264,9 @@ class TestCompaniesEntity:
 
         mock_client.update.assert_called_once()
         call_args = mock_client.update.call_args
-        update_data = call_args[0][2]  # data
-        assert update_data["Active"] is True
+        entity_data = call_args[0][1]  # entity_data is second positional argument
+        assert entity_data["id"] == 12345
+        assert entity_data["Active"] is True
 
     def test_deactivate_company(self, companies_entity, mock_client):
         """Test deactivating a company."""
@@ -259,8 +276,9 @@ class TestCompaniesEntity:
 
         mock_client.update.assert_called_once()
         call_args = mock_client.update.call_args
-        update_data = call_args[0][2]  # data
-        assert update_data["Active"] is False
+        entity_data = call_args[0][1]  # entity_data is second positional argument
+        assert entity_data["id"] == 12345
+        assert entity_data["Active"] is False
 
     def test_get_companies_by_location(self, companies_entity, mock_client):
         """Test getting companies by location."""
@@ -273,7 +291,9 @@ class TestCompaniesEntity:
         )
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Companies"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 3
 
         # Check that all location filters are present

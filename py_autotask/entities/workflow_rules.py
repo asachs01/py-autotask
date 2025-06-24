@@ -3,12 +3,7 @@ Workflow Rules entity for Autotask API operations.
 """
 
 import logging
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict
 from .base import BaseEntity

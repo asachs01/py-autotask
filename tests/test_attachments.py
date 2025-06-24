@@ -115,9 +115,13 @@ class TestAttachmentsEntity:
             temp_file_path = temp_file.name
 
         try:
-            # Mock file size to be over limit
-            with patch("pathlib.Path.stat") as mock_stat:
-                mock_stat.return_value.st_size = 11 * 1024 * 1024  # 11MB
+            # Mock Path.is_file() to return True and Path.stat() to return large size
+            with patch("py_autotask.entities.attachments.Path") as mock_path_class:
+                mock_path = mock_path_class.return_value
+                mock_path.is_file.return_value = True
+                mock_stat = Mock()
+                mock_stat.st_size = 11 * 1024 * 1024  # 11MB
+                mock_path.stat.return_value = mock_stat
 
                 # The actual implementation doesn't have size validation yet
                 # So this test should pass for now

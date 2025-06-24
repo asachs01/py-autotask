@@ -5,7 +5,6 @@ This module tests the AutotaskAuth class and related authentication
 mechanisms including zone detection and credential validation.
 """
 
-
 import pytest
 import responses
 

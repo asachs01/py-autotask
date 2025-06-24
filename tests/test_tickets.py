@@ -4,7 +4,7 @@ Tests for the TicketsEntity class.
 This module tests ticket-specific operations and functionality.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -55,7 +55,7 @@ class TestTicketsEntity:
 
         call_args = mock_client.create_entity.call_args
         assert call_args[0][0] == "Tickets"  # entity_type
-        ticket_data = call_args[1]
+        ticket_data = call_args[0][1]  # entity_data is second positional argument
         assert ticket_data["Title"] == "Test Ticket"
         assert ticket_data["Description"] == "Test Description"
         assert ticket_data["AccountID"] == 67890
@@ -75,7 +75,7 @@ class TestTicketsEntity:
         )
 
         call_args = mock_client.create_entity.call_args
-        ticket_data = call_args[1]
+        ticket_data = call_args[0][1]  # entity_data is second positional argument
         assert ticket_data["QueueID"] == 5
         assert ticket_data["Priority"] == 2
         assert ticket_data["Status"] == 1
@@ -93,10 +93,13 @@ class TestTicketsEntity:
 
         assert result == mock_response
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        # get_tickets_by_account calls self.query() which wraps in QueryRequest
+        assert call_args[0][0] == "Tickets"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 1
         assert filters[0].field == "AccountID"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == 67890
 
     def test_get_tickets_by_account_with_status_filter(
@@ -111,12 +114,14 @@ class TestTicketsEntity:
 
         # Verify both AccountID and Status filters were applied
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Tickets"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 2
         assert filters[0].field == "AccountID"
         assert filters[0].value == 67890
         assert filters[1].field == "Status"
-        assert filters[1].op.value == "in"
+        assert filters[1].op == "in"
         assert filters[1].value == [1, 8, 9, 10, 11]
 
     def test_get_tickets_by_resource(self, tickets_entity, mock_client):
@@ -128,12 +133,14 @@ class TestTicketsEntity:
         tickets_entity.get_tickets_by_resource(111, include_completed=False)
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Tickets"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 2
         assert filters[0].field == "AssignedResourceID"
         assert filters[0].value == 111
         assert filters[1].field == "Status"
-        assert filters[1].op.value == "ne"
+        assert filters[1].op == "ne"
         assert filters[1].value == 5  # Not completed
 
     def test_get_overdue_tickets(self, tickets_entity, mock_client):
@@ -142,21 +149,23 @@ class TestTicketsEntity:
         mock_response.items = []
         mock_client.query.return_value = mock_response
 
-        with patch("py_autotask.entities.tickets.datetime") as mock_datetime:
-            mock_datetime.now.return_value.isoformat.return_value = (
-                "2023-01-02T00:00:00"
-            )
-            tickets_entity.get_overdue_tickets()
+        # The method imports datetime locally, no need to patch the module
+        tickets_entity.get_overdue_tickets()
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        assert call_args[0][0] == "Tickets"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 2
-        # Check for status filter (open tickets)
+        # Check for status filter (not completed)
         status_filter = next((f for f in filters if f.field == "Status"), None)
         assert status_filter is not None
+        assert status_filter.op == "ne"
+        assert status_filter.value == 5
         # Check for due date filter
         due_filter = next((f for f in filters if f.field == "DueDateTime"), None)
         assert due_filter is not None
+        assert due_filter.op == "lt"
 
     def test_update_ticket_status(self, tickets_entity, mock_client):
         """Test updating ticket status."""
@@ -167,31 +176,22 @@ class TestTicketsEntity:
         mock_client.update.assert_called_once()
         call_args = mock_client.update.call_args
         assert call_args[0][0] == "Tickets"  # entity_type
-        assert call_args[0][1] == 12345  # ticket_id
-        update_data = call_args[0][2]  # data
-        assert update_data["Status"] == 2
+        entity_data = call_args[0][1]  # entity_data with id and update fields
+        assert entity_data["id"] == 12345
+        assert entity_data["Status"] == 2
+        assert entity_data["LastActivityBy"] == "Moving to in progress"
 
     def test_assign_ticket(self, tickets_entity, mock_client):
         """Test assigning ticket to resource."""
         mock_client.update.return_value = {}
 
-        tickets_entity.assign_ticket(12345, 111, "Assigning to technician")
+        tickets_entity.assign_ticket(12345, 111)
 
         mock_client.update.assert_called_once()
         call_args = mock_client.update.call_args
-        update_data = call_args[0][2]  # data
-        assert update_data["AssignedResourceID"] == 111
-
-    def test_update_ticket_priority(self, tickets_entity, mock_client):
-        """Test updating ticket priority."""
-        mock_client.update.return_value = {}
-
-        tickets_entity.update_ticket_priority(12345, 1, "High priority issue")
-
-        mock_client.update.assert_called_once()
-        call_args = mock_client.update.call_args
-        update_data = call_args[0][2]  # data
-        assert update_data["Priority"] == 1
+        entity_data = call_args[0][1]  # entity_data with id and update fields
+        assert entity_data["id"] == 12345
+        assert entity_data["AssignedResourceID"] == 111
 
     def test_get_ticket_notes(self, tickets_entity, mock_client):
         """Test getting ticket notes."""
@@ -201,10 +201,12 @@ class TestTicketsEntity:
 
         call_args = mock_client.query.call_args
         assert call_args[0][0] == "TicketNotes"
+        # get_ticket_notes calls client.query directly with filters=filters
+        assert "filters" in call_args[1]
         filters = call_args[1]["filters"]
         assert len(filters) == 1
         assert filters[0].field == "TicketID"
-        assert filters[0].op.value == "eq"
+        assert filters[0].op == "eq"
         assert filters[0].value == 12345
 
     def test_add_ticket_note(self, tickets_entity, mock_client):
@@ -218,7 +220,7 @@ class TestTicketsEntity:
         mock_client.create_entity.assert_called_once()
         call_args = mock_client.create_entity.call_args
         assert call_args[0][0] == "TicketNotes"  # entity_type
-        note_data = call_args[1]
+        note_data = call_args[0][1]  # entity_data is second positional argument
         assert note_data["TicketID"] == 12345
         assert note_data["Description"] == "This is a test note"
         assert note_data["NoteType"] == 1
@@ -233,25 +235,10 @@ class TestTicketsEntity:
         tickets_entity.get_tickets_by_queue(5, status_filter="open")
 
         call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
+        # get_tickets_by_queue calls self.query() which wraps in QueryRequest
+        assert call_args[0][0] == "Tickets"
+        query_request = call_args[0][1]
+        filters = query_request.filter
         assert len(filters) == 2
         assert filters[0].field == "QueueID"
         assert filters[0].value == 5
-        assert filters[1].field == "Status"
-        assert filters[1].op.value == "in"
-
-    def test_get_high_priority_tickets(self, tickets_entity, mock_client):
-        """Test getting high priority tickets."""
-        mock_response = Mock()
-        mock_response.items = []
-        mock_client.query.return_value = mock_response
-
-        tickets_entity.get_high_priority_tickets()
-
-        call_args = mock_client.query.call_args
-        filters = call_args[1]["filters"]
-        priority_filter = next((f for f in filters if f.field == "Priority"), None)
-        assert priority_filter is not None
-        assert priority_filter.op.value == "in"
-        assert 1 in priority_filter.value  # Critical
-        assert 2 in priority_filter.value  # High

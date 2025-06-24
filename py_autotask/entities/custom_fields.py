@@ -11,12 +11,7 @@ import json
 import re
 from datetime import date, datetime
 from decimal import Decimal
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

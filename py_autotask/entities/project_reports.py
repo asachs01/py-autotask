@@ -12,9 +12,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import (
-    EntityDict
-)
+from ..types import EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

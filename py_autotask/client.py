@@ -17,6 +17,7 @@ from .entities import EntityManager
 from .exceptions import (
     AutotaskConnectionError,
     AutotaskTimeoutError,
+    AutotaskValidationError,
 )
 from .types import (
     AuthCredentials,
@@ -229,9 +230,59 @@ class AutotaskClient:
         self,
         entity: str,
         query_request: Optional[Union[QueryRequest, Dict[str, Any]]] = None,
+        *,
+        filters: Optional[List] = None,
+        max_records: Optional[int] = None,
+        include_fields: Optional[List[str]] = None,
+        **kwargs,
     ) -> QueryResponse:
         """
         Query entities with filtering and pagination.
+
+        Args:
+            entity: Entity name
+            query_request: Query parameters
+            filters: List of filter objects (for backward compatibility)
+            max_records: Maximum number of records to return
+            include_fields: Specific fields to include in response
+            **kwargs: Additional query parameters
+
+        Returns:
+            Query response with items and pagination info
+        """
+        if filters is not None:
+            # Convert list of filters to QueryRequest format
+            if not isinstance(filters, list):
+                raise AutotaskValidationError(
+                    "Filters must be a list of filter objects"
+                )
+
+            for filter_obj in filters:
+                validate_filter(filter_obj)
+
+            query_request = QueryRequest(filter=filters)
+        elif query_request is None:
+            query_request = QueryRequest()
+
+        # Set additional parameters
+        if max_records is not None:
+            query_request.max_records = max_records
+
+        if include_fields is not None:
+            query_request.include_fields = include_fields
+
+        # Apply any additional kwargs to the query request
+        for key, value in kwargs.items():
+            if hasattr(query_request, key):
+                setattr(query_request, key, value)
+
+        return self._query_with_request(entity, query_request)
+
+    def _query_with_request(
+        self, entity: str, query_request: QueryRequest
+    ) -> QueryResponse:
+        """
+        Internal method to execute a query with a QueryRequest object.
 
         Args:
             entity: Entity name
@@ -240,11 +291,6 @@ class AutotaskClient:
         Returns:
             Query response with items and pagination info
         """
-        if isinstance(query_request, dict):
-            query_request = QueryRequest(**query_request)
-        elif query_request is None:
-            query_request = QueryRequest()
-
         # Validate filters
         if query_request.filter:
             for filter_item in query_request.filter:
@@ -513,9 +559,7 @@ class AutotaskClient:
             except requests.exceptions.Timeout:
                 raise AutotaskTimeoutError(f"Batch {batch_num} timed out")
             except requests.exceptions.ConnectionError:
-                raise AutotaskConnectionError(
-                    f"Batch {batch_num} connection error"
-                )
+                raise AutotaskConnectionError(f"Batch {batch_num} connection error")
             except requests.exceptions.HTTPError:
                 logger.error(f"Batch {batch_num} failed with HTTP error")
                 handle_api_error(response)

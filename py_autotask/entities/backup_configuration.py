@@ -8,12 +8,7 @@ recovery procedures, retention policies, and disaster recovery planning.
 
 import logging
 from datetime import datetime, timedelta
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

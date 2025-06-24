@@ -5,7 +5,6 @@ This module tests all custom exception classes and ensures
 proper error handling throughout the library.
 """
 
-
 from py_autotask.exceptions import (
     AutotaskAPIError,
     AutotaskAuthError,

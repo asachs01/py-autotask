@@ -7,12 +7,7 @@ CIs for better organization, reporting, and CMDB management.
 """
 
 from decimal import Decimal
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

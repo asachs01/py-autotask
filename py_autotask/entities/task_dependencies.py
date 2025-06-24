@@ -8,18 +8,9 @@ task relationships, dependency chains, critical path analysis, and scheduling co
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
-from ..types import (
-    CreateResponse,
-    EntityDict,
-    UpdateResponse
-)
+from ..types import CreateResponse, EntityDict, UpdateResponse
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

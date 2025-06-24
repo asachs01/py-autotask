@@ -9,12 +9,7 @@ with external systems, data synchronization, and automated data exchange.
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict
 from .base import BaseEntity

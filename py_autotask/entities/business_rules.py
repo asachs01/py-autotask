@@ -9,12 +9,7 @@ of business logic through configurable rule engines and validation frameworks.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict
 from .base import BaseEntity

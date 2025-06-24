@@ -8,12 +8,7 @@ companies, divisions, and other business units.
 
 from datetime import date
 from decimal import Decimal
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

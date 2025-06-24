@@ -8,12 +8,7 @@ scheduled events, and custom triggers.
 """
 
 from datetime import date, datetime, timedelta
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

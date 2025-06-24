@@ -6,12 +6,7 @@ notes and annotations across different entity types.
 """
 
 from datetime import datetime
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

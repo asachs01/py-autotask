@@ -7,11 +7,7 @@ file attachments for Autotask entities like tickets, projects, and contacts.
 
 import mimetypes
 from pathlib import Path
-from typing import (
-    List,
-    Optional,
-    Union
-)
+from typing import List, Optional, Union
 
 import requests
 

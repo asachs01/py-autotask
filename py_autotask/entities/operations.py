@@ -7,12 +7,7 @@ operational procedures for service delivery and management.
 """
 
 from datetime import date
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

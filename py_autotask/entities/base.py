@@ -13,6 +13,7 @@ from ..types import CreateResponse, EntityDict, EntityList, QueryRequest, QueryR
 
 if TYPE_CHECKING:
     from ..client import AutotaskClient
+    from .query_builder import QueryBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -794,3 +795,19 @@ class BaseEntity:
         )
 
         return results
+
+    def query_builder(self) -> "QueryBuilder":
+        """
+        Create a new QueryBuilder instance for this entity.
+
+        Returns:
+            QueryBuilder instance configured for this entity
+
+        Example:
+            query = client.tickets.query_builder()
+            query.where("status", "eq", 1).where("priority", "gte", 3)
+            results = query.execute()
+        """
+        from .query_builder import QueryBuilder
+
+        return QueryBuilder(self)
