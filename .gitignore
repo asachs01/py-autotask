@@ -168,5 +168,5 @@ memory/
 claude*
 CLAUDE_*
 agent*
-reference_docs*
+reference_docs/
 reports/

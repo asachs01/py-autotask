@@ -109,6 +109,17 @@ class AutotaskZoneError(AutotaskError):
         super().__init__(message)
 
 
+class AutotaskNotFoundError(AutotaskAPIError):
+    """Exception raised when a requested resource is not found (HTTP 404)."""
+    
+    def __init__(
+        self,
+        message: str = "Resource not found",
+        **kwargs: Any
+    ) -> None:
+        super().__init__(message, status_code=404, **kwargs)
+
+
 class AutotaskConfigurationError(AutotaskError):
     """Exception raised for configuration-related errors."""
     

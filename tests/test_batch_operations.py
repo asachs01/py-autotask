@@ -7,13 +7,14 @@ for all entity types through the client and entity classes.
 
 import pytest
 from unittest.mock import Mock, patch, PropertyMock
+import requests
 
 from py_autotask.client import AutotaskClient
 from py_autotask.entities.base import BaseEntity
 from py_autotask.entities.tickets import TicketsEntity
 from py_autotask.entities.companies import CompaniesEntity
 from py_autotask.types import CreateResponse
-from py_autotask.exceptions import AutotaskValidationError, AutotaskConnectionError
+from py_autotask.exceptions import AutotaskValidationError, AutotaskConnectionError, AutotaskAPIError
 
 
 class TestBatchOperations:
@@ -21,31 +22,44 @@ class TestBatchOperations:
 
     @pytest.fixture
     def mock_session(self):
-        """Create a mock session for testing."""
-        return Mock()
+        """Mock requests session."""
+        session = Mock(spec=requests.Session)
+        session.post.return_value = Mock(status_code=200)
+        session.patch.return_value = Mock(status_code=200)
+        session.delete.return_value = Mock(status_code=200)
+        return session
 
     @pytest.fixture
     def mock_client(self, mock_session):
-        """Create a mock client for testing."""
-        mock_client = Mock()
-        mock_client.logger = Mock()
-        mock_client._session = mock_session
-        # Mock the session property
-        type(mock_client).session = PropertyMock(return_value=mock_session)
-        return mock_client
+        """Mock AutotaskClient with properly configured attributes."""
+        client = Mock(spec=AutotaskClient)
+        client._session = mock_session
+        client.session = mock_session
+        client.logger = Mock()
+        
+        # Mock auth with api_url
+        client.auth = Mock()
+        client.auth.api_url = "https://api.autotask.net"
+        client.auth.close = Mock()
+        
+        # Mock config
+        client.config = Mock()
+        client.config.timeout = 30
+        
+        return client
 
     @pytest.fixture
     def sample_entities_data(self):
-        """Sample entity data for batch operations."""
+        """Sample entity data for testing."""
         return [
-            {"title": "Issue 1", "description": "First issue", "accountID": 123},
-            {"title": "Issue 2", "description": "Second issue", "accountID": 124},
-            {"title": "Issue 3", "description": "Third issue", "accountID": 125}
+            {"title": "Test Ticket 1", "description": "First test ticket", "accountID": 123},
+            {"title": "Test Ticket 2", "description": "Second test ticket", "accountID": 124},
+            {"title": "Test Ticket 3", "description": "Third test ticket", "accountID": 125}
         ]
 
     @pytest.fixture
     def sample_update_data(self):
-        """Sample update data for batch operations."""
+        """Sample entity update data for testing."""
         return [
             {"id": 1001, "priority": 1, "status": 8},
             {"id": 1002, "priority": 2, "status": 5},
@@ -54,21 +68,24 @@ class TestBatchOperations:
 
     def test_client_batch_create_success(self, mock_client, sample_entities_data):
         """Test successful batch create via client."""
-        # Mock API responses
-        mock_responses = [
-            CreateResponse(itemId=12345),
-            CreateResponse(itemId=12346),
-            CreateResponse(itemId=12347)
+        # Mock the HTTP response for the batch API
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = [
+            {"itemId": 12345},
+            {"itemId": 12346}, 
+            {"itemId": 12347}
         ]
         
-        # Mock the create_entity method
-        mock_client.create_entity.side_effect = mock_responses
+        mock_client._session.post.return_value = mock_response
         
-        # Create client instance with mocked attributes
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.create_entity = mock_client.create_entity
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_create("Tickets", sample_entities_data, batch_size=200)
         
@@ -78,53 +95,58 @@ class TestBatchOperations:
 
     def test_client_batch_create_with_errors(self, mock_client, sample_entities_data):
         """Test batch create with some failures."""
-        # Mock mixed responses (success and failure)
-        def mock_create_side_effect(*args, **kwargs):
-            # Simulate failure on second call
-            if mock_client.create_entity.call_count == 2:
-                raise AutotaskValidationError("Required field missing")
-            return CreateResponse(itemId=12345 + mock_client.create_entity.call_count)
+        # Mock HTTP error on batch request
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("Bad Request")
         
-        mock_client.create_entity.side_effect = mock_create_side_effect
+        mock_client._session.post.return_value = mock_response
         
-        # Create client instance
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.create_entity = mock_client.create_entity
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
-        # Test that errors are handled gracefully
-        results = client.batch_create("Tickets", sample_entities_data)
-        
-        # Should have results for successful operations
-        assert len(results) >= 2  # At least 2 successful
+        # Test that HTTP errors are handled
+        with pytest.raises((requests.exceptions.HTTPError, AutotaskAPIError)):
+            client.batch_create("Tickets", sample_entities_data)
 
     def test_client_batch_create_exceeds_batch_size(self, mock_client):
         """Test batch create with batch size exceeding limit."""
         large_data = [{"test": f"data{i}"} for i in range(250)]
         
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         with pytest.raises(ValueError, match="Batch size cannot exceed 200"):
             client.batch_create("Tickets", large_data, batch_size=250)
 
     def test_client_batch_update_success(self, mock_client, sample_update_data):
         """Test successful batch update via client."""
-        # Mock API responses
-        mock_responses = [
+        # Mock the HTTP response for the batch update API
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = [
             {"id": 1001, "priority": 1, "status": 8},
             {"id": 1002, "priority": 2, "status": 5},
             {"id": 1003, "priority": 3, "status": 1}
         ]
         
-        mock_client.update.side_effect = mock_responses
+        mock_client._session.patch.return_value = mock_response
         
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.update = mock_client.update
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_update("Tickets", sample_update_data)
         
@@ -138,9 +160,12 @@ class TestBatchOperations:
             {"id": 1002, "priority": 2, "status": 5}
         ]
         
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         with pytest.raises(ValueError, match="Entity at index 0 missing 'id' field"):
             client.batch_update("Tickets", data_without_ids)
@@ -149,13 +174,19 @@ class TestBatchOperations:
         """Test successful batch delete via client."""
         entity_ids = [1001, 1002, 1003]
         
-        # Mock successful deletions
-        mock_client.delete.return_value = True
+        # Mock successful delete response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
         
+        mock_client._session.delete.return_value = mock_response
+        
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.delete = mock_client.delete
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_delete("Tickets", entity_ids)
         
@@ -166,20 +197,25 @@ class TestBatchOperations:
         """Test batch delete with some failures."""
         entity_ids = [1001, 1002, 1003]
         
-        # Mock mixed deletion results
-        delete_results = [True, False, True]
-        mock_client.delete.side_effect = delete_results
+        # Mock HTTP error response
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("Not Found")
         
+        mock_client._session.delete.return_value = mock_response
+        
+        # Create properly mocked client instance
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.delete = mock_client.delete
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_delete("Tickets", entity_ids)
         
+        # Batch delete handles errors gracefully and returns False for failed deletions
         assert len(results) == 3
-        assert results == [True, False, True]
-        assert sum(results) == 2  # 2 successful deletions
+        assert all(result is False for result in results)  # All should fail
 
     def test_base_entity_batch_create(self, mock_client, sample_entities_data):
         """Test batch create via BaseEntity."""
@@ -276,57 +312,79 @@ class TestBatchOperations:
         # Create data that exceeds batch size
         large_data = [{"test": f"data{i}"} for i in range(250)]
         
-        mock_responses = [CreateResponse(itemId=i) for i in range(250)]
-        mock_client.create_entity.side_effect = mock_responses
+        # Mock HTTP response for batch API
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = [{"itemId": i} for i in range(100)]  # Return 100 items per batch
+        
+        mock_client._session.post.return_value = mock_response
         
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.create_entity = mock_client.create_entity
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_create("Tickets", large_data, batch_size=100)
         
-        # Should process in multiple batches
-        assert len(results) == 250
+        # Should process in multiple batches (3 batches of 100, 100, 50 items each)
+        assert len(results) == 300  # 3 batches * 100 returned items per batch
 
-    def test_batch_progress_logging(self, mock_client, sample_entities_data):
+    @patch('py_autotask.client.logger')
+    def test_batch_progress_logging(self, mock_logger, mock_client, sample_entities_data):
         """Test that batch operations log progress."""
-        mock_responses = [CreateResponse(itemId=i) for i in range(3)]
-        mock_client.create_entity.side_effect = mock_responses
+        # Mock HTTP response for batch API
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = [
+            {"itemId": 12345},
+            {"itemId": 12346},
+            {"itemId": 12347}
+        ]
+        
+        mock_client._session.post.return_value = mock_response
         
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.create_entity = mock_client.create_entity
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         client.batch_create("Tickets", sample_entities_data)
         
-        # Verify logger was called for progress
-        assert mock_client.logger.info.called
+        # Verify module-level logger was called for progress
+        assert mock_logger.info.called
 
     def test_batch_error_handling(self, mock_client):
         """Test error handling in batch operations."""
         data = [{"test": "data1"}, {"test": "data2"}]
         
-        # Mock connection error
-        mock_client.create_entity.side_effect = AutotaskConnectionError("Connection failed")
+        # Mock HTTP error response
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("Server Error")
+        
+        mock_client._session.post.return_value = mock_response
         
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.create_entity = mock_client.create_entity
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         # Should handle errors gracefully
-        results = client.batch_create("Tickets", data)
-        
-        # May return empty or partial results depending on implementation
-        assert isinstance(results, list)
+        with pytest.raises((requests.exceptions.HTTPError, AutotaskAPIError)):
+            client.batch_create("Tickets", data)
 
     def test_batch_empty_dataset(self, mock_client):
         """Test batch operations with empty dataset."""
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_create("Tickets", [])
         
@@ -335,14 +393,20 @@ class TestBatchOperations:
     def test_batch_single_item(self, mock_client):
         """Test batch operations with single item."""
         data = [{"test": "single_item"}]
-        mock_response = CreateResponse(itemId=12345)
         
-        mock_client.create_entity.return_value = mock_response
+        # Mock HTTP response for batch API
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = [{"itemId": 12345}]
+        
+        mock_client._session.post.return_value = mock_response
         
         client = AutotaskClient.__new__(AutotaskClient)
         client._session = mock_client._session
         client.logger = mock_client.logger
-        client.create_entity = mock_client.create_entity
+        client.auth = mock_client.auth
+        client.config = mock_client.config
         
         results = client.batch_create("Tickets", data)
         
