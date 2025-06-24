@@ -164,8 +164,9 @@ prompt_logs/
 plans/ 
 
 ww2*
-memory*
+memory/
 claude*
 CLAUDE_*
 agent*
 reference_docs*
+reports/

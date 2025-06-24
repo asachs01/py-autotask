@@ -57,17 +57,28 @@ from .incident_types import IncidentTypesEntity
 from .vendor_types import VendorTypesEntity
 from .configuration_item_types import ConfigurationItemTypesEntity
 
-# Security & Compliance entities (Week 5)
-from .security_policies import SecurityPoliciesEntity
-from .compliance_frameworks import ComplianceFrameworksEntity
+# Data & Analytics entities (Week 5)
 from .custom_fields import CustomFieldsEntity
-from .business_rules import BusinessRulesEntity
-from .notification_rules import NotificationRulesEntity
-
-# System Management entities (Week 6)
-from .system_health import SystemHealthEntity
-from .system_configuration import SystemConfigurationEntity
+from .reports import ReportsEntity
 from .dashboards import DashboardsEntity
+from .data_export import DataExportEntity
+from .analytics import AnalyticsEntity
+from .audit_logs import AuditLogsEntity
+from .notification_rules import NotificationRulesEntity
+from .user_defined_fields import UserDefinedFieldsEntity
+from .business_rules import BusinessRulesEntity
+from .data_integrations import DataIntegrationsEntity
+
+# Advanced Features & Integration entities (Week 6)
+from .automation_rules import AutomationRulesEntity
+from .integration_endpoints import IntegrationEndpointsEntity
+from .system_configuration import SystemConfigurationEntity
+from .performance_metrics import PerformanceMetricsEntity
+from .security_policies import SecurityPoliciesEntity
+from .backup_configuration import BackupConfigurationEntity
+from .compliance_frameworks import ComplianceFrameworksEntity
+from .api_usage_metrics import APIUsageMetricsEntity
+from .system_health import SystemHealthEntity
 
 # Operational entities
 from .configuration_items import ConfigurationItemsEntity
@@ -160,17 +171,28 @@ __all__ = [
     "TaskDependenciesEntity",
     "ProjectReportsEntity",
     
-    # Security & Compliance entities (Week 5)
-    "SecurityPoliciesEntity",
-    "ComplianceFrameworksEntity",
+    # Data & Analytics entities (Week 5)
     "CustomFieldsEntity",
-    "BusinessRulesEntity",
-    "NotificationRulesEntity",
-    
-    # System Management entities (Week 6)
-    "SystemHealthEntity",
-    "SystemConfigurationEntity",
+    "ReportsEntity",
     "DashboardsEntity",
+    "DataExportEntity",
+    "AnalyticsEntity",
+    "AuditLogsEntity",
+    "NotificationRulesEntity",
+    "UserDefinedFieldsEntity",
+    "BusinessRulesEntity",
+    "DataIntegrationsEntity",
+    
+    # Advanced Features & Integration entities (Week 6)
+    "AutomationRulesEntity",
+    "IntegrationEndpointsEntity",
+    "SystemConfigurationEntity",
+    "PerformanceMetricsEntity",
+    "SecurityPoliciesEntity",
+    "BackupConfigurationEntity",
+    "ComplianceFrameworksEntity",
+    "APIUsageMetricsEntity",
+    "SystemHealthEntity",
     
     # Manager
     "EntityManager",

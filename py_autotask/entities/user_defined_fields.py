@@ -467,7 +467,7 @@ class UserDefinedFieldsEntity(BaseEntity):
                 },
                 {
                     "type": "validate_format", 
-                    "options": {"pattern": r"^[A-Z]{3}-\d{3}$"}
+                    "options": {"pattern": r"^[A-Z]{3}-\\d{3}$"}
                 },
                 {
                     "type": "default_value",
