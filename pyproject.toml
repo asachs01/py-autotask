@@ -9,10 +9,10 @@ description = "Python library for Autotask PSA REST API integration"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Adam Sachs", email = "asachs01@gmail.com"}
 ]
 maintainers = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Adam Sachs", email = "asachs01@gmail.com"}
 ]
 keywords = ["autotask", "psa", "api", "rest", "integration"]
 classifiers = [
@@ -70,11 +70,11 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/py-autotask"
+Homepage = "https://github.com/asachs01/py-autotask"
 Documentation = "https://py-autotask.readthedocs.io/"
-Repository = "https://github.com/yourusername/py-autotask.git"
-Issues = "https://github.com/yourusername/py-autotask/issues"
-Changelog = "https://github.com/yourusername/py-autotask/blob/main/CHANGELOG.md"
+Repository = "https://github.com/asachs01/py-autotask.git"
+Issues = "https://github.com/asachs01/py-autotask/issues"
+Changelog = "https://github.com/asachs01/py-autotask/blob/main/CHANGELOG.md"
 
 [project.scripts]
 py-autotask = "py_autotask.cli:main"

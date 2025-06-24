@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-06-23
 
+### Added
+- **GitHub Actions Release Workflow** - Automated release and PyPI publishing pipeline
+  - Comprehensive release workflow triggered by version tags (v*)
+  - Automated testing and code quality checks before release
+  - Package building with source and wheel distributions
+  - GitHub release creation with automatic changelog extraction
+  - PyPI publishing using trusted publishing (no API tokens required)
+  - Test PyPI publishing for pre-releases (beta/rc/alpha)
+  - Post-release automation with tracking issues
+  - Support for semantic versioning and pre-release detection
+- **Release Documentation** - Complete release process documentation
+  - Step-by-step release guide in `docs/RELEASE_PROCESS.md`
+  - PyPI trusted publishing setup instructions
+  - GitHub environments configuration guide
+  - Troubleshooting guide for common release issues
+- **Release Helper Script** - Convenient script for creating releases
+  - Version validation and semantic versioning checks
+  - Automated changelog validation
+  - Pre-release testing and quality checks
+  - Dry-run capability for testing release process
+  - Branch protection and uncommitted changes detection
+
+### Changed
+- **Project Metadata** - Updated pyproject.toml with correct repository information
+  - Updated author information (Adam Sachs)
+  - Corrected GitHub repository URLs (asachs01/py-autotask)
+  - Enhanced project metadata for PyPI publication
+  - Configured setuptools_scm for automatic versioning
+
 ### Analysis
 - **MAJOR DISCOVERY**: Complete Autotask API entity analysis reveals 170+ entities vs. our current 26 (15% coverage)
 - **SCOPE EXPANSION**: Previous parity analysis with autotask-node severely underestimated API scope
