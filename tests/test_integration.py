@@ -17,7 +17,7 @@ import os
 import pytest
 from py_autotask import AutotaskClient
 from py_autotask.auth import AuthCredentials
-from py_autotask.exceptions import AutotaskAuthenticationError, AutotaskConnectionError
+from py_autotask.exceptions import AutotaskAuthError, AutotaskConnectionError
 
 
 # Skip integration tests by default

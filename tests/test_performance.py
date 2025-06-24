@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from py_autotask.client import AutotaskClient
 from py_autotask.auth import AuthCredentials
-from py_autotask.types import CreateResponse, QueryResponse, PageDetails
+from py_autotask.types import CreateResponse, QueryResponse, PaginationInfo
 
 
 # Skip performance tests by default
@@ -51,7 +51,7 @@ class TestPaginationPerformance:
             items = [{'id': i + (page_num * items_per_page), 'companyName': f'Company {i}'} 
                     for i in range(items_per_page)]
             
-            page_details = PageDetails(
+            page_details = PaginationInfo(
                 count=items_per_page,
                 requestCount=items_per_page,
                 nextPageUrl=f"https://api.autotask.net/v1.0/Companies?page={page_num + 1}" if page_num < 5 else None
@@ -96,7 +96,7 @@ class TestPaginationPerformance:
             time.sleep(0.1)  # Simulate 100ms network latency
             return QueryResponse(
                 items=[{'id': i, 'title': f'Ticket {i}'} for i in range(50)],
-                pageDetails=PageDetails(count=50, requestCount=50, nextPageUrl=None)
+                pageDetails=PaginationInfo(count=50, requestCount=50, nextPageUrl=None)
             )
         
         mock_client.query.side_effect = mock_query_with_delay
@@ -256,7 +256,7 @@ class TestQueryPerformance:
         # Mock response
         mock_response = QueryResponse(
             items=[{'id': i, 'companyName': f'Company {i}'} for i in range(100)],
-            pageDetails=PageDetails(count=100, requestCount=100, nextPageUrl=None)
+            pageDetails=PaginationInfo(count=100, requestCount=100, nextPageUrl=None)
         )
         mock_client.query.return_value = mock_response
         
@@ -288,7 +288,7 @@ class TestQueryPerformance:
         
         mock_response = QueryResponse(
             items=large_items,
-            pageDetails=PageDetails(count=10000, requestCount=10000, nextPageUrl=None)
+            pageDetails=PaginationInfo(count=10000, requestCount=10000, nextPageUrl=None)
         )
         mock_client.query.return_value = mock_response
         
