@@ -46,6 +46,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Proper CI dependency installation using `.[test]` and `.[dev]` extras
 
 ### Fixed
+- **Code Formatting & Style** - Comprehensive formatting cleanup for CI compliance
+  - Applied black formatting to all 96 Python files (97 total files changed)
+  - Fixed import sorting with isort for all modules and tests
+  - Resolved code style consistency issues across the entire codebase  
+  - All files now pass `black --check` and `isort --check` requirements
+  - Fixed flake8 configuration issues in setup.cfg (removed inline comments)
+  - Ensures CI linting tests will pass for basic formatting requirements
+  - Note: Additional flake8 issues (unused imports, complexity) to be addressed in future releases
 - **GitHub Actions Workflows** - Updated deprecated v3 artifact actions to v4
   - Fixed CI workflow failures due to artifact actions deprecation (January 30, 2025)
   - Updated all upload-artifact and download-artifact actions from v3 to v4
