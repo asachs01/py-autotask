@@ -5,118 +5,115 @@ This module provides entity classes for interacting with different
 Autotask API endpoints, offering specialized functionality for each entity type.
 """
 
-from .base import BaseEntity
-from .tickets import TicketsEntity
-from .companies import CompaniesEntity
-from .contacts import ContactsEntity
-from .projects import ProjectsEntity
-from .resources import ResourcesEntity
-from .contracts import ContractsEntity
-from .time_entries import TimeEntriesEntity
+# Human Resources & Resource Management entities
+from .accounts import AccountsEntity
+from .allocation_codes import AllocationCodesEntity
+from .analytics import AnalyticsEntity
+from .api_usage_metrics import APIUsageMetricsEntity
 from .attachments import AttachmentsEntity
-from .manager import EntityManager
+from .audit_logs import AuditLogsEntity
 
-# Contract-related entities
-from .contract_services import ContractServicesEntity
-from .contract_blocks import ContractBlocksEntity
-from .contract_adjustments import ContractAdjustmentsEntity
-from .contract_exclusions import ContractExclusionsEntity
+# Advanced Features & Integration entities (Week 6)
+from .automation_rules import AutomationRulesEntity
+from .backup_configuration import BackupConfigurationEntity
+from .base import BaseEntity
 
 # Financial entities
 from .billing_codes import BillingCodesEntity
 from .billing_items import BillingItemsEntity
-from .contract_charges import ContractChargesEntity
-from .invoices import InvoicesEntity
-from .project_charges import ProjectChargesEntity
-from .quotes import QuotesEntity
-from .purchase_orders import PurchaseOrdersEntity
-from .expenses import ExpensesEntity
-
-# Service desk entities
-from .ticket_categories import TicketCategoriesEntity
-from .ticket_statuses import TicketStatusesEntity
-from .ticket_priorities import TicketPrioritiesEntity
-from .ticket_sources import TicketSourcesEntity
-
-# Human Resources & Resource Management entities
-from .accounts import AccountsEntity
-from .departments import DepartmentsEntity
-from .resource_roles import ResourceRolesEntity
-from .resource_skills import ResourceSkillsEntity
-from .teams import TeamsEntity
-from .work_types import WorkTypesEntity
-
-# Service Delivery & Operations entities (Week 3)
-from .subscriptions import SubscriptionsEntity
-from .service_level_agreements import ServiceLevelAgreementsEntity
-from .products import ProductsEntity
 from .business_divisions import BusinessDivisionsEntity
-from .operations import OperationsEntity
-from .change_requests import ChangeRequestsEntity
-from .incident_types import IncidentTypesEntity
-from .vendor_types import VendorTypesEntity
-from .configuration_item_types import ConfigurationItemTypesEntity
-
-# Data & Analytics entities (Week 5)
-from .custom_fields import CustomFieldsEntity
-from .reports import ReportsEntity
-from .dashboards import DashboardsEntity
-from .data_export import DataExportEntity
-from .analytics import AnalyticsEntity
-from .audit_logs import AuditLogsEntity
-from .notification_rules import NotificationRulesEntity
-from .user_defined_fields import UserDefinedFieldsEntity
 from .business_rules import BusinessRulesEntity
-from .data_integrations import DataIntegrationsEntity
-
-# Advanced Features & Integration entities (Week 6)
-from .automation_rules import AutomationRulesEntity
-from .integration_endpoints import IntegrationEndpointsEntity
-from .system_configuration import SystemConfigurationEntity
-from .performance_metrics import PerformanceMetricsEntity
-from .security_policies import SecurityPoliciesEntity
-from .backup_configuration import BackupConfigurationEntity
+from .change_requests import ChangeRequestsEntity
+from .companies import CompaniesEntity
 from .compliance_frameworks import ComplianceFrameworksEntity
-from .api_usage_metrics import APIUsageMetricsEntity
-from .system_health import SystemHealthEntity
+from .configuration_item_types import ConfigurationItemTypesEntity
 
 # Operational entities
 from .configuration_items import ConfigurationItemsEntity
-from .service_calls import ServiceCallsEntity
-from .tasks import TasksEntity
+from .contacts import ContactsEntity
+from .contract_adjustments import ContractAdjustmentsEntity
+from .contract_blocks import ContractBlocksEntity
+from .contract_charges import ContractChargesEntity
+from .contract_exclusions import ContractExclusionsEntity
+
+# Contract-related entities
+from .contract_services import ContractServicesEntity
+from .contracts import ContractsEntity
+
+# Data & Analytics entities (Week 5)
+from .custom_fields import CustomFieldsEntity
+from .dashboards import DashboardsEntity
+from .data_export import DataExportEntity
+from .data_integrations import DataIntegrationsEntity
+from .departments import DepartmentsEntity
+from .expenses import ExpensesEntity
+from .holiday_sets import HolidaySetsEntity
+from .incident_types import IncidentTypesEntity
+from .integration_endpoints import IntegrationEndpointsEntity
+from .invoices import InvoicesEntity
+from .manager import EntityManager
 from .notes import NotesEntity
+from .notification_rules import NotificationRulesEntity
+from .operations import OperationsEntity
+from .performance_metrics import PerformanceMetricsEntity
+from .products import ProductsEntity
+from .project_budgets import ProjectBudgetsEntity
+from .project_charges import ProjectChargesEntity
+from .project_milestones import ProjectMilestonesEntity
 
 # Project Management & Workflow entities (Week 4)
 from .project_phases import ProjectPhasesEntity
-from .project_milestones import ProjectMilestonesEntity
-from .allocation_codes import AllocationCodesEntity
-from .holiday_sets import HolidaySetsEntity
+from .project_reports import ProjectReportsEntity
+from .project_templates import ProjectTemplatesEntity
+from .projects import ProjectsEntity
+from .purchase_orders import PurchaseOrdersEntity
+from .quotes import QuotesEntity
+from .reports import ReportsEntity
+from .resource_allocation import ResourceAllocationEntity
+from .resource_roles import ResourceRolesEntity
+from .resource_skills import ResourceSkillsEntity
+from .resources import ResourcesEntity
+from .security_policies import SecurityPoliciesEntity
+from .service_calls import ServiceCallsEntity
+from .service_level_agreements import ServiceLevelAgreementsEntity
+
+# Service Delivery & Operations entities (Week 3)
+from .subscriptions import SubscriptionsEntity
+from .system_configuration import SystemConfigurationEntity
+from .system_health import SystemHealthEntity
+from .task_dependencies import TaskDependenciesEntity
+from .tasks import TasksEntity
+from .teams import TeamsEntity
+
+# Service desk entities
+from .ticket_categories import TicketCategoriesEntity
+from .ticket_priorities import TicketPrioritiesEntity
+from .ticket_sources import TicketSourcesEntity
+from .ticket_statuses import TicketStatusesEntity
+from .tickets import TicketsEntity
+from .time_entries import TimeEntriesEntity
+from .user_defined_fields import UserDefinedFieldsEntity
+from .vendor_types import VendorTypesEntity
+from .work_types import WorkTypesEntity
 from .workflow_rules import WorkflowRulesEntity
 from .workflows import WorkflowRulesEntity as WorkflowsEntity
-from .project_templates import ProjectTemplatesEntity
-from .resource_allocation import ResourceAllocationEntity
-from .project_budgets import ProjectBudgetsEntity
-from .task_dependencies import TaskDependenciesEntity
-from .project_reports import ProjectReportsEntity
 
 __all__ = [
     # Core entities
     "BaseEntity",
     "TicketsEntity",
-    "CompaniesEntity", 
+    "CompaniesEntity",
     "ContactsEntity",
     "ProjectsEntity",
     "ResourcesEntity",
     "ContractsEntity",
     "TimeEntriesEntity",
     "AttachmentsEntity",
-    
     # Contract entities
     "ContractServicesEntity",
     "ContractBlocksEntity",
-    "ContractAdjustmentsEntity", 
+    "ContractAdjustmentsEntity",
     "ContractExclusionsEntity",
-    
     # Financial entities
     "BillingCodesEntity",
     "BillingItemsEntity",
@@ -126,21 +123,18 @@ __all__ = [
     "QuotesEntity",
     "PurchaseOrdersEntity",
     "ExpensesEntity",
-    
     # Service desk entities
     "TicketCategoriesEntity",
     "TicketStatusesEntity",
     "TicketPrioritiesEntity",
     "TicketSourcesEntity",
-    
     # Human Resources & Resource Management entities (Week 2)
     "AccountsEntity",
     "DepartmentsEntity",
-    "ResourceRolesEntity", 
+    "ResourceRolesEntity",
     "ResourceSkillsEntity",
     "TeamsEntity",
     "WorkTypesEntity",
-    
     # Service Delivery & Operations entities (Week 3)
     "SubscriptionsEntity",
     "ServiceLevelAgreementsEntity",
@@ -151,13 +145,11 @@ __all__ = [
     "IncidentTypesEntity",
     "VendorTypesEntity",
     "ConfigurationItemTypesEntity",
-    
     # Operational entities
     "ConfigurationItemsEntity",
     "ServiceCallsEntity",
     "TasksEntity",
     "NotesEntity",
-    
     # Project Management & Workflow entities (Week 4)
     "ProjectPhasesEntity",
     "ProjectMilestonesEntity",
@@ -170,7 +162,6 @@ __all__ = [
     "ProjectBudgetsEntity",
     "TaskDependenciesEntity",
     "ProjectReportsEntity",
-    
     # Data & Analytics entities (Week 5)
     "CustomFieldsEntity",
     "ReportsEntity",
@@ -182,7 +173,6 @@ __all__ = [
     "UserDefinedFieldsEntity",
     "BusinessRulesEntity",
     "DataIntegrationsEntity",
-    
     # Advanced Features & Integration entities (Week 6)
     "AutomationRulesEntity",
     "IntegrationEndpointsEntity",
@@ -193,7 +183,6 @@ __all__ = [
     "ComplianceFrameworksEntity",
     "APIUsageMetricsEntity",
     "SystemHealthEntity",
-    
     # Manager
     "EntityManager",
-] 
+]

@@ -7,8 +7,8 @@ including mock clients, sample data, and test utilities.
 
 import json
 import os
-from typing import Dict, Any
-from unittest.mock import Mock, MagicMock
+from typing import Any, Dict
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import responses
@@ -26,7 +26,7 @@ def sample_credentials():
         username="test@example.com",
         integration_code="TEST123",
         secret="test_secret",
-        api_url=None
+        api_url=None,
     )
 
 
@@ -36,7 +36,7 @@ def sample_zone_info():
     return ZoneInfo(
         url="https://webservices123.autotask.net/atservicesrest",
         dataBaseType="Production",
-        ciLevel=1
+        ciLevel=1,
     )
 
 
@@ -58,7 +58,7 @@ def mock_client(mock_auth):
     client = Mock(spec=AutotaskClient)
     client.auth = mock_auth
     client.session = Mock(spec=Session)
-    
+
     # Mock entity managers
     client.tickets = Mock()
     client.companies = Mock()
@@ -66,7 +66,7 @@ def mock_client(mock_auth):
     client.projects = Mock()
     client.resources = Mock()
     client.contracts = Mock()
-    
+
     return client
 
 
@@ -81,7 +81,7 @@ def sample_ticket_data():
         "priority": 3,
         "accountID": 67890,
         "assignedResourceID": 111,
-        "createdDateTime": "2023-01-01T00:00:00Z"
+        "createdDateTime": "2023-01-01T00:00:00Z",
     }
 
 
@@ -94,7 +94,7 @@ def sample_company_data():
         "companyType": 1,
         "isActive": True,
         "ownerResourceID": 111,
-        "createdDate": "2023-01-01T00:00:00Z"
+        "createdDate": "2023-01-01T00:00:00Z",
     }
 
 
@@ -107,8 +107,8 @@ def sample_query_response(sample_ticket_data):
             "count": 1,
             "requestCount": 50,
             "nextPageUrl": None,
-            "prevPageUrl": None
-        }
+            "prevPageUrl": None,
+        },
     }
 
 
@@ -128,7 +128,7 @@ def sample_field_info():
                 "referenceEntityType": "",
                 "isPickList": False,
                 "picklistValues": None,
-                "picklistParentValueField": ""
+                "picklistParentValueField": "",
             },
             {
                 "name": "title",
@@ -141,8 +141,8 @@ def sample_field_info():
                 "referenceEntityType": "",
                 "isPickList": False,
                 "picklistValues": None,
-                "picklistParentValueField": ""
-            }
+                "picklistParentValueField": "",
+            },
         ]
     }
 
@@ -158,9 +158,9 @@ def responses_mock():
             json={
                 "url": "https://webservices123.autotask.net/atservicesrest",
                 "dataBaseType": "Production",
-                "ciLevel": 1
+                "ciLevel": 1,
             },
-            status=200
+            status=200,
         )
         yield rsps
 
@@ -172,24 +172,24 @@ def setup_test_env(monkeypatch):
         "AUTOTASK_USERNAME": "test@example.com",
         "AUTOTASK_INTEGRATION_CODE": "TEST123",
         "AUTOTASK_SECRET": "test_secret",
-        "AUTOTASK_API_URL": "https://webservices123.autotask.net/atservicesrest"
+        "AUTOTASK_API_URL": "https://webservices123.autotask.net/atservicesrest",
     }
-    
+
     for key, value in test_env.items():
         monkeypatch.setenv(key, value)
 
 
 class MockResponse:
     """Mock HTTP response for testing."""
-    
+
     def __init__(self, json_data: Dict[str, Any], status_code: int = 200):
         self.json_data = json_data
         self.status_code = status_code
         self.ok = 200 <= status_code < 300
-        
+
     def json(self):
         return self.json_data
-        
+
     def raise_for_status(self):
         if not self.ok:
             raise Exception(f"HTTP {self.status_code}")
@@ -205,4 +205,4 @@ def mock_response():
 TEST_API_URL = "https://webservices123.autotask.net/atservicesrest"
 TEST_USERNAME = "test@example.com"
 TEST_INTEGRATION_CODE = "TEST123"
-TEST_SECRET = "test_secret" 
+TEST_SECRET = "test_secret"

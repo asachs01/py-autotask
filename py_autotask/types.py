@@ -7,18 +7,19 @@ and runtime validation using Pydantic.
 
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
 
 
 class FilterOperation(str, Enum):
     """Enumeration of supported filter operations for Autotask API queries."""
-    
-    EQ = "eq"              # Equal
-    NE = "ne"              # Not equal
-    GT = "gt"              # Greater than
-    GTE = "gte"            # Greater than or equal
-    LT = "lt"              # Less than
-    LTE = "lte"            # Less than or equal
+
+    EQ = "eq"  # Equal
+    NE = "ne"  # Not equal
+    GT = "gt"  # Greater than
+    GTE = "gte"  # Greater than or equal
+    LT = "lt"  # Less than
+    LTE = "lte"  # Less than or equal
     BEGINS_WITH = "beginsWith"
     ENDS_WITH = "endsWith"
     CONTAINS = "contains"
@@ -31,7 +32,7 @@ class FilterOperation(str, Enum):
 
 class QueryFilter(BaseModel):
     """Represents a single filter condition in an Autotask API query."""
-    
+
     op: FilterOperation = Field(..., description="Filter operation")
     field: str = Field(..., description="Field name to filter on")
     value: Optional[Union[str, int, float, bool, List[Any]]] = Field(
@@ -42,7 +43,7 @@ class QueryFilter(BaseModel):
 
 class PaginationInfo(BaseModel):
     """Information about pagination in API responses."""
-    
+
     count: int = Field(..., description="Number of items in current page")
     request_count: int = Field(
         ..., alias="requestCount", description="Requested page size"
@@ -57,7 +58,7 @@ class PaginationInfo(BaseModel):
 
 class QueryRequest(BaseModel):
     """Structure for API query requests."""
-    
+
     filter: Optional[List[QueryFilter]] = Field(
         None, description="List of filter conditions"
     )
@@ -71,7 +72,7 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     """Structure for API query responses."""
-    
+
     items: List[Dict[str, Any]] = Field(..., description="Query result items")
     page_details: PaginationInfo = Field(
         ..., alias="pageDetails", description="Pagination information"
@@ -80,20 +81,18 @@ class QueryResponse(BaseModel):
 
 class EntityMetadata(BaseModel):
     """Metadata information about an Autotask entity."""
-    
+
     name: str = Field(..., description="Entity name")
     can_create: bool = Field(..., alias="canCreate")
     can_update: bool = Field(..., alias="canUpdate")
     can_query: bool = Field(..., alias="canQuery")
     can_delete: bool = Field(..., alias="canDelete")
-    has_user_defined_fields: bool = Field(
-        ..., alias="hasUserDefinedFields"
-    )
+    has_user_defined_fields: bool = Field(..., alias="hasUserDefinedFields")
 
 
 class FieldMetadata(BaseModel):
     """Metadata about a specific field in an entity."""
-    
+
     name: str = Field(..., description="Field name")
     data_type: str = Field(..., alias="dataType", description="Field data type")
     length: int = Field(..., description="Maximum field length")
@@ -108,26 +107,24 @@ class FieldMetadata(BaseModel):
     picklist_values: Optional[List[Dict[str, Any]]] = Field(
         None, alias="picklistValues"
     )
-    picklist_parent_value_field: str = Field(
-        "", alias="picklistParentValueField"
-    )
+    picklist_parent_value_field: str = Field("", alias="picklistParentValueField")
 
 
 class CreateResponse(BaseModel):
     """Response from entity creation operations."""
-    
+
     item_id: int = Field(..., alias="itemId", description="ID of created item")
 
 
 class UpdateResponse(BaseModel):
     """Response from entity update operations."""
-    
+
     item_id: int = Field(..., alias="itemId", description="ID of updated item")
 
 
 class ZoneInfo(BaseModel):
     """Information about an Autotask zone."""
-    
+
     url: str = Field(..., description="Zone API URL")
     data_base_type: str = Field(..., alias="dataBaseType")
     ci_level: int = Field(..., alias="ciLevel")
@@ -135,7 +132,7 @@ class ZoneInfo(BaseModel):
 
 class AuthCredentials(BaseModel):
     """Authentication credentials for Autotask API."""
-    
+
     username: str = Field(..., description="API username")
     integration_code: str = Field(..., description="Integration code")
     secret: str = Field(..., description="API secret")
@@ -144,7 +141,7 @@ class AuthCredentials(BaseModel):
 
 class RequestConfig(BaseModel):
     """Configuration for HTTP requests."""
-    
+
     timeout: int = Field(30, description="Request timeout in seconds")
     max_retries: int = Field(3, description="Maximum retry attempts")
     retry_delay: float = Field(1.0, description="Base retry delay in seconds")
@@ -165,9 +162,11 @@ ResourceData = EntityDict
 ContractData = EntityDict
 TimeEntryData = EntityDict
 
+
 # Time Entry Related Types
 class TimeEntryData(BaseModel):
     """Data structure for time entries."""
+
     id: Optional[int] = None
     resource_id: Optional[int] = None
     ticket_id: Optional[int] = None
@@ -188,9 +187,11 @@ class TimeEntryData(BaseModel):
     created_by: Optional[int] = None
     last_modified_by: Optional[int] = None
 
+
 # Attachment Related Types
 class AttachmentData(BaseModel):
     """Data structure for file attachments."""
+
     id: Optional[int] = None
     parent_type: Optional[str] = None
     parent_id: Optional[int] = None
@@ -203,7 +204,7 @@ class AttachmentData(BaseModel):
     created_by: Optional[int] = None
     last_modified_date_time: Optional[str] = None
     last_modified_by: Optional[int] = None
-    
+
     class Config:
         allow_population_by_field_name = True
-        alias_generator = None 
+        alias_generator = None
