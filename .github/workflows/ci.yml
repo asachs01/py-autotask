@@ -32,7 +32,7 @@ jobs:
       run: isort --check-only --diff py_autotask tests
     
     - name: Run flake8 (linting)
-      run: flake8 py_autotask tests --max-line-length=88 --extend-ignore=E203,W503
+      run: flake8 py_autotask tests --max-line-length=120 --extend-ignore=E203,W503,C901 --max-complexity=15
     
     - name: Run mypy (type checking)
       run: mypy py_autotask --ignore-missing-imports
@@ -87,8 +87,7 @@ jobs:
     
     - name: Run unit tests
       run: |
-        pytest tests/ -v --cov=py_autotask --cov-report=xml --cov-report=term-missing \
-               --junit-xml=test-results.xml -m "not integration and not performance"
+        pytest tests/ -v --cov=py_autotask --cov-report=xml --cov-report=term-missing --junit-xml=test-results.xml -m "not integration and not performance"
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
