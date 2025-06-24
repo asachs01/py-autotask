@@ -6,9 +6,14 @@ in Autotask. Business divisions represent high-level organizational units for
 financial reporting, resource allocation, and business segmentation.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

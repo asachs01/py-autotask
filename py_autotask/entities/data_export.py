@@ -12,12 +12,15 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter, UpdateResponse
+from ..types import (
+    CreateResponse,
+    EntityDict
+)
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -816,11 +819,10 @@ class DataExportEntity(BaseEntity):
         """
         # Get entity field information
         try:
-            entity_info = self.client.get_entity_info(entity_type)
-            field_info = self.client.get_field_info(entity_type)
+            self.client.get_entity_info(entity_type)
+            self.client.get_field_info(entity_type)
         except Exception:
-            entity_info = {}
-            field_info = {}
+            pass
 
         validation_rules = {}
 
@@ -1291,7 +1293,7 @@ class DataExportEntity(BaseEntity):
 
     def _convert_to_xml(self, records: List[Dict[str, Any]], root_element: str) -> str:
         """Convert records to XML format."""
-        xml_lines = [f"<?xml version='1.0' encoding='UTF-8'?>", f"<{root_element}>"]
+        xml_lines = ["<?xml version='1.0' encoding='UTF-8'?>", f"<{root_element}>"]
 
         for record in records:
             xml_lines.append("  <record>")
@@ -1327,7 +1329,7 @@ class DataExportEntity(BaseEntity):
             try:
                 Decimal(str(value))
                 return True
-            except:
+            except (ValueError, TypeError, InvalidOperation):
                 return False
         elif expected_type == "string":
             return isinstance(value, str)

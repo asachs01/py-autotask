@@ -5,7 +5,12 @@ This module provides the TicketStatusesEntity class for managing
 ticket status definitions and workflow transitions.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

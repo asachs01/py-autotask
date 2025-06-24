@@ -5,7 +5,7 @@ This module provides the ExpensesEntity class for managing
 expense tracking and reimbursement within the Autotask system.
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 

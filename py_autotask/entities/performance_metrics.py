@@ -14,7 +14,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter
+from ..types import (
+    CreateResponse,
+    EntityDict
+)
 from .base import BaseEntity
 
 if TYPE_CHECKING:
@@ -1304,7 +1307,7 @@ class PerformanceMetricsEntity(BaseEntity):
                 y_std = statistics.stdev(values)
                 if x_std > 0 and y_std > 0:
                     correlation = slope_numerator / (n * x_std * y_std)
-            except:
+            except (ValueError, ZeroDivisionError):
                 correlation = 0
 
         # Determine trend direction and strength

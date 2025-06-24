@@ -5,7 +5,7 @@ This module tests batch create, update, and delete operations
 for all entity types through the client and entity classes.
 """
 
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -16,8 +16,6 @@ from py_autotask.entities.companies import CompaniesEntity
 from py_autotask.entities.tickets import TicketsEntity
 from py_autotask.exceptions import (
     AutotaskAPIError,
-    AutotaskConnectionError,
-    AutotaskValidationError,
 )
 from py_autotask.types import CreateResponse
 

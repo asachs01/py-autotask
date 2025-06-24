@@ -164,7 +164,7 @@ class TestBatchOperationPerformance:
         # Test batch creation
         start_time = time.time()
 
-        results = mock_client.batch_create("Tickets", large_dataset, batch_size=100)
+        _ = mock_client.batch_create("Tickets", large_dataset, batch_size=100)
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -185,7 +185,7 @@ class TestBatchOperationPerformance:
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         # Large dataset
-        large_dataset = [{"data": f"x" * 1000} for _ in range(5000)]  # ~5MB of data
+        large_dataset = [{"data": "x" * 1000} for _ in range(5000)]  # ~5MB of data
 
         # Process in batches
         batch_size = 200
@@ -232,7 +232,7 @@ class TestBatchOperationPerformance:
         # Test concurrent processing
         start_time = time.time()
         with ThreadPoolExecutor(max_workers=4) as executor:
-            concurrent_results = list(executor.map(process_batch, batches))
+            list(executor.map(process_batch, batches))
         concurrent_time = time.time() - start_time
 
         # Concurrent should be faster (allowing for overhead)
@@ -349,7 +349,7 @@ class TestConnectionPerformance:
         from py_autotask.client import AutotaskClient
 
         # Mock credentials
-        credentials = AuthCredentials(
+        _ = AuthCredentials(
             username="test", integration_code="test", secret="test"
         )
 
@@ -381,7 +381,7 @@ class TestConnectionPerformance:
         # Mock adapter with connection pooling
         with patch("requests.Session") as mock_session_class:
             mock_session = Mock()
-            mock_adapter = Mock(spec=requests.adapters.HTTPAdapter)
+            _ = Mock(spec=requests.adapters.HTTPAdapter)
 
             # Configure session with adapter
             mock_session.mount.return_value = None
@@ -443,7 +443,7 @@ class TestMemoryPerformance:
         assert (
             creation_memory < 50
         ), f"Created 1000 entities using {creation_memory:.2f}MB"
-        assert cleanup_memory < creation_memory / 2, f"Memory not properly cleaned up"
+        assert cleanup_memory < creation_memory / 2, "Memory not properly cleaned up"
 
         print(
             f"1000 entities: +{creation_memory:.2f}MB, after cleanup: +{cleanup_memory:.2f}MB"

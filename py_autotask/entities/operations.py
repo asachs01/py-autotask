@@ -6,9 +6,13 @@ in Autotask. Operations represent business processes, workflows, and
 operational procedures for service delivery and management.
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from datetime import date
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

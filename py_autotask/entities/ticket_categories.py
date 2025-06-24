@@ -5,7 +5,12 @@ This module provides the TicketCategoriesEntity class for managing
 ticket categorization and classification within the Autotask service desk.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
@@ -399,7 +404,7 @@ class TicketCategoriesEntity(BaseEntity):
         all_categories = self.get_active_categories(include_inactive=True)
 
         # Build tree structure
-        category_map = {cat["id"]: cat for cat in all_categories}
+        _ = {cat["id"]: cat for cat in all_categories}
         tree = []
 
         def build_tree_node(category: Dict[str, Any]) -> Dict[str, Any]:

@@ -5,8 +5,7 @@ This module provides the ConfigurationItemsEntity class for managing
 asset configuration tracking and change management.
 """
 
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse

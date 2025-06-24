@@ -5,16 +5,16 @@ This module provides the ProjectReportsEntity class for comprehensive
 project reporting, analytics framework, business intelligence, and performance analysis.
 """
 
-import json
 import logging
-from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter, UpdateResponse
+from ..types import (
+    EntityDict
+)
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

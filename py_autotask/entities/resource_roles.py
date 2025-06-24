@@ -6,7 +6,7 @@ in Autotask. Resource roles define permissions and access levels for resources
 within the system.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 

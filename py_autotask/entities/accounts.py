@@ -6,9 +6,14 @@ in Autotask. Accounts represent organizational entities that can include
 companies, divisions, and other business units.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

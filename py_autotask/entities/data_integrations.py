@@ -9,10 +9,14 @@ with external systems, data synchronization, and automated data exchange.
 import json
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..types import EntityDict, QueryFilter
+from ..types import EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

@@ -6,9 +6,12 @@ file attachments for Autotask entities like tickets, projects, and contacts.
 """
 
 import mimetypes
-import os
 from pathlib import Path
-from typing import BinaryIO, Dict, List, Optional, Union
+from typing import (
+    List,
+    Optional,
+    Union
+)
 
 import requests
 
@@ -17,7 +20,7 @@ from ..exceptions import (
     AutotaskTimeoutError,
     AutotaskValidationError,
 )
-from ..types import AttachmentData, EntityDict
+from ..types import AttachmentData
 from .base import BaseEntity
 
 

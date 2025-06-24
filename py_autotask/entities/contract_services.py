@@ -5,8 +5,12 @@ This module provides the ContractServicesEntity class for managing
 contract services within the Autotask system.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

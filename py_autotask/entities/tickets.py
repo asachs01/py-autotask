@@ -213,7 +213,6 @@ class TicketsEntity(BaseEntity):
         """
         # Note: This would typically be a separate entity (TicketNotes)
         # but including here for convenience
-        from ..client import AutotaskClient
 
         filters = [QueryFilter(field="TicketID", op="eq", value=ticket_id)]
         return self.client.query("TicketNotes", filters=filters)

@@ -9,9 +9,14 @@ and audit trail functionality.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..types import EntityDict, EntityList, QueryFilter
+from ..types import EntityDict, EntityList
 from .base import BaseEntity
 
 
@@ -721,7 +726,7 @@ class ComplianceFrameworksEntity(BaseEntity):
 
         if auto_configure and standard_config:
             # Apply standard configuration
-            config_result = self.configure_compliance_rules(
+            _ = self.configure_compliance_rules(
                 framework_id=framework_id,
                 rules_config=standard_config.get("rules", {}),
                 validation_criteria=standard_config.get("validation_criteria", {}),

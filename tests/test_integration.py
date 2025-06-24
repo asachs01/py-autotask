@@ -19,7 +19,7 @@ import pytest
 
 from py_autotask import AutotaskClient
 from py_autotask.auth import AuthCredentials
-from py_autotask.exceptions import AutotaskAuthError, AutotaskConnectionError
+from py_autotask.exceptions import AutotaskConnectionError
 
 # Skip integration tests by default
 pytestmark = pytest.mark.integration
@@ -206,7 +206,7 @@ class TestIntegration:
             with pytest.raises((AutotaskConnectionError, Exception)):
                 client.entities.tickets.query_by_id(999999999)
 
-        except Exception as e:
+        except Exception:
             # Some errors are expected in this test
             pass
 

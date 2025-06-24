@@ -4,10 +4,14 @@ Project Milestones entity for Autotask API operations.
 
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..types import EntityDict, QueryFilter
+from ..types import EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -337,7 +341,7 @@ class ProjectMilestonesEntity(BaseEntity):
         # Adjust due date if requested
         if adjust_dates and original.get("DueDate"):
             try:
-                original_due = datetime.fromisoformat(original["DueDate"])
+                datetime.fromisoformat(original["DueDate"])
                 # Add 30 days as default offset
                 new_due = datetime.now() + timedelta(days=30)
                 clone_data["DueDate"] = new_due.isoformat()

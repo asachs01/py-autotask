@@ -6,7 +6,7 @@ entity instances, providing both direct access and dynamic entity creation.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Dict
 
 # Week 2 entities - Human Resources & Resource Management
 from .accounts import AccountsEntity

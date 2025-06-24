@@ -9,9 +9,14 @@ data capture and reporting capabilities.
 
 import json
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 
@@ -508,7 +513,7 @@ class CustomFieldsEntity(BaseEntity):
                 if not validation["is_valid"]:
                     validation_errors.extend(
                         [
-                            f"Field {i+1} ({field_def.get('name', 'unnamed')}): {error}"
+                            f"Field {i + 1} ({field_def.get('name', 'unnamed')}): {error}"
                             for error in validation["errors"]
                         ]
                     )

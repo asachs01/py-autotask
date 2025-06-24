@@ -9,9 +9,14 @@ of business logic through configurable rule engines and validation frameworks.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..types import EntityDict, QueryFilter
+from ..types import EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

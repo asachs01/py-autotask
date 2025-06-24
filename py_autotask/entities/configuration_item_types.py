@@ -6,9 +6,13 @@ configuration item types in Autotask. Configuration item types classify
 CIs for better organization, reporting, and CMDB management.
 """
 
-from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

@@ -9,14 +9,13 @@ Supports advanced analytics, data aggregation, and business intelligence.
 import json
 import logging
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from statistics import mean, median, stdev
 from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -771,7 +770,7 @@ class AnalyticsEntity(BaseEntity):
             try:
                 entity_type = config.get("entity_type")
                 metrics = config.get("metrics", [])
-                filters = config.get("filters", {})
+                config.get("filters", {})
 
                 if not entity_type:
                     results.append(

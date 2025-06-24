@@ -9,9 +9,14 @@ import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..types import CreateResponse, EntityDict, QueryFilter
+from ..types import CreateResponse, EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -450,7 +455,7 @@ class AutomationRulesEntity(BaseEntity):
             f"optimization_{datetime.utcnow().strftime('%Y%m%d')}"
         ] = optimization_results
 
-        self.logger.info(f"Completed automation performance optimization")
+        self.logger.info("Completed automation performance optimization")
         return optimization_results
 
     def analyze_automation_effectiveness(
@@ -576,7 +581,7 @@ class AutomationRulesEntity(BaseEntity):
         )
         self.effectiveness_metrics[cache_key] = analysis_results
 
-        self.logger.info(f"Completed automation effectiveness analysis")
+        self.logger.info("Completed automation effectiveness analysis")
         return analysis_results
 
     def bulk_activate_rules(

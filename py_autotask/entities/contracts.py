@@ -2,7 +2,10 @@
 Contracts entity for Autotask API operations.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import (
+    List,
+    Optional
+)
 
 from ..types import ContractData, QueryFilter
 from .base import BaseEntity

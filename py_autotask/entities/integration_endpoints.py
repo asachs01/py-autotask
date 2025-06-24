@@ -5,15 +5,19 @@ This module provides comprehensive API integration endpoint management with
 advanced configuration, health monitoring, and integration orchestration.
 """
 
-import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 from urllib.parse import urlparse
 
-from ..types import CreateResponse, EntityDict, QueryFilter
+from ..types import CreateResponse, EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -655,8 +659,8 @@ class IntegrationEndpointsEntity(BaseEntity):
 
         try:
             # Simulate health check (in real implementation, this would make actual HTTP requests)
-            endpoint_url = endpoint.get("EndpointUrl")
-            integration_type = endpoint.get("IntegrationType")
+            endpoint.get("EndpointUrl")
+            endpoint.get("IntegrationType")
 
             # Mock health check results based on endpoint configuration
             if endpoint.get("IsActive"):

@@ -7,10 +7,14 @@ comprehensive system monitoring capabilities, health checks, performance metrics
 and diagnostic tools for maintaining optimal system performance.
 """
 
-import logging
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

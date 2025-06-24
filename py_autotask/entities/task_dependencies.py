@@ -6,14 +6,20 @@ task relationships, dependency chains, critical path analysis, and scheduling co
 """
 
 import logging
-from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter, UpdateResponse
+from ..types import (
+    CreateResponse,
+    EntityDict,
+    UpdateResponse
+)
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -940,7 +946,7 @@ class TaskDependenciesEntity(BaseEntity):
 
         # Get dependency chain
         forward_chain = self.get_dependency_chain(task_id, "forward", max_depth=20)
-        backward_chain = self.get_dependency_chain(task_id, "backward", max_depth=20)
+        _ = self.get_dependency_chain(task_id, "backward", max_depth=20)
 
         impact = {
             "task_id": task_id,

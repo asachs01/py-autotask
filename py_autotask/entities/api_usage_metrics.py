@@ -9,9 +9,14 @@ optimization recommendations, and detailed reporting.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
-from ..types import EntityDict, EntityList, QueryFilter
+from ..types import EntityDict, EntityList
 from .base import BaseEntity
 
 
@@ -707,11 +712,11 @@ class APIUsageMetricsEntity(BaseEntity):
                 batch_results = self.batch_create(batch, batch_size)
                 results.extend(batch_results)
                 self._metrics_logger.debug(
-                    f"Successfully created batch {i//batch_size + 1}"
+                    f"Successfully created batch {i // batch_size + 1}"
                 )
             except Exception as e:
                 self._metrics_logger.error(
-                    f"Failed to create batch {i//batch_size + 1}: {e}"
+                    f"Failed to create batch {i // batch_size + 1}: {e}"
                 )
                 # Continue with next batch
                 continue

@@ -9,11 +9,10 @@ import pytest
 from py_autotask.entities.base import BaseEntity
 from py_autotask.entities.query_builder import (
     FilterOperator,
-    LogicalOperator,
     QueryBuilder,
 )
 from py_autotask.exceptions import AutotaskValidationError
-from py_autotask.types import QueryRequest, QueryResponse
+from py_autotask.types import QueryRequest
 
 
 class TestQueryBuilder:

@@ -2,7 +2,6 @@
 Time Entries entity for Autotask API operations.
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from ..types import QueryFilter, TimeEntryData

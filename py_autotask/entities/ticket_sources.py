@@ -5,7 +5,12 @@ This module provides the TicketSourcesEntity class for managing
 ticket source tracking and integration mapping.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

@@ -4,12 +4,11 @@ Tests for the CompaniesEntity class.
 This module tests company/account-specific operations and functionality.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
 from py_autotask.entities.companies import CompaniesEntity
-from py_autotask.types import CompanyData, QueryFilter
 
 
 class TestCompaniesEntity:
@@ -61,7 +60,7 @@ class TestCompaniesEntity:
         """Test company creation with address."""
         mock_client.create_entity.return_value = Mock(item_id=12345)
 
-        result = companies_entity.create_company(
+        _ = companies_entity.create_company(
             company_name="Acme Corp",
             phone="555-1234",
             address1="123 Main St",

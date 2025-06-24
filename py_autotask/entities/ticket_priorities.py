@@ -5,7 +5,12 @@ This module provides the TicketPrioritiesEntity class for managing
 ticket priority levels and SLA integration.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

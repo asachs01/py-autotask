@@ -11,13 +11,11 @@ import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
@@ -790,7 +788,7 @@ class AuditLogsEntity(BaseEntity):
 
             results.extend(batch_results)
             self.logger.info(
-                f"Processed batch {i//batch_size + 1} of {len(audit_events)//batch_size + 1}"
+                f"Processed batch {i // batch_size + 1} of {len(audit_events) // batch_size + 1}"
             )
 
         return results

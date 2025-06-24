@@ -5,9 +5,13 @@ This module provides the TasksEntity class for managing
 task creation, assignment, and progress tracking.
 """
 
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime, timedelta
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

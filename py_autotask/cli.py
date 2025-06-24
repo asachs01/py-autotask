@@ -9,7 +9,7 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import click
 from dotenv import load_dotenv
@@ -89,7 +89,7 @@ def auth(
         # Test authentication by getting zone info
         zone_info = client.auth.zone_info
         if zone_info:
-            click.echo(f"✓ Authentication successful!")
+            click.echo("✓ Authentication successful!")
             click.echo(f"  Zone URL: {zone_info.url}")
             click.echo(f"  Database Type: {zone_info.data_base_type}")
         else:
@@ -103,7 +103,6 @@ def auth(
 @main.group()
 def get() -> None:
     """Get entities by ID."""
-    pass
 
 
 @get.command()
@@ -163,7 +162,6 @@ def company(ctx: click.Context, company_id: int, output: str) -> None:
 @main.group()
 def query() -> None:
     """Query entities with filters."""
-    pass
 
 
 @query.command()
@@ -316,7 +314,6 @@ def info(ctx: click.Context, entity: str, output: str) -> None:
 @main.group()
 def batch() -> None:
     """Batch operations for multiple entities."""
-    pass
 
 
 @batch.command()
@@ -361,7 +358,7 @@ def create(
             # Show any errors
             for i, result in enumerate(results):
                 if result.errors:
-                    click.echo(f"  Entity {i+1} errors: {result.errors}")
+                    click.echo(f"  Entity {i + 1} errors: {result.errors}")
 
     except AutotaskError as e:
         click.echo(f"Error: {e}")
@@ -475,7 +472,6 @@ def delete(
 @main.group()
 def attachments() -> None:
     """File attachment operations."""
-    pass
 
 
 @attachments.command()

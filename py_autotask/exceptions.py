@@ -5,7 +5,11 @@ This module provides a hierarchy of exceptions for different types of errors
 that can occur when interacting with the Autotask API.
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    Optional
+)
 
 
 class AutotaskError(Exception):

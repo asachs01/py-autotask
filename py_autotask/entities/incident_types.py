@@ -6,9 +6,13 @@ in Autotask. Incident types help categorize and classify incidents for proper
 handling, escalation, and reporting.
 """
 
-from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from datetime import date
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

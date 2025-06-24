@@ -7,9 +7,13 @@ data protection rules, and compliance standards for secure system operation.
 """
 
 import logging
-from datetime import date, datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime, timedelta
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

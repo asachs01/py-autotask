@@ -5,19 +5,17 @@ This module tests the AutotaskAuth class and related authentication
 mechanisms including zone detection and credential validation.
 """
 
-from unittest.mock import Mock, patch
 
 import pytest
 import responses
 
 from py_autotask.auth import AutotaskAuth
 from py_autotask.exceptions import (
-    AutotaskAPIError,
     AutotaskAuthError,
     AutotaskConnectionError,
     AutotaskZoneError,
 )
-from py_autotask.types import AuthCredentials, ZoneInfo
+from py_autotask.types import AuthCredentials
 
 
 class TestAutotaskAuth:
@@ -202,7 +200,7 @@ class TestAutotaskAuth:
     def test_close(self, sample_credentials):
         """Test session cleanup."""
         auth = AutotaskAuth(sample_credentials)
-        session = auth.get_session()
+        auth.get_session()
 
         auth.close()
         assert auth._session is None

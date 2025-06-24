@@ -160,7 +160,6 @@ ContactData = EntityDict
 ProjectData = EntityDict
 ResourceData = EntityDict
 ContractData = EntityDict
-TimeEntryData = EntityDict
 
 
 # Time Entry Related Types

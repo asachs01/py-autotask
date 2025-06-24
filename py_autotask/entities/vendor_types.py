@@ -6,9 +6,14 @@ in Autotask. Vendor types classify vendors by category, relationship type,
 and business function for better organization and reporting.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

@@ -7,11 +7,9 @@ entity access, HTTP operations, and client configuration.
 
 from unittest.mock import Mock, patch
 
-import pytest
 
-from py_autotask.auth import AutotaskAuth
 from py_autotask.client import AutotaskClient
-from py_autotask.types import AuthCredentials, RequestConfig
+from py_autotask.types import RequestConfig
 
 
 class TestAutotaskClient:

@@ -8,7 +8,12 @@ resources and managing workflow organization.
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

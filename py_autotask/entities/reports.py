@@ -7,12 +7,16 @@ business intelligence, performance metrics, and operational insights through
 configurable data aggregation and visualization capabilities.
 """
 
-import hashlib
 import json
 import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

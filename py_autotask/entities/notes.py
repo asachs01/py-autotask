@@ -5,8 +5,13 @@ This module provides the NotesEntity class for managing
 notes and annotations across different entity types.
 """
 
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

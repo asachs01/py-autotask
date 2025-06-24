@@ -6,7 +6,7 @@ in Autotask. Resource skills track competencies, certifications, and skill level
 for resources to support project assignment and capability planning.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
@@ -327,7 +327,7 @@ class ResourceSkillsEntity(BaseEntity):
         cutoff_date = date.today().replace(day=date.today().day + expiring_days)
 
         for skill in certified_skills:
-            cert_date = skill.get("certificationDate")
+            skill.get("certificationDate")
             expiry_date = skill.get("certificationExpiryDate")
 
             if expiry_date and date.fromisoformat(expiry_date) <= cutoff_date:

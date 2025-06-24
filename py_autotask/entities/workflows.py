@@ -7,8 +7,12 @@ conditions, actions, and triggers that respond to data changes and events.
 """
 
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 
@@ -428,9 +432,9 @@ class WorkflowRulesEntity(BaseEntity):
 
         for i, condition in enumerate(conditions):
             if not condition.get("field"):
-                errors.append(f"Condition {i+1}: Missing field")
+                errors.append(f"Condition {i + 1}: Missing field")
             if not condition.get("operator"):
-                errors.append(f"Condition {i+1}: Missing operator")
+                errors.append(f"Condition {i + 1}: Missing operator")
 
         # Validate actions
         actions = rule_data.get("actions", [])
@@ -477,7 +481,7 @@ class WorkflowRulesEntity(BaseEntity):
             validation = self.validate_workflow_rule(rule_def)
             if not validation["is_valid"]:
                 validation_errors.extend(
-                    [f"Rule {i+1}: {error}" for error in validation["errors"]]
+                    [f"Rule {i + 1}: {error}" for error in validation["errors"]]
                 )
 
         return {

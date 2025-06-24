@@ -7,7 +7,6 @@ metrics for customer service delivery.
 """
 
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity

@@ -5,10 +5,8 @@ This module provides common fixtures and configuration for all tests,
 including mock clients, sample data, and test utilities.
 """
 
-import json
-import os
 from typing import Any, Dict
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 import responses

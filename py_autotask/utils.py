@@ -6,12 +6,11 @@ including pagination, retry logic, and data transformation.
 """
 
 import logging
-import time
 from typing import Any, Dict, Generator, List, Optional, Union
 from urllib.parse import parse_qs, urlparse
 
 from .exceptions import AutotaskValidationError
-from .types import FilterOperation, QueryFilter, QueryRequest
+from .types import FilterOperation, QueryRequest
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ def validate_filter_operation(field: str, operation: str, value: Any) -> None:
     elif op_enum == FilterOperation.BETWEEN:
         if not isinstance(value, list) or len(value) != 2:
             raise AutotaskValidationError(
-                f"Operation 'between' requires a list with exactly 2 values",
+                "Operation 'between' requires a list with exactly 2 values",
                 field=field,
                 value=value,
             )
@@ -458,7 +457,7 @@ def handle_api_error(response) -> None:
         try:
             error_data = response.json()
             error_message = error_data.get("message", f"HTTP {response.status_code}")
-        except:
+        except (ValueError, TypeError):
             error_message = f"HTTP {response.status_code}: {response.text}"
 
         raise AutotaskAPIError(f"API error: {error_message}")

@@ -6,9 +6,14 @@ in Autotask. Work types categorize different types of work for time tracking,
 billing, and reporting purposes.
 """
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 

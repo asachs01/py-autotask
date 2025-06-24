@@ -8,11 +8,19 @@ including configuration creation, validation, deployment, and monitoring.
 import json
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryFilter
+from ..types import (
+    CreateResponse,
+    EntityDict
+)
 from .base import BaseEntity
 
 if TYPE_CHECKING:

@@ -9,9 +9,14 @@ field definitions, validation rules, and data transformation pipelines.
 
 import json
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 
 from .base import BaseEntity
 
@@ -431,10 +436,10 @@ class UserDefinedFieldsEntity(BaseEntity):
                 # Validate picklist value structure
                 for i, value in enumerate(picklist_values):
                     if not isinstance(value, dict):
-                        errors.append(f"Picklist value {i+1} must be a dictionary")
+                        errors.append(f"Picklist value {i + 1} must be a dictionary")
                     elif "value" not in value or "label" not in value:
                         errors.append(
-                            f"Picklist value {i+1} must have 'value' and 'label' fields"
+                            f"Picklist value {i + 1} must have 'value' and 'label' fields"
                         )
 
         # Validate validation rules
@@ -444,7 +449,7 @@ class UserDefinedFieldsEntity(BaseEntity):
             if not rule_validation["is_valid"]:
                 errors.extend(
                     [
-                        f"Validation rule {i+1}: {error}"
+                        f"Validation rule {i + 1}: {error}"
                         for error in rule_validation["errors"]
                     ]
                 )
@@ -1051,7 +1056,7 @@ class UserDefinedFieldsEntity(BaseEntity):
                         "type": "low_usage",
                         "field_name": field_stats["field_name"],
                         "severity": "medium",
-                        "description": f"Field '{field_stats['field_name']}' has low usage ({100-field_stats['null_percentage']}% populated). Consider making required or removing.",
+                        "description": f"Field '{field_stats['field_name']}' has low usage ({100 - field_stats['null_percentage']}% populated). Consider making required or removing.",
                     }
                 )
 

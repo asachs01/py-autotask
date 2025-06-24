@@ -15,25 +15,19 @@ from urllib3.util.retry import Retry
 from .auth import AutotaskAuth
 from .entities import EntityManager
 from .exceptions import (
-    AutotaskAPIError,
     AutotaskConnectionError,
-    AutotaskRateLimitError,
     AutotaskTimeoutError,
 )
 from .types import (
     AuthCredentials,
     CreateResponse,
     EntityDict,
-    EntityList,
     QueryRequest,
     QueryResponse,
     RequestConfig,
 )
 from .utils import (
-    build_query_url,
     handle_api_error,
-    paginate_query,
-    parse_api_response,
     validate_filter,
 )
 
@@ -226,9 +220,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def query(
@@ -272,9 +266,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def create_entity(self, entity: str, entity_data: EntityDict) -> CreateResponse:
@@ -302,9 +296,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def update(self, entity: str, entity_data: EntityDict) -> EntityDict:
@@ -336,9 +330,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def delete(self, entity: str, entity_id: int) -> bool:
@@ -361,9 +355,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def count(
@@ -402,9 +396,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def get_field_info(self, entity: str) -> Dict[str, Any]:
@@ -426,9 +420,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def get_entity_info(self, entity: str) -> Dict[str, Any]:
@@ -450,9 +444,9 @@ class AutotaskClient:
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timed out")
-        except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error: {e}")
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
             handle_api_error(response)
 
     def close(self) -> None:
@@ -518,11 +512,11 @@ class AutotaskClient:
 
             except requests.exceptions.Timeout:
                 raise AutotaskTimeoutError(f"Batch {batch_num} timed out")
-            except requests.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError:
                 raise AutotaskConnectionError(
-                    f"Batch {batch_num} connection error: {e}"
+                    f"Batch {batch_num} connection error"
                 )
-            except requests.exceptions.HTTPError as e:
+            except requests.exceptions.HTTPError:
                 logger.error(f"Batch {batch_num} failed with HTTP error")
                 handle_api_error(response)
 
@@ -581,11 +575,11 @@ class AutotaskClient:
 
             except requests.exceptions.Timeout:
                 raise AutotaskTimeoutError(f"Update batch {batch_num} timed out")
-            except requests.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError:
                 raise AutotaskConnectionError(
-                    f"Update batch {batch_num} connection error: {e}"
+                    f"Update batch {batch_num} connection error"
                 )
-            except requests.exceptions.HTTPError as e:
+            except requests.exceptions.HTTPError:
                 logger.error(f"Update batch {batch_num} failed with HTTP error")
                 handle_api_error(response)
 
@@ -634,11 +628,11 @@ class AutotaskClient:
 
             except requests.exceptions.Timeout:
                 raise AutotaskTimeoutError(f"Delete batch {batch_num} timed out")
-            except requests.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError:
                 raise AutotaskConnectionError(
-                    f"Delete batch {batch_num} connection error: {e}"
+                    f"Delete batch {batch_num} connection error"
                 )
-            except requests.exceptions.HTTPError as e:
+            except requests.exceptions.HTTPError:
                 logger.error(f"Delete batch {batch_num} failed with HTTP error")
                 # For deletions, we might want to continue with other batches
                 batch_results = [False] * len(batch)

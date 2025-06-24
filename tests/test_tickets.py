@@ -9,7 +9,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from py_autotask.entities.tickets import TicketsEntity
-from py_autotask.types import QueryFilter, TicketData
 
 
 class TestTicketsEntity:
@@ -65,7 +64,7 @@ class TestTicketsEntity:
         """Test ticket creation with optional fields."""
         mock_client.create_entity.return_value = Mock(item_id=12345)
 
-        result = tickets_entity.create_ticket(
+        _ = tickets_entity.create_ticket(
             title="Test Ticket",
             description="Test Description",
             account_id=67890,
@@ -212,7 +211,7 @@ class TestTicketsEntity:
         """Test adding ticket note."""
         mock_client.create_entity.return_value = Mock(item_id=98765)
 
-        result = tickets_entity.add_ticket_note(
+        _ = tickets_entity.add_ticket_note(
             12345, "This is a test note", note_type=1, title="Test Note"
         )
 
