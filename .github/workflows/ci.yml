@@ -32,7 +32,7 @@ jobs:
       run: isort --check-only --diff py_autotask tests
     
     - name: Run flake8 (linting)
-      run: flake8 py_autotask tests --max-line-length=200 --extend-ignore=E203,W503,C901 --max-complexity=15
+      run: flake8 py_autotask tests
     
     - name: Run mypy (type checking)
       run: mypy py_autotask --ignore-missing-imports
