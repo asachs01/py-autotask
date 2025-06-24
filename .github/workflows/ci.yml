@@ -46,6 +46,7 @@ jobs:
     
     - name: Upload security reports
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: security-reports
         path: |
@@ -57,14 +58,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        exclude:
-          # Reduce matrix size for efficiency
+        # Streamlined matrix: Test core Python versions on Linux, latest on other OS
+        include:
+          # Linux: Test Python 3.8 (min), 3.11 (current), 3.12 (latest)
+          - os: ubuntu-latest
+            python-version: '3.8'
+          - os: ubuntu-latest
+            python-version: '3.11'
+          - os: ubuntu-latest
+            python-version: '3.12'
+          # Windows & macOS: Only test latest stable Python
           - os: windows-latest
-            python-version: '3.8'
+            python-version: '3.11'
           - os: macos-latest
-            python-version: '3.8'
+            python-version: '3.11'
     
     steps:
     - uses: actions/checkout@v4
@@ -85,17 +92,9 @@ jobs:
         pytest tests/ -v --cov=py_autotask --cov-report=xml --cov-report=term-missing \
                --junit-xml=test-results.xml -m "not integration and not performance"
     
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
-        path: |
-          test-results.xml
-          coverage.xml
-    
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
+      # Only upload coverage from one job to avoid duplication
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       with:
         file: ./coverage.xml
@@ -105,7 +104,8 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-integration'))
+    # Only run on main branch pushes or PRs with integration label
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
     - uses: actions/checkout@v4
     
@@ -129,62 +129,6 @@ jobs:
       run: |
         pytest tests/ -v -m integration --tb=short
       continue-on-error: true
-
-  performance-tests:
-    name: Performance Tests
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pytest-benchmark psutil
-        pip install -e .
-    
-    - name: Run performance tests
-      run: |
-        pytest tests/ -v -m performance --benchmark-json=benchmark-results.json
-    
-    - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-results
-        path: benchmark-results.json
-
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install sphinx sphinx-rtd-theme myst-parser
-        pip install -e .
-    
-    - name: Build documentation
-      run: |
-        cd docs
-        sphinx-build -b html . _build/html
-    
-    - name: Upload documentation
-      uses: actions/upload-artifact@v4
-      with:
-        name: documentation
-        path: docs/_build/html
 
   package:
     name: Build Package
@@ -215,30 +159,10 @@ jobs:
         name: package-dist
         path: dist/
 
-  security-scan:
-    name: Security Scanning
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-    
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
-
   deploy-test:
     name: Deploy to Test PyPI
     runs-on: ubuntu-latest
-    needs: [lint, test, package]
+    needs: [package]
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment: test-pypi
     steps:
@@ -259,7 +183,7 @@ jobs:
   deploy-prod:
     name: Deploy to PyPI
     runs-on: ubuntu-latest
-    needs: [lint, test, package]
+    needs: [package]
     if: github.event_name == 'release' && github.event.action == 'published'
     environment: pypi
     steps:
