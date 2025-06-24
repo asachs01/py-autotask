@@ -36,6 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced project metadata for PyPI publication
   - Configured setuptools_scm for automatic versioning
 
+### Fixed
+- **GitHub Actions Workflows** - Updated deprecated v3 artifact actions to v4
+  - Fixed CI workflow failures due to artifact actions deprecation (January 30, 2025)
+  - Updated all upload-artifact and download-artifact actions from v3 to v4
+  - Improved workflow performance with up to 98% faster upload/download speeds
+  - Maintained compatibility with existing workflow functionality
+  - References: [GitHub Blog - Deprecation Notice](https://github.blog/changelog/2024-04-16-deprecation-notice-v3-of-the-artifact-actions/)
+
 ### Analysis
 - **MAJOR DISCOVERY**: Complete Autotask API entity analysis reveals 170+ entities vs. our current 26 (15% coverage)
 - **SCOPE EXPANSION**: Previous parity analysis with autotask-node severely underestimated API scope
