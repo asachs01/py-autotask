@@ -161,6 +161,9 @@ jobs:
     needs: [package]
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment: test-pypi
+    permissions:
+      contents: read
+      id-token: write
     steps:
     - name: Download package artifacts
       uses: actions/download-artifact@v4
@@ -172,8 +175,6 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
-        user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         skip-existing: true
 
   deploy-prod:
@@ -182,6 +183,9 @@ jobs:
     needs: [package]
     if: github.event_name == 'release' && github.event.action == 'published'
     environment: pypi
+    permissions:
+      contents: read
+      id-token: write
     steps:
     - name: Download package artifacts
       uses: actions/download-artifact@v4
@@ -191,9 +195,6 @@ jobs:
     
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
 
   notify:
     name: Notifications
