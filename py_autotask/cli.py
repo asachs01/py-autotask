@@ -1,610 +1,797 @@
+#!/usr/bin/env python3
 """
-Command-line interface for py-autotask.
+py-autotask CLI: Command-line interface for Autotask data liberation.
 
-This module provides a CLI for common Autotask API operations,
-allowing users to interact with the API from the command line.
+This module provides a comprehensive CLI for data extraction, manipulation,
+and export from Autotask. Designed to liberate users from platform limitations
+and enable complete control over their Autotask data.
 """
 
+import asyncio
+import csv
 import json
-import logging
 import os
 import sys
-from typing import Optional
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 import click
-from dotenv import load_dotenv
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
+from rich.table import Table
+from rich import print as rprint
 
-from . import AutotaskClient
+from .client import AutotaskClient
+from .async_client import AsyncAutotaskClient
+from .bulk_manager import IntelligentBulkManager, BulkConfig
+from .types import AuthCredentials, RequestConfig
 from .exceptions import AutotaskError
 
-# Load environment variables
-load_dotenv()
+console = Console()
 
 
-def setup_logging(verbose: bool = False) -> None:
-    """Set up logging configuration."""
-    level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-
-
-def get_client_from_env() -> AutotaskClient:
-    """Create client from environment variables."""
-    username = os.getenv("AUTOTASK_USERNAME")
-    integration_code = os.getenv("AUTOTASK_INTEGRATION_CODE")
-    secret = os.getenv("AUTOTASK_SECRET")
-    api_url = os.getenv("AUTOTASK_API_URL")
-
-    if not all([username, integration_code, secret]):
-        click.echo("Error: Missing required environment variables.")
-        click.echo(
-            "Please set: AUTOTASK_USERNAME, AUTOTASK_INTEGRATION_CODE, AUTOTASK_SECRET"
-        )
-        sys.exit(1)
-
-    return AutotaskClient.create(
-        username=username,
-        integration_code=integration_code,
-        secret=secret,
-        api_url=api_url,
-    )
-
-
-@click.group()
-@click.option("--verbose", "-v", is_flag=True, help="Enable verbose logging")
-@click.pass_context
-def main(ctx: click.Context, verbose: bool) -> None:
-    """py-autotask: Python client for Autotask REST API."""
-    ctx.ensure_object(dict)
-    ctx.obj["verbose"] = verbose
-    setup_logging(verbose)
-
-
-@main.command()
-@click.option("--username", "-u", help="API username")
-@click.option("--integration-code", "-i", help="Integration code")
-@click.option("--secret", "-s", help="API secret")
-@click.option("--api-url", help="Override API URL")
-@click.pass_context
-def auth(
-    ctx: click.Context,
-    username: Optional[str],
-    integration_code: Optional[str],
-    secret: Optional[str],
-    api_url: Optional[str],
-) -> None:
-    """Test authentication and zone detection."""
-    try:
+class CLIConfig:
+    """CLI configuration and state management."""
+    
+    def __init__(self):
+        self.credentials: Optional[AuthCredentials] = None
+        self.client: Optional[Union[AutotaskClient, AsyncAutotaskClient]] = None
+        self.verbose: bool = False
+        self.output_format: str = "table"
+        self.output_file: Optional[str] = None
+    
+    @classmethod
+    def from_env(cls) -> 'CLIConfig':
+        """Create CLI config from environment variables."""
+        config = cls()
+        
+        username = os.environ.get("AUTOTASK_USERNAME")
+        integration_code = os.environ.get("AUTOTASK_INTEGRATION_CODE")  
+        secret = os.environ.get("AUTOTASK_SECRET")
+        api_url = os.environ.get("AUTOTASK_API_URL")
+        
         if username and integration_code and secret:
-            client = AutotaskClient.create(
+            config.credentials = AuthCredentials(
                 username=username,
                 integration_code=integration_code,
                 secret=secret,
-                api_url=api_url,
+                api_url=api_url
             )
-        else:
-            client = get_client_from_env()
-
-        # Test authentication by getting zone info
-        zone_info = client.auth.zone_info
-        if zone_info:
-            click.echo("✓ Authentication successful!")
-            click.echo(f"  Zone URL: {zone_info.url}")
-            click.echo(f"  Database Type: {zone_info.data_base_type}")
-        else:
-            click.echo("✗ Authentication failed - could not detect zone")
-
-    except AutotaskError as e:
-        click.echo(f"✗ Authentication failed: {e}")
-        sys.exit(1)
+        
+        return config
 
 
-@main.group()
-def get() -> None:
-    """Get entities by ID."""
+# Global CLI configuration
+cli_config = CLIConfig()
 
 
-@get.command()
-@click.argument("ticket_id", type=int)
-@click.option("--output", "-o", type=click.Choice(["json", "table"]), default="json")
-@click.pass_context
-def ticket(ctx: click.Context, ticket_id: int, output: str) -> None:
-    """Get a ticket by ID."""
-    try:
-        client = get_client_from_env()
-        ticket_data = client.tickets.get(ticket_id)
-
-        if ticket_data:
-            if output == "json":
-                click.echo(json.dumps(ticket_data, indent=2))
-            else:
-                # Simple table output
-                click.echo(f"Ticket ID: {ticket_data.get('id', 'N/A')}")
-                click.echo(f"Title: {ticket_data.get('title', 'N/A')}")
-                click.echo(f"Status: {ticket_data.get('status', 'N/A')}")
-                click.echo(f"Priority: {ticket_data.get('priority', 'N/A')}")
-        else:
-            click.echo(f"Ticket {ticket_id} not found")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@get.command()
-@click.argument("company_id", type=int)
-@click.option("--output", "-o", type=click.Choice(["json", "table"]), default="json")
-@click.pass_context
-def company(ctx: click.Context, company_id: int, output: str) -> None:
-    """Get a company by ID."""
-    try:
-        client = get_client_from_env()
-        company_data = client.companies.get(company_id)
-
-        if company_data:
-            if output == "json":
-                click.echo(json.dumps(company_data, indent=2))
-            else:
-                # Simple table output
-                click.echo(f"Company ID: {company_data.get('id', 'N/A')}")
-                click.echo(f"Name: {company_data.get('companyName', 'N/A')}")
-                click.echo(f"Type: {company_data.get('companyType', 'N/A')}")
-                click.echo(f"Active: {company_data.get('isActive', 'N/A')}")
-        else:
-            click.echo(f"Company {company_id} not found")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@main.group()
-def query() -> None:
-    """Query entities with filters."""
-
-
-@query.command()
-@click.option("--filter", "-f", help="JSON filter string")
-@click.option("--fields", help="Comma-separated list of fields to include")
-@click.option("--max-records", type=int, help="Maximum records to return")
-@click.option("--output", "-o", type=click.Choice(["json", "table"]), default="json")
-@click.pass_context
-def tickets(
-    ctx: click.Context,
-    filter: Optional[str],
-    fields: Optional[str],
-    max_records: Optional[int],
-    output: str,
-) -> None:
-    """Query tickets with optional filters."""
-    try:
-        client = get_client_from_env()
-
-        # Parse filter if provided
-        filters = None
-        if filter:
-            try:
-                filters = json.loads(filter)
-            except json.JSONDecodeError:
-                click.echo("Error: Invalid JSON filter format")
-                sys.exit(1)
-
-        # Parse fields if provided
-        include_fields = None
-        if fields:
-            include_fields = [f.strip() for f in fields.split(",")]
-
-        response = client.tickets.query(
-            filters=filters, include_fields=include_fields, max_records=max_records
+@click.group()
+@click.option('--username', envvar='AUTOTASK_USERNAME', help='Autotask username')
+@click.option('--integration-code', envvar='AUTOTASK_INTEGRATION_CODE', help='Autotask integration code')
+@click.option('--secret', envvar='AUTOTASK_SECRET', help='Autotask secret')
+@click.option('--api-url', envvar='AUTOTASK_API_URL', help='Override API URL')
+@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
+@click.option('--output-format', type=click.Choice(['table', 'json', 'csv']), default='table', help='Output format')
+@click.option('--output-file', '-o', help='Output file (default: stdout)')
+def main(username, integration_code, secret, api_url, verbose, output_format, output_file):
+    """
+    py-autotask CLI: The ultimate tool for Autotask data liberation.
+    
+    Liberate your Autotask data with powerful export, analysis, and manipulation capabilities.
+    Break free from platform limitations and own your data completely.
+    """
+    if username and integration_code and secret:
+        cli_config.credentials = AuthCredentials(
+            username=username,
+            integration_code=integration_code,
+            secret=secret,
+            api_url=api_url
         )
-
-        if output == "json":
-            # Convert response to dict for JSON serialization
-            result = {
-                "items": response.items,
-                "page_details": {
-                    "count": response.page_details.count,
-                    "request_count": response.page_details.request_count,
-                    "next_page_url": response.page_details.next_page_url,
-                    "prev_page_url": response.page_details.prev_page_url,
-                },
-            }
-            click.echo(json.dumps(result, indent=2))
-        else:
-            # Simple table output
-            click.echo(f"Found {len(response.items)} tickets:")
-            for item in response.items:
-                click.echo(f"  ID: {item.get('id')} - {item.get('title', 'No title')}")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@query.command()
-@click.option("--filter", "-f", help="JSON filter string")
-@click.option("--fields", help="Comma-separated list of fields to include")
-@click.option("--max-records", type=int, help="Maximum records to return")
-@click.option("--output", "-o", type=click.Choice(["json", "table"]), default="json")
-@click.pass_context
-def companies(
-    ctx: click.Context,
-    filter: Optional[str],
-    fields: Optional[str],
-    max_records: Optional[int],
-    output: str,
-) -> None:
-    """Query companies with optional filters."""
-    try:
-        client = get_client_from_env()
-
-        # Parse filter if provided
-        filters = None
-        if filter:
-            try:
-                filters = json.loads(filter)
-            except json.JSONDecodeError:
-                click.echo("Error: Invalid JSON filter format")
-                sys.exit(1)
-
-        # Parse fields if provided
-        include_fields = None
-        if fields:
-            include_fields = [f.strip() for f in fields.split(",")]
-
-        response = client.companies.query(
-            filters=filters, include_fields=include_fields, max_records=max_records
-        )
-
-        if output == "json":
-            # Convert response to dict for JSON serialization
-            result = {
-                "items": response.items,
-                "page_details": {
-                    "count": response.page_details.count,
-                    "request_count": response.page_details.request_count,
-                    "next_page_url": response.page_details.next_page_url,
-                    "prev_page_url": response.page_details.prev_page_url,
-                },
-            }
-            click.echo(json.dumps(result, indent=2))
-        else:
-            # Simple table output
-            click.echo(f"Found {len(response.items)} companies:")
-            for item in response.items:
-                click.echo(
-                    f"  ID: {item.get('id')} - {item.get('companyName', 'No name')}"
-                )
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
+    elif not cli_config.credentials:
+        cli_config = CLIConfig.from_env()
+    
+    cli_config.verbose = verbose
+    cli_config.output_format = output_format
+    cli_config.output_file = output_file
+    
+    if verbose:
+        console.print("[dim]Verbose mode enabled[/dim]")
 
 
 @main.command()
-@click.argument("entity")
-@click.option("--output", "-o", type=click.Choice(["json", "table"]), default="json")
-@click.pass_context
-def info(ctx: click.Context, entity: str, output: str) -> None:
-    """Get information about an entity type."""
-    try:
-        client = get_client_from_env()
-        entity_info = client.get_entity_info(entity)
-
-        if output == "json":
-            click.echo(json.dumps(entity_info, indent=2))
-        else:
-            # Simple table output for entity info
-            click.echo(f"Entity: {entity}")
-            if "entityInformation" in entity_info:
-                info = entity_info["entityInformation"]
-                click.echo(f"Name: {info.get('name', 'N/A')}")
-                click.echo(
-                    f"Has User Defined Fields: {info.get('hasUserDefinedFields', 'N/A')}"
-                )
-                click.echo(f"Supports Query: {info.get('supportsQuery', 'N/A')}")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
+@click.argument('entities', nargs=-1, required=True)
+@click.option('--format', 'export_format', type=click.Choice(['csv', 'json', 'excel', 'parquet']), default='csv', help='Export format')
+@click.option('--output', '-o', help='Output file path')
+@click.option('--date-range', help='Date range filter (YYYY-MM-DD,YYYY-MM-DD)')
+@click.option('--filters', help='JSON string of additional filters')
+@click.option('--include-relationships', is_flag=True, help='Include related entity data')
+@click.option('--compress', is_flag=True, help='Compress output file')
+@click.option('--batch-size', type=int, default=1000, help='Records per batch')
+@click.option('--parallel', is_flag=True, help='Use parallel processing')
+def export(entities, export_format, output, date_range, filters, include_relationships, compress, batch_size, parallel):
+    """
+    Export Autotask entities to various formats for complete data liberation.
+    
+    ENTITIES: Space-separated list of entities to export (e.g., tickets companies contacts)
+    
+    Examples:
+        py-autotask export tickets --format=excel --output=tickets.xlsx
+        py-autotask export companies contacts --date-range=2024-01-01,2024-12-31
+        py-autotask export tickets --filters='[{"field":"status","op":"eq","value":"1"}]'
+    """
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided. Set environment variables or use command options.[/red]")
         sys.exit(1)
+    
+    asyncio.run(_export_data(
+        entities, export_format, output, date_range, filters, 
+        include_relationships, compress, batch_size, parallel
+    ))
 
 
-# Phase 4: Batch Operations
-@main.group()
-def batch() -> None:
-    """Batch operations for multiple entities."""
-
-
-@batch.command()
-@click.argument("entity")
-@click.argument("data_file", type=click.File("r"))
-@click.option("--batch-size", type=int, default=200, help="Batch size (max 200)")
-@click.option(
-    "--output", "-o", type=click.Choice(["json", "summary"]), default="summary"
-)
-@click.pass_context
-def create(
-    ctx: click.Context, entity: str, data_file, batch_size: int, output: str
-) -> None:
-    """Create multiple entities from JSON file."""
+async def _export_data(entities, export_format, output, date_range, filters, include_relationships, compress, batch_size, parallel):
+    """Execute the data export operation."""
+    console.print(Panel.fit(
+        f"[bold blue]🚀 Autotask Data Liberation[/bold blue]\n"
+        f"[green]Exporting {len(entities)} entities: {', '.join(entities)}[/green]",
+        border_style="blue"
+    ))
+    
     try:
-        client = get_client_from_env()
-
-        # Parse input data
-        try:
-            entities_data = json.load(data_file)
-            if not isinstance(entities_data, list):
-                entities_data = [entities_data]
-        except json.JSONDecodeError as e:
-            click.echo(f"Error parsing JSON file: {e}")
-            sys.exit(1)
-
-        click.echo(
-            f"Creating {len(entities_data)} {entity} entities in batches of {batch_size}..."
-        )
-
-        results = client.batch_create(entity, entities_data, batch_size)
-
-        if output == "json":
-            output_data = [{"item_id": r.item_id, "errors": r.errors} for r in results]
-            click.echo(json.dumps(output_data, indent=2))
-        else:
-            success_count = sum(1 for r in results if r.item_id)
-            click.echo(
-                f"✓ Successfully created {success_count}/{len(entities_data)} entities"
-            )
-
-            # Show any errors
-            for i, result in enumerate(results):
-                if result.errors:
-                    click.echo(f"  Entity {i + 1} errors: {result.errors}")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@batch.command()
-@click.argument("entity")
-@click.argument("data_file", type=click.File("r"))
-@click.option("--batch-size", type=int, default=200, help="Batch size (max 200)")
-@click.option(
-    "--output", "-o", type=click.Choice(["json", "summary"]), default="summary"
-)
-@click.pass_context
-def update(
-    ctx: click.Context, entity: str, data_file, batch_size: int, output: str
-) -> None:
-    """Update multiple entities from JSON file."""
-    try:
-        client = get_client_from_env()
-
-        # Parse input data
-        try:
-            entities_data = json.load(data_file)
-            if not isinstance(entities_data, list):
-                entities_data = [entities_data]
-        except json.JSONDecodeError as e:
-            click.echo(f"Error parsing JSON file: {e}")
-            sys.exit(1)
-
-        # Validate all have IDs
-        for i, data in enumerate(entities_data):
-            if not data.get("id"):
-                click.echo(f"Error: Entity at index {i} missing 'id' field")
-                sys.exit(1)
-
-        click.echo(
-            f"Updating {len(entities_data)} {entity} entities in batches of {batch_size}..."
-        )
-
-        results = client.batch_update(entity, entities_data, batch_size)
-
-        if output == "json":
-            click.echo(json.dumps(results, indent=2))
-        else:
-            click.echo(f"✓ Successfully updated {len(results)} entities")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@batch.command()
-@click.argument("entity")
-@click.argument("ids", nargs=-1, type=int)
-@click.option("--batch-size", type=int, default=200, help="Batch size (max 200)")
-@click.option(
-    "--ids-file", type=click.File("r"), help="File with entity IDs (one per line)"
-)
-@click.option("--confirm", is_flag=True, help="Skip confirmation prompt")
-@click.pass_context
-def delete(
-    ctx: click.Context,
-    entity: str,
-    ids: tuple,
-    batch_size: int,
-    ids_file,
-    confirm: bool,
-) -> None:
-    """Delete multiple entities by ID."""
-    try:
-        # Collect entity IDs
-        entity_ids = list(ids)
-
-        if ids_file:
-            for line in ids_file:
-                line = line.strip()
-                if line and line.isdigit():
-                    entity_ids.append(int(line))
-
-        if not entity_ids:
-            click.echo("Error: No entity IDs provided")
-            sys.exit(1)
-
-        # Confirmation prompt
-        if not confirm:
-            if not click.confirm(f"Delete {len(entity_ids)} {entity} entities?"):
-                click.echo("Aborted.")
+        # Create async client for maximum performance
+        async with AsyncAutotaskClient.create(credentials=cli_config.credentials) as client:
+            
+            # Test connection first
+            console.print("🔗 Testing connection to Autotask API...")
+            if not await client.test_connection_async():
+                console.print("[red]❌ Failed to connect to Autotask API[/red]")
                 return
-
-        click.echo(
-            f"Deleting {len(entity_ids)} {entity} entities in batches of {batch_size}..."
-        )
-
-        client = get_client_from_env()
-        results = client.batch_delete(entity, entity_ids, batch_size)
-
-        success_count = sum(results)
-        click.echo(f"✓ Successfully deleted {success_count}/{len(entity_ids)} entities")
-
-        if success_count < len(entity_ids):
-            failed_count = len(entity_ids) - success_count
-            click.echo(f"⚠ {failed_count} deletions failed")
-
+            
+            console.print("✅ Connected successfully!")
+            
+            # Parse date range if provided
+            date_filters = []
+            if date_range:
+                try:
+                    start_date, end_date = date_range.split(',')
+                    date_filters = [
+                        {"field": "createDate", "op": "gte", "value": f"{start_date}T00:00:00Z"},
+                        {"field": "createDate", "op": "lte", "value": f"{end_date}T23:59:59Z"}
+                    ]
+                    console.print(f"📅 Date range: {start_date} to {end_date}")
+                except ValueError:
+                    console.print("[red]❌ Invalid date range format. Use YYYY-MM-DD,YYYY-MM-DD[/red]")
+                    return
+            
+            # Parse additional filters
+            additional_filters = []
+            if filters:
+                try:
+                    additional_filters = json.loads(filters)
+                    console.print(f"🔍 Additional filters: {len(additional_filters)} conditions")
+                except json.JSONDecodeError:
+                    console.print("[red]❌ Invalid filters JSON format[/red]")
+                    return
+            
+            # Export each entity
+            exported_data = {}
+            
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console
+            ) as progress:
+                
+                for entity in entities:
+                    task = progress.add_task(f"Exporting {entity}...", total=100)
+                    
+                    # Build query filters
+                    entity_filters = date_filters + additional_filters
+                    
+                    # Query entity data
+                    console.print(f"📊 Querying {entity} data...")
+                    
+                    if parallel and len(entities) > 1:
+                        # Use bulk query for multiple entities
+                        bulk_manager = IntelligentBulkManager(client)
+                        query_config = {
+                            "entity": entity,
+                            "filters": entity_filters
+                        }
+                        
+                        if batch_size:
+                            query_config["maxRecords"] = batch_size
+                        
+                        entity_data = await bulk_manager.bulk_query([query_config])
+                        entity_data = entity_data[0].items if entity_data else []
+                    else:
+                        # Single entity query
+                        entity_proxy = getattr(client, entity.lower(), None)
+                        if entity_proxy:
+                            response = await entity_proxy.query_async(filters=entity_filters)
+                            entity_data = response.items
+                        else:
+                            response = await client.query_async(entity, filters=entity_filters)
+                            entity_data = response.items
+                    
+                    progress.update(task, advance=50)
+                    
+                    console.print(f"✅ Retrieved {len(entity_data)} {entity} records")
+                    exported_data[entity] = entity_data
+                    
+                    # Handle relationship inclusion
+                    if include_relationships and entity_data:
+                        console.print(f"🔗 Loading relationships for {entity}...")
+                        await _load_relationships(client, entity, entity_data)
+                    
+                    progress.update(task, advance=50)
+            
+            # Export data to specified format
+            await _save_exported_data(exported_data, export_format, output, compress)
+            
     except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
+        console.print(f"[red]❌ Autotask API error: {e}[/red]")
+    except Exception as e:
+        console.print(f"[red]❌ Export failed: {e}[/red]")
+        if cli_config.verbose:
+            import traceback
+            console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
 
-# Phase 4: Attachment Operations
-@main.group()
-def attachments() -> None:
-    """File attachment operations."""
+async def _load_relationships(client, entity: str, entity_data: List[Dict]) -> None:
+    """Load related entity data for relationship inclusion."""
+    # This is a simplified relationship loader
+    # In a full implementation, this would be more sophisticated
+    
+    relationship_mappings = {
+        "Tickets": [
+            {"field": "AccountID", "entity": "Companies"},
+            {"field": "AssignedResourceID", "entity": "Resources"},
+            {"field": "ContactID", "entity": "Contacts"}
+        ],
+        "Projects": [
+            {"field": "AccountID", "entity": "Companies"},
+            {"field": "ProjectManagerResourceID", "entity": "Resources"}
+        ],
+        "TimeEntries": [
+            {"field": "TicketID", "entity": "Tickets"},
+            {"field": "ResourceID", "entity": "Resources"},
+            {"field": "ProjectID", "entity": "Projects"}
+        ]
+    }
+    
+    relationships = relationship_mappings.get(entity, [])
+    
+    for relationship in relationships:
+        field = relationship["field"]
+        related_entity = relationship["entity"]
+        
+        # Get unique IDs for related entities
+        related_ids = list(set(
+            item.get(field) for item in entity_data 
+            if item.get(field) is not None
+        ))
+        
+        if related_ids:
+            console.print(f"   Loading {len(related_ids)} {related_entity} relationships...")
+            
+            # Query related entities
+            related_filters = [{"field": "id", "op": "in", "value": ",".join(map(str, related_ids))}]
+            
+            related_proxy = getattr(client, related_entity.lower(), None)
+            if related_proxy:
+                related_response = await related_proxy.query_async(filters=related_filters)
+                related_data = {item["id"]: item for item in related_response.items}
+                
+                # Embed related data
+                for item in entity_data:
+                    related_id = item.get(field)
+                    if related_id and related_id in related_data:
+                        item[f"_{related_entity.lower()}_data"] = related_data[related_id]
 
 
-@attachments.command()
-@click.argument("parent_type")
-@click.argument("parent_id", type=int)
-@click.argument("file_path", type=click.Path(exists=True))
-@click.option("--title", help="Attachment title")
-@click.option("--description", help="Attachment description")
-@click.pass_context
-def upload(
-    ctx: click.Context,
-    parent_type: str,
-    parent_id: int,
-    file_path: str,
-    title: Optional[str],
-    description: Optional[str],
-) -> None:
-    """Upload a file attachment to an entity."""
-    try:
-        client = get_client_from_env()
-
-        click.echo(f"Uploading {file_path} to {parent_type} {parent_id}...")
-
-        result = client.attachments.upload_file(
-            parent_type=parent_type,
-            parent_id=parent_id,
-            file_path=file_path,
-            title=title,
-            description=description,
-        )
-
-        click.echo(f"✓ Successfully uploaded attachment with ID: {result.id}")
-        click.echo(f"  Title: {result.title}")
-        click.echo(f"  File: {result.file_name}")
-        click.echo(f"  Size: {result.file_size} bytes")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@attachments.command()
-@click.argument("attachment_id", type=int)
-@click.argument("output_path", type=click.Path())
-@click.pass_context
-def download(ctx: click.Context, attachment_id: int, output_path: str) -> None:
-    """Download an attachment by ID."""
-    try:
-        client = get_client_from_env()
-
-        click.echo(f"Downloading attachment {attachment_id}...")
-
-        file_data = client.attachments.download_file(
-            attachment_id=attachment_id, output_path=output_path
-        )
-
-        click.echo(f"✓ Successfully downloaded to: {output_path}")
-        click.echo(f"  Size: {len(file_data)} bytes")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@attachments.command()
-@click.argument("parent_type")
-@click.argument("parent_id", type=int)
-@click.option("--output", "-o", type=click.Choice(["json", "table"]), default="table")
-@click.pass_context
-def list(ctx: click.Context, parent_type: str, parent_id: int, output: str) -> None:
-    """List attachments for an entity."""
-    try:
-        client = get_client_from_env()
-
-        attachments = client.attachments.get_attachments_for_entity(
-            parent_type=parent_type, parent_id=parent_id
-        )
-
-        if output == "json":
-            output_data = [a.dict() for a in attachments]
-            click.echo(json.dumps(output_data, indent=2))
-        else:
-            if attachments:
-                click.echo(f"Attachments for {parent_type} {parent_id}:")
-                for attachment in attachments:
-                    click.echo(f"  ID: {attachment.id}")
-                    click.echo(f"    Title: {attachment.title}")
-                    click.echo(f"    File: {attachment.file_name}")
-                    click.echo(f"    Size: {attachment.file_size} bytes")
-                    click.echo(f"    Type: {attachment.content_type}")
-                    click.echo("")
+async def _save_exported_data(data: Dict[str, List], export_format: str, output: Optional[str], compress: bool) -> None:
+    """Save exported data in the specified format."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    for entity_name, entity_data in data.items():
+        if not entity_data:
+            console.print(f"[yellow]⚠️  No data to export for {entity_name}[/yellow]")
+            continue
+        
+        # Determine output filename
+        if output:
+            base_path = Path(output)
+            if len(data) > 1:
+                # Multiple entities - add entity name to filename
+                output_file = base_path.parent / f"{base_path.stem}_{entity_name.lower()}{base_path.suffix}"
             else:
-                click.echo(f"No attachments found for {parent_type} {parent_id}")
-
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
-        sys.exit(1)
-
-
-@attachments.command()
-@click.argument("attachment_id", type=int)
-@click.option("--confirm", is_flag=True, help="Skip confirmation prompt")
-@click.pass_context
-def delete_attachment(ctx: click.Context, attachment_id: int, confirm: bool) -> None:
-    """Delete an attachment by ID."""
-    try:
-        client = get_client_from_env()
-
-        # Get attachment info first
-        attachment = client.attachments.get_attachment_info(attachment_id)
-        if not attachment:
-            click.echo(f"Attachment {attachment_id} not found")
-            sys.exit(1)
-
-        # Confirmation prompt
-        if not confirm:
-            if not click.confirm(
-                f"Delete attachment '{attachment.title}' ({attachment.file_name})?"
-            ):
-                click.echo("Aborted.")
-                return
-
-        success = client.attachments.delete_attachment(attachment_id)
-
-        if success:
-            click.echo(f"✓ Successfully deleted attachment {attachment_id}")
+                output_file = base_path
         else:
-            click.echo(f"✗ Failed to delete attachment {attachment_id}")
-            sys.exit(1)
+            # Default filename
+            output_file = Path(f"autotask_{entity_name.lower()}_{timestamp}.{export_format}")
+        
+        console.print(f"💾 Saving {len(entity_data)} {entity_name} records to {output_file}")
+        
+        try:
+            if export_format == "csv":
+                await _save_csv(entity_data, output_file)
+            elif export_format == "json":
+                await _save_json(entity_data, output_file)
+            elif export_format == "excel":
+                await _save_excel(entity_data, output_file)
+            elif export_format == "parquet":
+                await _save_parquet(entity_data, output_file)
+            
+            # Compress if requested
+            if compress:
+                await _compress_file(output_file)
+            
+            console.print(f"✅ Successfully exported {entity_name} to {output_file}")
+            
+        except Exception as e:
+            console.print(f"[red]❌ Failed to save {entity_name}: {e}[/red]")
 
-    except AutotaskError as e:
-        click.echo(f"Error: {e}")
+
+async def _save_csv(data: List[Dict], output_file: Path) -> None:
+    """Save data as CSV."""
+    if not data:
+        return
+    
+    with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+        fieldnames = list(data[0].keys())
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
+
+
+async def _save_json(data: List[Dict], output_file: Path) -> None:
+    """Save data as JSON."""
+    with open(output_file, 'w', encoding='utf-8') as jsonfile:
+        json.dump(data, jsonfile, indent=2, default=str)
+
+
+async def _save_excel(data: List[Dict], output_file: Path) -> None:
+    """Save data as Excel."""
+    try:
+        import pandas as pd
+        df = pd.DataFrame(data)
+        df.to_excel(output_file, index=False, engine='openpyxl')
+    except ImportError:
+        console.print("[red]❌ pandas and openpyxl required for Excel export. Install with: pip install pandas openpyxl[/red]")
+        raise
+
+
+async def _save_parquet(data: List[Dict], output_file: Path) -> None:
+    """Save data as Parquet."""
+    try:
+        import pandas as pd
+        df = pd.DataFrame(data)
+        df.to_parquet(output_file, index=False)
+    except ImportError:
+        console.print("[red]❌ pandas and pyarrow required for Parquet export. Install with: pip install pandas pyarrow[/red]")
+        raise
+
+
+async def _compress_file(file_path: Path) -> None:
+    """Compress a file using gzip."""
+    import gzip
+    import shutil
+    
+    compressed_path = file_path.with_suffix(file_path.suffix + '.gz')
+    
+    with open(file_path, 'rb') as f_in:
+        with gzip.open(compressed_path, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    
+    # Remove original file
+    file_path.unlink()
+    console.print(f"🗜️  Compressed to {compressed_path}")
+
+
+@main.command()
+@click.argument('entity')
+@click.option('--filters', help='JSON string of filters')
+@click.option('--limit', type=int, default=100, help='Maximum records to display')
+@click.option('--fields', help='Comma-separated list of fields to display')
+def query(entity, filters, limit, fields):
+    """
+    Query Autotask entities and display results.
+    
+    ENTITY: Entity name to query (e.g., tickets, companies, contacts)
+    
+    Examples:
+        py-autotask query tickets --filters='[{"field":"status","op":"eq","value":"1"}]'
+        py-autotask query companies --limit=50 --fields=id,companyName,isActive
+    """
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided[/red]")
         sys.exit(1)
+    
+    asyncio.run(_execute_query(entity, filters, limit, fields))
+
+
+async def _execute_query(entity: str, filters: Optional[str], limit: int, fields: Optional[str]) -> None:
+    """Execute a query operation."""
+    try:
+        async with AsyncAutotaskClient.create(credentials=cli_config.credentials) as client:
+            
+            # Parse filters
+            query_filters = []
+            if filters:
+                try:
+                    query_filters = json.loads(filters)
+                except json.JSONDecodeError:
+                    console.print("[red]❌ Invalid filters JSON format[/red]")
+                    return
+            
+            # Parse fields
+            include_fields = None
+            if fields:
+                include_fields = [field.strip() for field in fields.split(',')]
+            
+            # Execute query
+            console.print(f"🔍 Querying {entity} (limit: {limit})...")
+            
+            entity_proxy = getattr(client, entity.lower(), None)
+            if entity_proxy:
+                response = await entity_proxy.query_async(
+                    filters=query_filters,
+                    max_records=limit,
+                    include_fields=include_fields
+                )
+            else:
+                response = await client.query_async(
+                    entity,
+                    filters=query_filters,
+                    max_records=limit,
+                    include_fields=include_fields
+                )
+            
+            # Display results
+            if response.items:
+                _display_query_results(entity, response.items, include_fields)
+            else:
+                console.print(f"[yellow]📭 No {entity} records found matching criteria[/yellow]")
+            
+    except Exception as e:
+        console.print(f"[red]❌ Query failed: {e}[/red]")
+
+
+def _display_query_results(entity: str, items: List[Dict], fields: Optional[List[str]]) -> None:
+    """Display query results in a formatted table."""
+    if not items:
+        return
+    
+    # Determine fields to display
+    if fields:
+        display_fields = fields
+    else:
+        # Use common fields or first few fields from first item
+        common_fields = ["id", "name", "title", "companyName", "status", "priority", "createDate"]
+        available_fields = list(items[0].keys())
+        display_fields = [field for field in common_fields if field in available_fields]
+        
+        # Add remaining fields up to a reasonable limit
+        remaining_fields = [field for field in available_fields if field not in display_fields]
+        display_fields.extend(remaining_fields[:5])  # Limit to prevent wide tables
+    
+    # Create table
+    table = Table(title=f"{entity} Query Results ({len(items)} records)")
+    
+    for field in display_fields:
+        table.add_column(field, style="cyan", no_wrap=True)
+    
+    # Add rows
+    for item in items[:20]:  # Limit displayed rows
+        row = []
+        for field in display_fields:
+            value = item.get(field, "")
+            # Truncate long values
+            if isinstance(value, str) and len(value) > 50:
+                value = value[:47] + "..."
+            row.append(str(value))
+        table.add_row(*row)
+    
+    console.print(table)
+    
+    if len(items) > 20:
+        console.print(f"[dim]... and {len(items) - 20} more records[/dim]")
+
+
+@main.command()
+@click.argument('entity')
+@click.argument('data_file')
+@click.option('--batch-size', type=int, default=100, help='Records per batch')
+@click.option('--parallel', is_flag=True, help='Use parallel processing')
+@click.option('--validate', is_flag=True, help='Validate data before upload')
+@click.option('--dry-run', is_flag=True, help='Simulate operation without actual changes')
+def bulk(entity, data_file, batch_size, parallel, validate, dry_run):
+    """
+    Perform bulk operations on Autotask entities from CSV/JSON files.
+    
+    ENTITY: Entity name (e.g., tickets, companies)
+    DATA_FILE: Path to CSV or JSON file containing entity data
+    
+    Examples:
+        py-autotask bulk tickets tickets.csv --batch-size=200 --parallel
+        py-autotask bulk companies companies.json --validate --dry-run
+    """
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided[/red]")
+        sys.exit(1)
+    
+    asyncio.run(_execute_bulk_operation(entity, data_file, batch_size, parallel, validate, dry_run))
+
+
+async def _execute_bulk_operation(entity: str, data_file: str, batch_size: int, parallel: bool, validate: bool, dry_run: bool) -> None:
+    """Execute bulk operation."""
+    try:
+        # Load data from file
+        data_path = Path(data_file)
+        if not data_path.exists():
+            console.print(f"[red]❌ File not found: {data_file}[/red]")
+            return
+        
+        console.print(f"📂 Loading data from {data_file}...")
+        
+        if data_path.suffix.lower() == '.csv':
+            data = _load_csv_data(data_path)
+        elif data_path.suffix.lower() == '.json':
+            data = _load_json_data(data_path)
+        else:
+            console.print("[red]❌ Unsupported file format. Use CSV or JSON.[/red]")
+            return
+        
+        console.print(f"✅ Loaded {len(data)} records")
+        
+        # Create async client and bulk manager
+        async with AsyncAutotaskClient.create(credentials=cli_config.credentials) as client:
+            bulk_manager = IntelligentBulkManager(client)
+            
+            # Configure bulk operation
+            config = BulkConfig(
+                batch_size=batch_size,
+                parallel=parallel,
+                validate_data=validate,
+                dry_run=dry_run,
+                progress_callback=lambda p: console.print(f"   Progress: {p:.1f}%", end='\r')
+            )
+            
+            console.print(f"🚀 Starting bulk create for {entity}...")
+            if dry_run:
+                console.print("[yellow]🧪 DRY RUN MODE - No actual changes will be made[/yellow]")
+            
+            # Execute bulk operation
+            result = await bulk_manager.bulk_create(entity, data, config)
+            
+            # Display results
+            _display_bulk_results(result)
+            
+    except Exception as e:
+        console.print(f"[red]❌ Bulk operation failed: {e}[/red]")
+
+
+def _load_csv_data(file_path: Path) -> List[Dict]:
+    """Load data from CSV file."""
+    data = []
+    with open(file_path, 'r', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        data = list(reader)
+    return data
+
+
+def _load_json_data(file_path: Path) -> List[Dict]:
+    """Load data from JSON file."""
+    with open(file_path, 'r', encoding='utf-8') as jsonfile:
+        data = json.load(jsonfile)
+    
+    if not isinstance(data, list):
+        raise ValueError("JSON file must contain a list of objects")
+    
+    return data
+
+
+def _display_bulk_results(result) -> None:
+    """Display bulk operation results."""
+    # Create results table
+    table = Table(title="Bulk Operation Results")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    
+    table.add_row("Operation", result.operation_type.value.title())
+    table.add_row("Entity", result.entity_name)
+    table.add_row("Total Records", str(result.total_records))
+    table.add_row("Successful", str(result.successful))
+    table.add_row("Failed", str(result.failed))
+    table.add_row("Duration", f"{result.duration:.2f}s")
+    table.add_row("Throughput", f"{result.throughput:.1f} records/min")
+    table.add_row("Batch Size", str(result.batch_size_used))
+    table.add_row("Parallel Workers", str(result.parallel_workers))
+    
+    console.print(table)
+    
+    # Display errors if any
+    if result.errors:
+        console.print(f"\n[red]❌ Errors ({len(result.errors)}):[/red]")
+        for i, error in enumerate(result.errors[:5]):  # Show first 5 errors
+            console.print(f"   {i+1}. {error.get('error', 'Unknown error')}")
+        
+        if len(result.errors) > 5:
+            console.print(f"   ... and {len(result.errors) - 5} more errors")
+
+
+@main.command()
+def test():
+    """Test connection to Autotask API and display zone information."""
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided[/red]")
+        sys.exit(1)
+    
+    asyncio.run(_test_connection())
+
+
+async def _test_connection() -> None:
+    """Test connection and display connection info."""
+    try:
+        console.print("🔗 Testing Autotask API connection...")
+        
+        async with AsyncAutotaskClient.create(credentials=cli_config.credentials) as client:
+            # Test connection
+            success = await client.test_connection_async()
+            
+            if success:
+                console.print("✅ Connection successful!")
+                
+                # Display zone info
+                zone_info = client.auth.zone_info
+                if zone_info:
+                    console.print(f"📍 Zone: {zone_info.url}")
+                    if hasattr(zone_info, 'zone_id'):
+                        console.print(f"🌍 Zone ID: {zone_info.zone_id}")
+                
+                # Get rate limit info
+                rate_info = await client.get_rate_limit_info()
+                if rate_info:
+                    table = Table(title="Rate Limit Information")
+                    table.add_column("Metric", style="cyan")
+                    table.add_column("Value", style="green")
+                    
+                    for key, value in rate_info.items():
+                        if value is not None:
+                            table.add_row(key.replace('_', ' ').title(), str(value))
+                    
+                    console.print(table)
+            else:
+                console.print("[red]❌ Connection failed[/red]")
+                
+    except Exception as e:
+        console.print(f"[red]❌ Connection test failed: {e}[/red]")
+
+
+@main.command()
+@click.argument('entity')
+@click.option('--count', is_flag=True, help='Show record count only')
+@click.option('--fields', is_flag=True, help='Show available fields')
+@click.option('--sample', type=int, help='Show sample records')
+def inspect(entity, count, fields, sample):
+    """
+    Inspect Autotask entities to understand data structure and availability.
+    
+    ENTITY: Entity name to inspect
+    
+    Examples:
+        py-autotask inspect tickets --count
+        py-autotask inspect companies --fields
+        py-autotask inspect contacts --sample=5
+    """
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided[/red]")
+        sys.exit(1)
+    
+    asyncio.run(_inspect_entity(entity, count, fields, sample))
+
+
+async def _inspect_entity(entity: str, show_count: bool, show_fields: bool, sample_size: Optional[int]) -> None:
+    """Inspect an entity."""
+    try:
+        async with AsyncAutotaskClient.create(credentials=cli_config.credentials) as client:
+            
+            if show_count:
+                console.print(f"📊 Counting {entity} records...")
+                
+                # Get total count (limit to reasonable number for counting)
+                response = await client.query_async(entity, max_records=10000)
+                count = len(response.items)
+                
+                console.print(f"✅ Total {entity} records: {count}")
+                
+                if count >= 10000:
+                    console.print("[yellow]⚠️  Showing count up to 10,000 records limit[/yellow]")
+            
+            if show_fields or sample_size:
+                console.print(f"🔍 Analyzing {entity} structure...")
+                
+                # Get sample records
+                sample_response = await client.query_async(entity, max_records=sample_size or 5)
+                
+                if sample_response.items:
+                    sample_item = sample_response.items[0]
+                    
+                    if show_fields:
+                        table = Table(title=f"{entity} Available Fields")
+                        table.add_column("Field Name", style="cyan")
+                        table.add_column("Sample Value", style="green")
+                        table.add_column("Type", style="yellow")
+                        
+                        for field_name, value in sample_item.items():
+                            sample_value = str(value)[:50] if value is not None else "NULL"
+                            value_type = type(value).__name__
+                            table.add_row(field_name, sample_value, value_type)
+                        
+                        console.print(table)
+                    
+                    if sample_size:
+                        console.print(f"\n📋 Sample {entity} records:")
+                        for i, item in enumerate(sample_response.items[:sample_size]):
+                            console.print(f"\n[bold]Record {i+1}:[/bold]")
+                            for key, value in list(item.items())[:10]:  # Limit fields shown
+                                console.print(f"  {key}: {value}")
+                            
+                            if len(item) > 10:
+                                console.print(f"  ... and {len(item) - 10} more fields")
+                else:
+                    console.print(f"[yellow]📭 No {entity} records found[/yellow]")
+                    
+    except Exception as e:
+        console.print(f"[red]❌ Inspection failed: {e}[/red]")
+
+
+@main.command()
+def entities():
+    """List all available Autotask entities that can be queried."""
+    # This would ideally query the API for available entities
+    # For now, showing common entities
+    
+    common_entities = [
+        "Tickets", "Companies", "Contacts", "Resources", "Projects", 
+        "TimeEntries", "Invoices", "Contracts", "Tasks", "Notes",
+        "Attachments", "Products", "Services", "Expenses", "Quotes"
+    ]
+    
+    table = Table(title="Available Autotask Entities")
+    table.add_column("Entity Name", style="cyan")
+    table.add_column("Description", style="green")
+    
+    entity_descriptions = {
+        "Tickets": "Support tickets and service requests",
+        "Companies": "Customer and prospect company records",
+        "Contacts": "Individual contact records",
+        "Resources": "Internal staff and technician records",
+        "Projects": "Project management records",
+        "TimeEntries": "Time tracking and billing records",
+        "Invoices": "Billing and invoice records",
+        "Contracts": "Service contracts and agreements",
+        "Tasks": "Task management records",
+        "Notes": "Notes and documentation",
+        "Attachments": "File attachments",
+        "Products": "Product catalog items",
+        "Services": "Service offerings",
+        "Expenses": "Expense tracking records",
+        "Quotes": "Sales quotes and proposals"
+    }
+    
+    for entity in common_entities:
+        description = entity_descriptions.get(entity, "Entity description")
+        table.add_row(entity, description)
+    
+    console.print(table)
+    console.print("\n[dim]💡 Use 'py-autotask inspect <entity>' to explore any entity structure[/dim]")
 
 
 if __name__ == "__main__":

@@ -1593,11 +1593,156 @@ class ProjectReportsEntity(BaseEntity):
         project_ids: Optional[List[int]],
         account_id: Optional[int],
     ) -> Optional[float]:
-        """Calculate a specific metric for a time period."""
-        # Mock implementation - would calculate actual metrics
-        import random
-
-        return round(random.uniform(50, 100), 2)
+        """Calculate a specific metric for a time period using actual Autotask data."""
+        try:
+            if metric_name == "completion_percentage":
+                return self._calculate_completion_percentage(project_ids, account_id, start_date, end_date)
+            elif metric_name == "budget_utilization":
+                return self._calculate_budget_utilization(project_ids, account_id, start_date, end_date)
+            elif metric_name == "time_utilization":
+                return self._calculate_time_utilization(project_ids, account_id, start_date, end_date)
+            elif metric_name == "resource_efficiency":
+                return self._calculate_resource_efficiency(project_ids, account_id, start_date, end_date)
+            elif metric_name == "milestone_completion":
+                return self._calculate_milestone_completion(project_ids, account_id, start_date, end_date)
+            else:
+                self.logger.warning(f"Unknown metric: {metric_name}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Failed to calculate metric {metric_name}: {e}")
+            return None
+    
+    def _calculate_completion_percentage(self, project_ids: Optional[List[int]], account_id: Optional[int], start_date: datetime, end_date: datetime) -> float:
+        """Calculate actual project completion percentage."""
+        try:
+            # Build filters for projects
+            project_filters = []
+            
+            if project_ids:
+                project_filters.append({"field": "id", "op": "in", "value": ",".join(map(str, project_ids))})
+            
+            if account_id:
+                project_filters.append({"field": "AccountID", "op": "eq", "value": str(account_id)})
+            
+            project_filters.extend([
+                {"field": "StartDate", "op": "gte", "value": start_date.isoformat()},
+                {"field": "StartDate", "op": "lte", "value": end_date.isoformat()},
+            ])
+            
+            # Get projects
+            projects_response = self.client.query("Projects", {"filter": project_filters})
+            
+            if not projects_response.items:
+                return 0.0
+            
+            total_completion = 0.0
+            project_count = len(projects_response.items)
+            
+            for project in projects_response.items:
+                # Calculate completion based on project status and milestones
+                project_status = project.get("Status")
+                
+                if project_status == 1:  # Complete
+                    total_completion += 100.0
+                elif project_status in [2, 3]:  # In progress or on hold
+                    # Calculate based on milestone completion
+                    project_id = project.get("id")
+                    milestone_completion = self._get_milestone_completion_for_project(project_id)
+                    total_completion += milestone_completion
+                else:  # Not started or other
+                    total_completion += 0.0
+            
+            return round(total_completion / project_count, 2) if project_count > 0 else 0.0
+            
+        except Exception as e:
+            self.logger.error(f"Failed to calculate completion percentage: {e}")
+            return 0.0
+    
+    def _calculate_budget_utilization(self, project_ids: Optional[List[int]], account_id: Optional[int], start_date: datetime, end_date: datetime) -> float:
+        """Calculate budget utilization percentage."""
+        try:
+            # Get projects with budget information
+            project_filters = self._build_project_filters(project_ids, account_id, start_date, end_date)
+            projects_response = self.client.query("Projects", {"filter": project_filters})
+            
+            if not projects_response.items:
+                return 0.0
+            
+            total_budget = 0.0
+            total_spent = 0.0
+            
+            for project in projects_response.items:
+                project_budget = float(project.get("Budget", 0) or 0)
+                project_id = project.get("id")
+                
+                if project_budget > 0:
+                    total_budget += project_budget
+                    
+                    # Calculate actual spending from time entries and expenses
+                    spent = self._calculate_project_spending(project_id, start_date, end_date)
+                    total_spent += spent
+            
+            return round((total_spent / total_budget) * 100, 2) if total_budget > 0 else 0.0
+            
+        except Exception as e:
+            self.logger.error(f"Failed to calculate budget utilization: {e}")
+            return 0.0
+    
+    def _calculate_project_spending(self, project_id: int, start_date: datetime, end_date: datetime) -> float:
+        """Calculate total spending for a project."""
+        try:
+            total_spending = 0.0
+            
+            # Get time entries for the project
+            time_filters = [
+                {"field": "ProjectID", "op": "eq", "value": str(project_id)},
+                {"field": "DateWorked", "op": "gte", "value": start_date.isoformat()},
+                {"field": "DateWorked", "op": "lte", "value": end_date.isoformat()},
+            ]
+            
+            time_entries_response = self.client.query("TimeEntries", {"filter": time_filters})
+            
+            for time_entry in time_entries_response.items:
+                hours = float(time_entry.get("HoursWorked", 0) or 0)
+                rate = float(time_entry.get("BillingRate", 0) or 0)
+                total_spending += hours * rate
+            
+            # Get expenses for the project
+            expense_filters = [
+                {"field": "ProjectID", "op": "eq", "value": str(project_id)},
+                {"field": "ExpenseDate", "op": "gte", "value": start_date.isoformat()},
+                {"field": "ExpenseDate", "op": "lte", "value": end_date.isoformat()},
+            ]
+            
+            expenses_response = self.client.query("Expenses", {"filter": expense_filters})
+            
+            for expense in expenses_response.items:
+                amount = float(expense.get("Amount", 0) or 0)
+                total_spending += amount
+            
+            return total_spending
+            
+        except Exception as e:
+            self.logger.error(f"Failed to calculate project spending for {project_id}: {e}")
+            return 0.0
+    
+    def _build_project_filters(self, project_ids: Optional[List[int]], account_id: Optional[int], start_date: datetime, end_date: datetime) -> List[Dict]:
+        """Build common project filters."""
+        filters = []
+        
+        if project_ids:
+            filters.append({"field": "id", "op": "in", "value": ",".join(map(str, project_ids))})
+        
+        if account_id:
+            filters.append({"field": "AccountID", "op": "eq", "value": str(account_id)})
+        
+        filters.extend([
+            {"field": "StartDate", "op": "gte", "value": start_date.isoformat()},
+            {"field": "StartDate", "op": "lte", "value": end_date.isoformat()},
+        ])
+        
+        return filters
 
     def _calculate_trend_strength(self, values: List[float]) -> str:
         """Calculate trend strength from values."""
@@ -1725,11 +1870,100 @@ class ProjectReportsEntity(BaseEntity):
         ]
 
     def _calculate_project_metric(self, project_id: int, metric: str) -> float:
-        """Calculate a specific metric for a project."""
-        # Mock implementation - would calculate actual metric
-        import random
-
-        return round(random.uniform(60, 95), 2)
+        """Calculate a specific metric for a project using actual Autotask data."""
+        try:
+            if metric == "completion_percentage":
+                return self._get_project_completion_percentage(project_id)
+            elif metric == "budget_utilization":
+                return self._get_project_budget_utilization(project_id)
+            elif metric == "time_efficiency":
+                return self._get_project_time_efficiency(project_id)
+            elif metric == "milestone_completion":
+                return self._get_milestone_completion_for_project(project_id)
+            elif metric == "resource_utilization":
+                return self._get_project_resource_utilization(project_id)
+            else:
+                self.logger.warning(f"Unknown project metric: {metric}")
+                return 0.0
+                
+        except Exception as e:
+            self.logger.error(f"Failed to calculate project metric {metric} for project {project_id}: {e}")
+            return 0.0
+    
+    def _get_project_completion_percentage(self, project_id: int) -> float:
+        """Get actual completion percentage for a specific project."""
+        try:
+            # Get the project details
+            project = self.client.get("Projects", project_id)
+            if not project:
+                return 0.0
+            
+            project_status = project.get("Status")
+            
+            if project_status == 1:  # Complete
+                return 100.0
+            elif project_status in [2, 3]:  # In progress or on hold
+                # Calculate based on milestone completion
+                return self._get_milestone_completion_for_project(project_id)
+            else:
+                return 0.0
+                
+        except Exception as e:
+            self.logger.error(f"Failed to get completion percentage for project {project_id}: {e}")
+            return 0.0
+    
+    def _get_milestone_completion_for_project(self, project_id: int) -> float:
+        """Calculate milestone completion percentage for a project."""
+        try:
+            # Get project milestones
+            milestone_filters = [
+                {"field": "ProjectID", "op": "eq", "value": str(project_id)}
+            ]
+            
+            milestones_response = self.client.query("ProjectMilestones", {"filter": milestone_filters})
+            
+            if not milestones_response.items:
+                # No milestones defined, check tasks instead
+                return self._get_task_completion_for_project(project_id)
+            
+            total_milestones = len(milestones_response.items)
+            completed_milestones = 0
+            
+            for milestone in milestones_response.items:
+                if milestone.get("Status") == 1:  # Complete
+                    completed_milestones += 1
+            
+            return round((completed_milestones / total_milestones) * 100, 2) if total_milestones > 0 else 0.0
+            
+        except Exception as e:
+            self.logger.error(f"Failed to calculate milestone completion for project {project_id}: {e}")
+            return 0.0
+    
+    def _get_task_completion_for_project(self, project_id: int) -> float:
+        """Calculate task completion percentage as fallback when no milestones exist."""
+        try:
+            # Get project tasks
+            task_filters = [
+                {"field": "ProjectID", "op": "eq", "value": str(project_id)}
+            ]
+            
+            tasks_response = self.client.query("Tasks", {"filter": task_filters})
+            
+            if not tasks_response.items:
+                return 0.0
+            
+            total_tasks = len(tasks_response.items)
+            completed_tasks = 0
+            
+            for task in tasks_response.items:
+                if task.get("Status") == 5:  # Complete
+                    completed_tasks += 1
+            
+            return round((completed_tasks / total_tasks) * 100, 2) if total_tasks > 0 else 0.0
+            
+        except Exception as e:
+            self.logger.error(f"Failed to calculate task completion for project {project_id}: {e}")
+            return 0.0
 
     def _generate_comparative_insights(
         self, project_data: List[Dict], metrics: List[str]

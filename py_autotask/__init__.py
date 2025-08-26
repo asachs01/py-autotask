@@ -26,12 +26,14 @@ Example:
     })
 """
 
-__version__ = "0.1.1"
+__version__ = "2.1.0"
 __author__ = "Aaron Sachs"
 __email__ = "asachs@wyre.engineering"
 
 # Core imports
 from .client import AutotaskClient
+from .async_client import AsyncAutotaskClient
+from .bulk_manager import IntelligentBulkManager, BulkConfig, BulkResult
 from .exceptions import (
     AutotaskAPIError,
     AutotaskAuthError,
@@ -51,6 +53,10 @@ from .types import (
 __all__ = [
     # Core classes
     "AutotaskClient",
+    "AsyncAutotaskClient",
+    "IntelligentBulkManager",
+    "BulkConfig",
+    "BulkResult",
     # Exceptions
     "AutotaskError",
     "AutotaskAPIError",
