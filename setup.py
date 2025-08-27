@@ -11,7 +11,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="py-autotask",
-    version="2.1.0",
+    version="1.0.0",
     author="Aaron Sachs",
     author_email="asachs@wyre.engineering",
     description="A comprehensive Python client library for the Autotask REST API",
