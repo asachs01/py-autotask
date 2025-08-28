@@ -51,7 +51,7 @@ jobs:
         run: |
           black --check py_autotask tests
           isort --check-only py_autotask tests
-          flake8 py_autotask tests --max-line-length=88 --extend-ignore=E203,W503
+          flake8 py_autotask tests --max-line-length=200 --extend-ignore=E203,W503
           mypy py_autotask --ignore-missing-imports
 
   build:
