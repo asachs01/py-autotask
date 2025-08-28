@@ -126,8 +126,11 @@ class ZoneInfo(BaseModel):
     """Information about an Autotask zone."""
 
     url: str = Field(..., description="Zone API URL")
-    data_base_type: str = Field(..., alias="dataBaseType")
-    ci_level: int = Field(..., alias="ciLevel")
+    zone_name: Optional[str] = Field(None, alias="zoneName", description="Zone name")
+    web_url: Optional[str] = Field(None, alias="webUrl", description="Web URL")
+    ci: Optional[int] = Field(None, description="CI identifier")
+    data_base_type: Optional[str] = Field(None, alias="dataBaseType")
+    ci_level: Optional[int] = Field(None, alias="ciLevel")
 
 
 class AuthCredentials(BaseModel):

@@ -814,9 +814,13 @@ async def _test_connection() -> None:
                 # Display zone info
                 zone_info = client.auth.zone_info
                 if zone_info:
-                    console.print(f"📍 Zone: {zone_info.url}")
-                    if hasattr(zone_info, "zone_id"):
-                        console.print(f"🌍 Zone ID: {zone_info.zone_id}")
+                    if zone_info.zone_name:
+                        console.print(f"🌍 Zone: {zone_info.zone_name}")
+                    console.print(f"📍 API URL: {zone_info.url}")
+                    if zone_info.web_url:
+                        console.print(f"🌐 Web URL: {zone_info.web_url}")
+                    if zone_info.ci is not None:
+                        console.print(f"🔢 CI: {zone_info.ci}")
 
                 # Get rate limit info
                 rate_info = await client.get_rate_limit_info()

@@ -256,12 +256,20 @@ class AutotaskAuth:
                 logger.info(f"Detected API zone: {self._zone_info.url}")
 
                 # Cache the zone information
+                zone_info_dict = {"url": self._zone_info.url}
+                if self._zone_info.zone_name:
+                    zone_info_dict["zoneName"] = self._zone_info.zone_name
+                if self._zone_info.web_url:
+                    zone_info_dict["webUrl"] = self._zone_info.web_url
+                if self._zone_info.ci is not None:
+                    zone_info_dict["ci"] = self._zone_info.ci
+                if self._zone_info.data_base_type:
+                    zone_info_dict["dataBaseType"] = self._zone_info.data_base_type
+                if self._zone_info.ci_level is not None:
+                    zone_info_dict["ciLevel"] = self._zone_info.ci_level
+                    
                 self._zone_cache[cache_key] = {
-                    "zone_info": {
-                        "url": self._zone_info.url,
-                        "dataBaseType": self._zone_info.data_base_type,
-                        "ciLevel": self._zone_info.ci_level,
-                    },
+                    "zone_info": zone_info_dict,
                     "timestamp": time.time(),
                 }
 
@@ -313,8 +321,8 @@ class AutotaskAuth:
 
         self._zone_info = ZoneInfo(
             url=zone_url,
-            dataBaseType="Production",  # Default for production environments
-            ciLevel=1,  # Default CI level
+            data_base_type="Production",  # Default for production environments
+            ci_level=1,  # Default CI level
         )
         logger.info(f"Fallback zone selected: {zone_url} (Zone {zone_id})")
 
@@ -332,8 +340,8 @@ class AutotaskAuth:
             zone_url = self.ZONE_URLS[zone]
             self._zone_info = ZoneInfo(
                 url=zone_url,
-                dataBaseType="Production",  # Default for production environments
-                ciLevel=1,  # Default CI level
+                data_base_type="Production",  # Default for production environments
+                ci_level=1,  # Default CI level
             )
             logger.info(f"Manually set zone to: {zone_url} (Zone {zone})")
         else:
