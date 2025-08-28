@@ -12,12 +12,11 @@ import csv
 import json
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import click
-from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -33,7 +32,7 @@ from .async_client import AsyncAutotaskClient
 from .bulk_manager import BulkConfig, IntelligentBulkManager
 from .client import AutotaskClient
 from .exceptions import AutotaskError
-from .types import AuthCredentials, RequestConfig
+from .types import AuthCredentials
 
 console = Console()
 
@@ -99,6 +98,8 @@ def main(
     Liberate your Autotask data with powerful export, analysis, and manipulation capabilities.
     Break free from platform limitations and own your data completely.
     """
+    global cli_config
+    
     if username and integration_code and secret:
         cli_config.credentials = AuthCredentials(
             username=username,

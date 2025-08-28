@@ -6,16 +6,12 @@ bulk operations, migration, and advanced Autotask data management.
 """
 
 import asyncio
-import csv
 import json
-import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 import click
 import pandas as pd
-from rich import print as rprint
 from rich.console import Console
 from rich.progress import (
     BarColumn,
@@ -29,8 +25,6 @@ from rich.table import Table
 from .async_client import AsyncAutotaskClient
 from .bulk_manager import IntelligentBulkManager
 from .caching import CacheConfig
-from .client import AutotaskClient
-from .exceptions import AutotaskError
 
 console = Console()
 
