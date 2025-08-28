@@ -37,15 +37,25 @@ setup(
     python_requires=">=3.8",
     install_requires=requirements,
     extras_require={
+        "test": [
+            "pytest>=7.0.0",
+            "pytest-cov>=4.0.0",
+            "pytest-mock>=3.10.0",
+            "responses>=0.23.0",
+            "pytest-benchmark>=3.4.1",
+        ],
         "dev": [
             "pytest>=7.0.0",
             "pytest-cov>=4.0.0",
             "pytest-mock>=3.10.0",
             "responses>=0.23.0",
+            "pytest-benchmark>=3.4.1",
             "black>=23.0.0",
             "isort>=5.12.0",
             "flake8>=6.0.0",
             "mypy>=1.0.0",
+            "bandit>=1.7.0",
+            "safety>=2.3.0",
         ],
     },
     entry_points={
