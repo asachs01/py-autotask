@@ -200,9 +200,10 @@ async def _export_data(
 
     try:
         # Create async client for maximum performance
-        async with AsyncAutotaskClient.create(
+        client = await AsyncAutotaskClient.create(
             credentials=cli_config.credentials
-        ) as client:
+        )
+        async with client:
 
             # Test connection first
             console.print("🔗 Testing connection to Autotask API...")
@@ -518,9 +519,10 @@ async def _execute_query(
 ) -> None:
     """Execute a query operation."""
     try:
-        async with AsyncAutotaskClient.create(
+        client = await AsyncAutotaskClient.create(
             credentials=cli_config.credentials
-        ) as client:
+        )
+        async with client:
 
             # Parse filters
             query_filters = []
@@ -679,9 +681,10 @@ async def _execute_bulk_operation(
         console.print(f"✅ Loaded {len(data)} records")
 
         # Create async client and bulk manager
-        async with AsyncAutotaskClient.create(
+        client = await AsyncAutotaskClient.create(
             credentials=cli_config.credentials
-        ) as client:
+        )
+        async with client:
             bulk_manager = IntelligentBulkManager(client)
 
             # Configure bulk operation
@@ -785,9 +788,10 @@ async def _test_connection() -> None:
     try:
         console.print("🔗 Testing Autotask API connection...")
 
-        async with AsyncAutotaskClient.create(
+        client = await AsyncAutotaskClient.create(
             credentials=cli_config.credentials
-        ) as client:
+        )
+        async with client:
             # Test connection
             success = await client.test_connection_async()
 
@@ -848,9 +852,10 @@ async def _inspect_entity(
 ) -> None:
     """Inspect an entity."""
     try:
-        async with AsyncAutotaskClient.create(
+        client = await AsyncAutotaskClient.create(
             credentials=cli_config.credentials
-        ) as client:
+        )
+        async with client:
 
             if show_count:
                 console.print(f"📊 Counting {entity} records...")
