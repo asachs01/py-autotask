@@ -761,6 +761,16 @@ def _display_bulk_results(result) -> None:
 
 
 @main.command()
+def auth():
+    """Authenticate with Autotask API and display zone information."""
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided[/red]")
+        sys.exit(1)
+
+    asyncio.run(_test_connection())
+
+
+@main.command()
 def test():
     """Test connection to Autotask API and display zone information."""
     if not cli_config.credentials:

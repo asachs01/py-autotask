@@ -205,5 +205,5 @@ class AttachmentData(BaseModel):
     last_modified_by: Optional[int] = None
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         alias_generator = None

@@ -170,10 +170,12 @@ class AutotaskAuth:
 
             # Allow redirects and log them
             response = session.get(self.ZONE_INFO_URL, timeout=30, allow_redirects=True)
-            
+
             # Log if there was a redirect
             if response.history:
-                logger.warning(f"Zone detection was redirected from {self.ZONE_INFO_URL} to {response.url}")
+                logger.warning(
+                    f"Zone detection was redirected from {self.ZONE_INFO_URL} to {response.url}"
+                )
 
             if response.status_code == 404:
                 logger.error(f"Zone detection endpoint not found at {response.url}")
@@ -182,7 +184,9 @@ class AutotaskAuth:
                     http_url = response.url.replace("https://", "http://", 1)
                     logger.warning(f"Trying HTTP fallback: {http_url}")
                     try:
-                        http_response = session.get(http_url, timeout=30, allow_redirects=True)
+                        http_response = session.get(
+                            http_url, timeout=30, allow_redirects=True
+                        )
                         if http_response.ok:
                             response = http_response
                             logger.info("HTTP fallback succeeded")
