@@ -153,7 +153,7 @@ class AutotaskAuth:
                 return
 
         try:
-            logger.info("Detecting Autotask API zone...")
+            logger.info(f"Detecting Autotask API zone using: {self.ZONE_INFO_URL}")
 
             # Create a temporary session for zone detection
             session = requests.Session()
@@ -168,9 +168,44 @@ class AutotaskAuth:
                 }
             )
 
-            response = session.get(self.ZONE_INFO_URL, timeout=30)
+            # Allow redirects and log them
+            response = session.get(self.ZONE_INFO_URL, timeout=30, allow_redirects=True)
+            
+            # Log if there was a redirect
+            if response.history:
+                logger.warning(f"Zone detection was redirected from {self.ZONE_INFO_URL} to {response.url}")
 
-            if response.status_code == 401:
+            if response.status_code == 404:
+                logger.error(f"Zone detection endpoint not found at {response.url}")
+                # Try with HTTP as a fallback in case of environment-specific issues
+                if response.url.startswith("https://"):
+                    http_url = response.url.replace("https://", "http://", 1)
+                    logger.warning(f"Trying HTTP fallback: {http_url}")
+                    try:
+                        http_response = session.get(http_url, timeout=30, allow_redirects=True)
+                        if http_response.ok:
+                            response = http_response
+                            logger.info("HTTP fallback succeeded")
+                        else:
+                            raise AutotaskConnectionError(
+                                f"Zone detection endpoint not found at either HTTPS or HTTP.\n"
+                                f"HTTPS URL: {response.url} (404)\n"
+                                f"HTTP URL: {http_url} ({http_response.status_code})\n"
+                                "Please ensure you have the latest version of py-autotask."
+                            )
+                    except requests.exceptions.RequestException:
+                        raise AutotaskConnectionError(
+                            f"Zone detection endpoint not found. URL: {response.url}\n"
+                            "This may indicate an API endpoint change. Please ensure you have "
+                            "the latest version of py-autotask or check Autotask API documentation."
+                        )
+                else:
+                    raise AutotaskConnectionError(
+                        f"Zone detection endpoint not found. URL: {response.url}\n"
+                        "This may indicate an API endpoint change. Please ensure you have "
+                        "the latest version of py-autotask or check Autotask API documentation."
+                    )
+            elif response.status_code == 401:
                 raise AutotaskAuthError(
                     "Authentication failed during zone detection. "
                     "Please check your username, integration code, and secret."
@@ -240,6 +275,7 @@ class AutotaskAuth:
     def _fallback_zone_detection(self) -> None:
         """
         Fallback zone detection using intelligent heuristics.
+        Tries HTTP if HTTPS fails as some environments may have redirect issues.
         """
         logger.info("Using fallback zone detection strategy")
 

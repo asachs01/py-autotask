@@ -211,3 +211,33 @@ class TestAutotaskAuth:
 
         auth.close()
         assert auth._session is None
+
+    @responses.activate
+    def test_zone_detection_404_with_http_fallback(self, sample_credentials):
+        """Test zone detection handles 404 and tries HTTP fallback."""
+        # HTTPS returns 404
+        responses.add(
+            responses.GET, 
+            AutotaskAuth.ZONE_INFO_URL,
+            status=404
+        )
+        
+        # HTTP fallback succeeds
+        http_url = AutotaskAuth.ZONE_INFO_URL.replace("https://", "http://")
+        responses.add(
+            responses.GET,
+            http_url,
+            json={
+                "url": "https://webservices123.autotask.net/atservicesrest",
+                "dataBaseType": "Production",
+                "ciLevel": "1",
+            },
+            status=200,
+        )
+
+        auth = AutotaskAuth(sample_credentials)
+        
+        # This should succeed with HTTP fallback
+        api_url = auth.api_url
+        assert auth._zone_info is not None
+        assert api_url == "https://webservices123.autotask.net/atservicesrest"
