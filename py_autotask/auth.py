@@ -267,7 +267,7 @@ class AutotaskAuth:
                     zone_info_dict["dataBaseType"] = self._zone_info.data_base_type
                 if self._zone_info.ci_level is not None:
                     zone_info_dict["ciLevel"] = self._zone_info.ci_level
-                    
+
                 self._zone_cache[cache_key] = {
                     "zone_info": zone_info_dict,
                     "timestamp": time.time(),

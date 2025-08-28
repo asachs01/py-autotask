@@ -42,7 +42,9 @@ class TestAutotaskAuth:
     def test_zone_detection_success(self, sample_credentials):
         """Test successful zone detection."""
         # Mock zone detection response with user parameter
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET,
             zone_url_with_user,
@@ -64,7 +66,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_auth_error(self, sample_credentials):
         """Test zone detection with authentication error."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(responses.GET, zone_url_with_user, status=401)
 
         auth = AutotaskAuth(sample_credentials)
@@ -75,7 +79,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_invalid_integration_code(self, sample_credentials):
         """Test zone detection with invalid integration code."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET,
             zone_url_with_user,
@@ -91,7 +97,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_invalid_username(self, sample_credentials):
         """Test zone detection with invalid username."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET,
             zone_url_with_user,
@@ -107,7 +115,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_network_error(self, sample_credentials):
         """Test zone detection with network error."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET, zone_url_with_user, body=responses.ConnectionError()
         )
@@ -120,7 +130,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_invalid_response(self, sample_credentials):
         """Test zone detection with invalid response format."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET,
             zone_url_with_user,
@@ -156,7 +168,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_validate_credentials_success(self, sample_credentials):
         """Test credential validation success."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET,
             zone_url_with_user,
@@ -182,7 +196,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_validate_credentials_failure(self, sample_credentials):
         """Test credential validation failure."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(responses.GET, zone_url_with_user, status=401)
 
         auth = AutotaskAuth(sample_credentials)
@@ -191,7 +207,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_reset_zone_cache(self, sample_credentials):
         """Test zone cache reset."""
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
         responses.add(
             responses.GET,
             zone_url_with_user,
@@ -225,8 +243,10 @@ class TestAutotaskAuth:
     def test_zone_detection_404_with_http_fallback(self, sample_credentials):
         """Test zone detection handles 404 and tries HTTP fallback."""
         # Build URLs with user parameter
-        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
-        
+        zone_url_with_user = (
+            f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        )
+
         # HTTPS returns 404
         responses.add(responses.GET, zone_url_with_user, status=404)
 

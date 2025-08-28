@@ -200,9 +200,7 @@ async def _export_data(
 
     try:
         # Create async client for maximum performance
-        client = await AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        )
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
 
             # Test connection first
@@ -519,9 +517,7 @@ async def _execute_query(
 ) -> None:
     """Execute a query operation."""
     try:
-        client = await AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        )
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
 
             # Parse filters
@@ -681,9 +677,7 @@ async def _execute_bulk_operation(
         console.print(f"✅ Loaded {len(data)} records")
 
         # Create async client and bulk manager
-        client = await AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        )
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
             bulk_manager = IntelligentBulkManager(client)
 
@@ -787,23 +781,29 @@ async def _test_connection() -> None:
     """Test connection and display connection info."""
     try:
         console.print("🔗 Testing Autotask API connection...")
-        
+
         # Debug: Show if credentials are loaded
         if cli_config.credentials:
-            console.print(f"[dim]📧 Using username: {cli_config.credentials.username}[/dim]")
-            console.print(f"[dim]🔑 Integration code: {'*' * len(cli_config.credentials.integration_code) if cli_config.credentials.integration_code else 'NOT SET'}[/dim]")
-            console.print(f"[dim]🔐 Secret: {'SET' if cli_config.credentials.secret else 'NOT SET'}[/dim]")
+            console.print(
+                f"[dim]📧 Using username: {cli_config.credentials.username}[/dim]"
+            )
+            console.print(
+                f"[dim]🔑 Integration code: {'*' * len(cli_config.credentials.integration_code) if cli_config.credentials.integration_code else 'NOT SET'}[/dim]"
+            )
+            console.print(
+                f"[dim]🔐 Secret: {'SET' if cli_config.credentials.secret else 'NOT SET'}[/dim]"
+            )
         else:
-            console.print("[yellow]⚠️  No credentials found in environment or command line[/yellow]")
+            console.print(
+                "[yellow]⚠️  No credentials found in environment or command line[/yellow]"
+            )
             console.print("[dim]Expected environment variables:[/dim]")
             console.print("[dim]  AUTOTASK_USERNAME[/dim]")
             console.print("[dim]  AUTOTASK_INTEGRATION_CODE[/dim]")
             console.print("[dim]  AUTOTASK_SECRET[/dim]")
             return
 
-        client = await AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        )
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
             # Test connection
             success = await client.test_connection_async()
@@ -869,9 +869,7 @@ async def _inspect_entity(
 ) -> None:
     """Inspect an entity."""
     try:
-        client = await AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        )
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
 
             if show_count:

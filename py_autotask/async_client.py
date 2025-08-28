@@ -605,12 +605,15 @@ class AsyncAutotaskClient:
             ) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    self.logger.error(f"Connection test failed with status {response.status}: {error_text}")
+                    self.logger.error(
+                        f"Connection test failed with status {response.status}: {error_text}"
+                    )
                 return response.status == 200
 
         except Exception as e:
             self.logger.error(f"Async connection test failed: {e}")
             import traceback
+
             self.logger.error(f"Traceback: {traceback.format_exc()}")
             return False
 
