@@ -32,11 +32,20 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "requests>=2.25.0",
-    "pydantic>=1.8.0",
+    "requests>=2.31.0",
+    "pydantic>=2.0.0",
     "click>=8.0.0",
+    "python-dotenv>=1.0.0",
+    "tenacity>=8.0.0",
+    "httpx>=0.24.0",
+    "typing-extensions>=4.0.0",
+    "aiohttp>=3.8.0",
+    "redis>=4.5.0",
+    "pandas>=2.0.0",
+    "openpyxl>=3.1.0",
+    "pyarrow>=12.0.0",
+    "tqdm>=4.65.0",
     "rich>=10.0.0",
-    "typing-extensions>=4.0.0; python_version<'3.10'",
 ]
 
 [project.optional-dependencies]
