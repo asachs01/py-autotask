@@ -6,8 +6,27 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "r", encoding="utf-8") as fh:
-    requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+try:
+    with open("requirements.txt", "r", encoding="utf-8") as fh:
+        requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+except FileNotFoundError:
+    # Fallback if requirements.txt is not found (e.g., in CI)
+    requirements = [
+        "requests>=2.31.0",
+        "pydantic>=2.0.0", 
+        "click>=8.0.0",
+        "python-dotenv>=1.0.0",
+        "tenacity>=8.0.0",
+        "httpx>=0.24.0",
+        "typing-extensions>=4.0.0",
+        "aiohttp>=3.8.0",
+        "redis>=4.5.0",
+        "pandas>=2.0.0",
+        "openpyxl>=3.1.0",
+        "pyarrow>=12.0.0",
+        "tqdm>=4.65.0",
+        "rich>=10.0.0",
+    ]
 
 setup(
     name="py-autotask",
