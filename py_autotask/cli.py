@@ -99,7 +99,7 @@ def main(
     Break free from platform limitations and own your data completely.
     """
     global cli_config
-    
+
     if username and integration_code and secret:
         cli_config.credentials = AuthCredentials(
             username=username,
