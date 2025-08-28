@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__smart-tree__project_overview",
+      "WebFetch(domain:www.autotask.net)",
+      "mcp__perplexity-ask__perplexity_ask",
+      "mcp__notion__notion-update-page",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
