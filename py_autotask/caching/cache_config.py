@@ -3,8 +3,8 @@ Cache configuration for py-autotask caching system.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
 from enum import Enum
+from typing import Dict, Optional, Union
 
 
 class CacheBackendType(Enum):

@@ -2,9 +2,9 @@
 Ticket Costs entity for Autotask API operations.
 """
 
-from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict, EntityList
 from .base import BaseEntity

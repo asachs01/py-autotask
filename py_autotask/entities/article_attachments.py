@@ -6,8 +6,8 @@ attachments associated with knowledge base articles.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

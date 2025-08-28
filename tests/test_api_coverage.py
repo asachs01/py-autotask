@@ -6,11 +6,12 @@ of the Autotask REST API, including all major endpoints, entity types,
 and operation patterns.
 """
 
-import pytest
 import inspect
-import requests
-from unittest.mock import Mock, patch
 from typing import Dict, List, Set
+from unittest.mock import Mock, patch
+
+import pytest
+import requests
 
 try:
     import responses
@@ -20,10 +21,10 @@ except ImportError:
     HAS_RESPONSES = False
     responses = None
 
+from py_autotask import entities
 from py_autotask.client import AutotaskClient
 from py_autotask.entities import EntityManager
 from py_autotask.entities.base import BaseEntity
-from py_autotask import entities
 
 
 class TestAPICoverage:
@@ -444,8 +445,8 @@ class TestAPICoverage:
         """Test that proper error handling is implemented."""
         from py_autotask.exceptions import (
             AutotaskConnectionError,
-            AutotaskValidationError,
             AutotaskTimeoutError,
+            AutotaskValidationError,
         )
 
         # Test that custom exceptions are defined and importable

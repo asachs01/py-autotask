@@ -30,10 +30,11 @@ __version__ = "1.0.0"
 __author__ = "Aaron Sachs"
 __email__ = "asachs@wyre.engineering"
 
+from .async_client import AsyncAutotaskClient
+from .bulk_manager import BulkConfig, BulkResult, IntelligentBulkManager
+
 # Core imports
 from .client import AutotaskClient
-from .async_client import AsyncAutotaskClient
-from .bulk_manager import IntelligentBulkManager, BulkConfig, BulkResult
 from .exceptions import (
     AutotaskAPIError,
     AutotaskAuthError,

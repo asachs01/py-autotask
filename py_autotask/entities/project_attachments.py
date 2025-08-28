@@ -6,9 +6,9 @@ attachments to projects in Autotask. Project Attachments handle project-related
 documents, files, and media storage with version control and access management.
 """
 
+import base64
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
-import base64
 
 from .base import BaseEntity
 

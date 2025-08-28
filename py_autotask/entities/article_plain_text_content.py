@@ -5,9 +5,9 @@ This module provides the ArticlePlainTextContentEntity class for managing
 plain text content versions of knowledge base articles for search and indexing.
 """
 
+import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-import re
 
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity

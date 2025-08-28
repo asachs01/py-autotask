@@ -9,7 +9,7 @@ intelligent connection pooling, and async context management.
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional, Union, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
 import aiohttp
 from aiohttp import ClientTimeout, TCPConnector

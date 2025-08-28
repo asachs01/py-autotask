@@ -12,23 +12,24 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
 import click
 import pandas as pd
+from rich import print as rprint
 from rich.console import Console
 from rich.progress import (
+    BarColumn,
     Progress,
     SpinnerColumn,
     TextColumn,
-    BarColumn,
     TimeElapsedColumn,
 )
 from rich.table import Table
-from rich import print as rprint
 
-from .client import AutotaskClient
 from .async_client import AsyncAutotaskClient
 from .bulk_manager import IntelligentBulkManager
 from .caching import CacheConfig
+from .client import AutotaskClient
 from .exceptions import AutotaskError
 
 console = Console()

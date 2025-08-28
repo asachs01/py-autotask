@@ -6,8 +6,9 @@ complete Autotask API coverage, focusing on entity-specific functionality
 and specialized operations.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 try:
     import responses
@@ -18,16 +19,11 @@ except ImportError:
     responses = None
 
 from py_autotask.client import AutotaskClient
-from py_autotask.entities import (
-    # Advanced entities from Week 6
+from py_autotask.entities import (  # Advanced entities from Week 6; Article/Knowledge Base entities; Business & Financial entities; Company-related entities; Configuration Item entities; Contact entities; Contract entities; Financial entities; Document entities; Expense entities; System entities; Notification entities; Product entities; Project entities; Purchase entities; Quote entities; Resource entities; Service entities; System configuration entities; Task entities; Ticket entities; Additional entities; Tax and shipping entities; Survey and subscription entities; Price list entities; Organizational entities
     ActionTypesEntity,
     AdditionalInvoiceFieldValuesEntity,
     APIUsageMetricsEntity,
     AppointmentsEntity,
-    AttachmentInfoEntity,
-    AutomationRulesEntity,
-    BackupConfigurationEntity,
-    # Article/Knowledge Base entities
     ArticleAttachmentsEntity,
     ArticleConfigurationItemCategoryAssociationsEntity,
     ArticleNotesEntity,
@@ -36,7 +32,9 @@ from py_autotask.entities import (
     ArticleTicketAssociationsEntity,
     ArticleToArticleAssociationsEntity,
     ArticleToDocumentAssociationsEntity,
-    # Business & Financial entities
+    AttachmentInfoEntity,
+    AutomationRulesEntity,
+    BackupConfigurationEntity,
     BillingItemApprovalLevelsEntity,
     BusinessRulesEntity,
     ChangeOrderChargesEntity,
@@ -46,8 +44,6 @@ from py_autotask.entities import (
     ClassificationIconsEntity,
     ClientPortalUsersEntity,
     ComanagedAssociationsEntity,
-    ComplianceFrameworksEntity,
-    # Company-related entities
     CompanyAlertsEntity,
     CompanyAttachmentsEntity,
     CompanyCategoriesEntity,
@@ -57,7 +53,7 @@ from py_autotask.entities import (
     CompanySiteConfigurationsEntity,
     CompanyTeamsEntity,
     CompanyToDosEntity,
-    # Configuration Item entities
+    ComplianceFrameworksEntity,
     ConfigurationItemAttachmentsEntity,
     ConfigurationItemBillingProductAssociationsEntity,
     ConfigurationItemCategoriesEntity,
@@ -67,11 +63,9 @@ from py_autotask.entities import (
     ConfigurationItemNotesEntity,
     ConfigurationItemRelatedItemsEntity,
     ConfigurationItemSslSubjectAlternativeNameEntity,
-    # Contact entities
     ContactBillingProductAssociationsEntity,
-    ContactGroupsEntity,
     ContactGroupContactsEntity,
-    # Contract entities
+    ContactGroupsEntity,
     ContractBillingRulesEntity,
     ContractBlockHourFactorsEntity,
     ContractExclusionBillingCodesEntity,
@@ -83,67 +77,68 @@ from py_autotask.entities import (
     ContractRetainersEntity,
     ContractRolesEntity,
     ContractServiceAdjustmentsEntity,
-    # Financial entities
     CountriesEntity,
     CurrenciesEntity,
     CustomFieldsEntity,
     DashboardsEntity,
     DataExportEntity,
     DataIntegrationsEntity,
-    # Document entities
+    DocumentAttachmentsEntity,
     DocumentCategoriesEntity,
     DocumentToProcedureAssociationsEntity,
-    DocumentAttachmentsEntity,
-    # Expense entities
     ExpenseCategoriesEntity,
     ExpenseItemsEntity,
     ExpenseReportsEntity,
-    # System entities
     IntegrationEndpointsEntity,
     InventoryItemsEntity,
     InventoryLocationsEntity,
     InventoryStockedItemsEntity,
     InventoryTransfersEntity,
-    # Notification entities
     NotificationHistoryEntity,
     NotificationTemplatesEntity,
-    # Product entities
+    OrganizationalLevelAssociationsEntity,
+    OrganizationalLevelsEntity,
+    PaymentTermsEntity,
+    PerformanceMetricsEntity,
+    PriceListMaterialCodesEntity,
+    PriceListProductsEntity,
+    PriceListRolesEntity,
+    PriceListServiceBundlesEntity,
+    PriceListServicesEntity,
+    PriceListWorkTypeModifiersEntity,
     ProductCategoriesEntity,
     ProductNotesEntity,
     ProductTiersEntity,
     ProductVendorsEntity,
-    # Project entities
     ProjectAttachmentsEntity,
     ProjectCostsEntity,
     ProjectNotesEntity,
-    # Purchase entities
     PurchaseApprovalsEntity,
     PurchaseOrderItemsEntity,
-    # Quote entities
     QuoteItemsEntity,
     QuoteLocationsEntity,
     QuoteTemplatesEntity,
-    # Resource entities
     ResourceAttachmentsEntity,
     ResourceRoleDepartmentsEntity,
     ResourceRoleQueuesEntity,
     ResourceRoleSkillsEntity,
     ResourceServiceDeskRolesEntity,
-    # Service entities
+    SecurityPoliciesEntity,
     ServiceCallTicketResourcesEntity,
     ServiceCallTicketsEntity,
     ServiceLevelAgreementResultsEntity,
-    # System configuration entities
-    SecurityPoliciesEntity,
+    ShippingTypesEntity,
+    SubscriptionPeriodsEntity,
+    SurveyResultsEntity,
     SystemConfigurationEntity,
     SystemHealthEntity,
-    # Task entities
     TaskNotesEntity,
     TaskPredecessorsEntity,
     TaskSecondaryResourcesEntity,
-    # Ticket entities
-    TicketAdditionalContactsEntity,
+    TaxCategoriesEntity,
+    TaxRegionsEntity,
     TicketAdditionalConfigurationItemsEntity,
+    TicketAdditionalContactsEntity,
     TicketAttachmentsEntity,
     TicketChangeRequestApprovalsEntity,
     TicketChecklistItemsEntity,
@@ -152,27 +147,7 @@ from py_autotask.entities import (
     TicketHistoryEntity,
     TicketNotesEntity,
     TicketSecondaryResourcesEntity,
-    # Additional entities
     UserDefinedFieldListItemsEntity,
-    # Tax and shipping entities
-    TaxCategoriesEntity,
-    TaxRegionsEntity,
-    ShippingTypesEntity,
-    # Survey and subscription entities
-    SurveyResultsEntity,
-    SubscriptionPeriodsEntity,
-    # Price list entities
-    PriceListMaterialCodesEntity,
-    PriceListProductsEntity,
-    PriceListRolesEntity,
-    PriceListServicesEntity,
-    PriceListServiceBundlesEntity,
-    PriceListWorkTypeModifiersEntity,
-    # Organizational entities
-    OrganizationalLevelsEntity,
-    OrganizationalLevelAssociationsEntity,
-    PaymentTermsEntity,
-    PerformanceMetricsEntity,
 )
 
 

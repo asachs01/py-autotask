@@ -5,14 +5,15 @@ This module tests that all entities integrate properly with the client,
 entity manager, and provide consistent behavior across the entire API.
 """
 
-import pytest
 import inspect
 from unittest.mock import Mock, patch
 
+import pytest
+
+from py_autotask import entities
 from py_autotask.client import AutotaskClient
 from py_autotask.entities import EntityManager
 from py_autotask.entities.base import BaseEntity
-from py_autotask import entities
 
 
 class TestEntityIntegration:

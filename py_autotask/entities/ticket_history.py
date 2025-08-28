@@ -2,8 +2,8 @@
 Ticket History entity for Autotask API operations.
 """
 
-from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict, EntityList
 from .base import BaseEntity

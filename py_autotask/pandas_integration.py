@@ -7,21 +7,21 @@ enabling powerful data analysis, manipulation, and visualization capabilities.
 
 import asyncio
 import logging
+import warnings
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
-import warnings
 
 try:
-    import pandas as pd
     import numpy as np
+    import pandas as pd
 except ImportError:
     raise ImportError(
         "Pandas integration requires pandas and numpy. "
         "Install with: pip install 'py-autotask[pandas]'"
     )
 
-from .client import AutotaskClient
 from .async_client import AsyncAutotaskClient
+from .client import AutotaskClient
 from .exceptions import AutotaskError
 from .types import EntityDict, QueryResponse
 

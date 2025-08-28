@@ -17,23 +17,23 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import click
+from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
+    BarColumn,
     Progress,
     SpinnerColumn,
     TextColumn,
-    BarColumn,
     TimeElapsedColumn,
 )
 from rich.table import Table
-from rich import print as rprint
 
-from .client import AutotaskClient
 from .async_client import AsyncAutotaskClient
-from .bulk_manager import IntelligentBulkManager, BulkConfig
-from .types import AuthCredentials, RequestConfig
+from .bulk_manager import BulkConfig, IntelligentBulkManager
+from .client import AutotaskClient
 from .exceptions import AutotaskError
+from .types import AuthCredentials, RequestConfig
 
 console = Console()
 

@@ -5,8 +5,9 @@ This module tests the core client functionality including
 entity access, HTTP operations, and client configuration.
 """
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 
 from py_autotask.client import AutotaskClient
 from py_autotask.types import RequestConfig

@@ -6,9 +6,9 @@ attachments to documents in Autotask. Document Attachments handle file storage,
 retrieval, and management for various document types.
 """
 
+import base64
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
-import base64
 
 from .base import BaseEntity
 
