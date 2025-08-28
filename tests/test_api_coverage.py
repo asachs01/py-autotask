@@ -468,8 +468,9 @@ class TestAPICoverage:
         """Test that the library supports the correct API version."""
         # Test that API URLs are constructed with v1.0
         # by checking the client code directly
-        from py_autotask.client import AutotaskClient
         import inspect
+
+        from py_autotask.client import AutotaskClient
 
         # Get the source code of the client
         source = inspect.getsource(AutotaskClient)
