@@ -224,16 +224,18 @@ class AutotaskAuth:
                 }
 
             except (ValueError, TypeError) as e:
-                raise AutotaskZoneError(
-                    f"Invalid zone information format: {str(e)}"
-                )
+                raise AutotaskZoneError(f"Invalid zone information format: {str(e)}")
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError("Request timeout during zone detection")
         except requests.exceptions.ConnectionError as e:
-            raise AutotaskConnectionError(f"Connection error during zone detection: {str(e)}")
+            raise AutotaskConnectionError(
+                f"Connection error during zone detection: {str(e)}"
+            )
         except requests.exceptions.RequestException as e:
-            raise AutotaskConnectionError(f"Network error during zone detection: {str(e)}")
+            raise AutotaskConnectionError(
+                f"Network error during zone detection: {str(e)}"
+            )
 
     def _fallback_zone_detection(self) -> None:
         """
@@ -267,9 +269,9 @@ class AutotaskAuth:
         zone_url = self.ZONE_URLS.get(zone_id, self.ZONE_URLS[1])
 
         self._zone_info = ZoneInfo(
-            url=zone_url, 
+            url=zone_url,
             dataBaseType="Production",  # Default for production environments
-            ciLevel=1  # Default CI level
+            ciLevel=1,  # Default CI level
         )
         logger.info(f"Fallback zone selected: {zone_url} (Zone {zone_id})")
 
@@ -288,7 +290,7 @@ class AutotaskAuth:
             self._zone_info = ZoneInfo(
                 url=zone_url,
                 dataBaseType="Production",  # Default for production environments
-                ciLevel=1  # Default CI level
+                ciLevel=1,  # Default CI level
             )
             logger.info(f"Manually set zone to: {zone_url} (Zone {zone})")
         else:

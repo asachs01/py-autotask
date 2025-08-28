@@ -8,12 +8,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 try:
     with open("requirements.txt", "r", encoding="utf-8") as fh:
-        requirements = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
+        requirements = [
+            line.strip() for line in fh if line.strip() and not line.startswith("#")
+        ]
 except FileNotFoundError:
     # Fallback if requirements.txt is not found (e.g., in CI)
     requirements = [
         "requests>=2.31.0",
-        "pydantic>=2.0.0", 
+        "pydantic>=2.0.0",
         "click>=8.0.0",
         "python-dotenv>=1.0.0",
         "tenacity>=8.0.0",
@@ -84,4 +86,4 @@ setup(
     },
     include_package_data=True,
     zip_safe=False,
-) 
+)

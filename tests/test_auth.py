@@ -160,7 +160,7 @@ class TestAutotaskAuth:
             },
             status=200,
         )
-        
+
         # Mock the test connection endpoint
         responses.add(
             responses.POST,

@@ -20,7 +20,9 @@ class ArticleConfigurationItemCategoryAssociationsEntity(BaseEntity):
     and configuration item categories, enabling content categorization and filtering.
     """
 
-    def __init__(self, client, entity_name="ArticleConfigurationItemCategoryAssociations"):
+    def __init__(
+        self, client, entity_name="ArticleConfigurationItemCategoryAssociations"
+    ):
         """Initialize the Article Configuration Item Category Associations entity."""
         super().__init__(client, entity_name)
 

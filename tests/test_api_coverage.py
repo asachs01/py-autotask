@@ -470,13 +470,13 @@ class TestAPICoverage:
         # by checking the client code directly
         from py_autotask.client import AutotaskClient
         import inspect
-        
+
         # Get the source code of the client
         source = inspect.getsource(AutotaskClient)
-        
+
         # Verify that the client uses v1.0 in URL construction
         assert "/v1.0/" in source, "Client should use v1.0 API endpoints"
-        
+
         # Also verify that the client instance can be created
         client = AutotaskClient(mock_auth)
         assert client is not None
