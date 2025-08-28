@@ -332,9 +332,10 @@ class TestNewEntities:
         # Use fixed API URL for testing
         api_url = "https://webservices123.autotask.net/atservicesrest"
         mock_auth.api_url = api_url
-        
+
         # Make sure get_session returns a real Session that responses can intercept
         import requests
+
         mock_auth.get_session.return_value = requests.Session()
 
         # Mock API responses
@@ -395,9 +396,10 @@ class TestNewEntities:
         # Use fixed API URL for testing
         api_url = "https://webservices123.autotask.net/atservicesrest"
         mock_auth.api_url = api_url
-        
+
         # Make sure get_session returns a real Session that responses can intercept
         import requests
+
         mock_auth.get_session.return_value = requests.Session()
 
         responses.add(
