@@ -323,83 +323,99 @@ class TestNewEntities:
             assert entity.client is client
 
     @pytest.mark.skipif(not HAS_RESPONSES, reason="responses library not available")
+    @responses.activate
     def test_entity_crud_operations(self, mock_auth, sample_ticket_data):
         """Test CRUD operations for new entities."""
         if not HAS_RESPONSES:
             pytest.skip("responses library not available")
 
+        # Use fixed API URL for testing
+        api_url = "https://webservices123.autotask.net/atservicesrest"
+        mock_auth.api_url = api_url
+        
+        # Make sure get_session returns a real Session that responses can intercept
+        import requests
+        mock_auth.get_session.return_value = requests.Session()
+
         # Mock API responses
-        with responses.RequestsMock() as rsps:
-            rsps.add(
-                responses.GET,
-                f"{mock_auth.api_url}/v1.0/ActionTypes/12345",
-                json={"item": sample_ticket_data},
-                status=200,
-            )
+        responses.add(
+            responses.GET,
+            f"{api_url}/v1.0/ActionTypes/12345",
+            json={"item": sample_ticket_data},
+            status=200,
+        )
 
-            rsps.add(
-                responses.POST,
-                f"{mock_auth.api_url}/v1.0/ActionTypes",
-                json={"itemId": 12345},
-                status=201,
-            )
+        responses.add(
+            responses.POST,
+            f"{api_url}/v1.0/ActionTypes",
+            json={"itemId": 12345},
+            status=201,
+        )
 
-            rsps.add(
-                responses.PATCH,
-                f"{mock_auth.api_url}/v1.0/ActionTypes",
-                json={"item": sample_ticket_data},
-                status=200,
-            )
+        responses.add(
+            responses.PATCH,
+            f"{api_url}/v1.0/ActionTypes/12345",
+            json={"item": sample_ticket_data},
+            status=200,
+        )
 
-            rsps.add(
-                responses.DELETE,
-                f"{mock_auth.api_url}/v1.0/ActionTypes/12345",
-                status=200,
-            )
+        responses.add(
+            responses.DELETE,
+            f"{api_url}/v1.0/ActionTypes/12345",
+            status=200,
+        )
 
-            client = AutotaskClient(mock_auth)
-            entity = ActionTypesEntity(client, "ActionTypes")
+        client = AutotaskClient(mock_auth)
+        entity = ActionTypesEntity(client, "ActionTypes")
 
-            # Test get
-            result = entity.get(12345)
-            assert result == sample_ticket_data
+        # Test get
+        result = entity.get(12345)
+        assert result == sample_ticket_data
 
-            # Test create
-            create_result = entity.create(sample_ticket_data)
-            assert create_result.item_id == 12345
+        # Test create
+        create_result = entity.create(sample_ticket_data)
+        assert create_result.item_id == 12345
 
-            # Test update
-            sample_ticket_data["id"] = 12345
-            update_result = entity.update(sample_ticket_data)
-            assert update_result == sample_ticket_data
+        # Test update
+        sample_ticket_data["id"] = 12345
+        update_result = entity.update(sample_ticket_data)
+        assert update_result == sample_ticket_data
 
-            # Test delete
-            delete_result = entity.delete(12345)
-            assert delete_result is True
+        # Test delete
+        delete_result = entity.delete(12345)
+        assert delete_result is True
 
     @pytest.mark.skipif(not HAS_RESPONSES, reason="responses library not available")
+    @responses.activate
     def test_entity_query_operations(self, mock_auth, sample_query_response):
         """Test query operations for new entities."""
         if not HAS_RESPONSES:
             pytest.skip("responses library not available")
 
-        with responses.RequestsMock() as rsps:
-            rsps.add(
-                responses.GET,
-                f"{mock_auth.api_url}/v1.0/ActionTypes/query",
-                json=sample_query_response,
-                status=200,
-            )
+        # Use fixed API URL for testing
+        api_url = "https://webservices123.autotask.net/atservicesrest"
+        mock_auth.api_url = api_url
+        
+        # Make sure get_session returns a real Session that responses can intercept
+        import requests
+        mock_auth.get_session.return_value = requests.Session()
 
-            client = AutotaskClient(mock_auth)
-            entity = ActionTypesEntity(client, "ActionTypes")
+        responses.add(
+            responses.POST,
+            f"{api_url}/v1.0/ActionTypes/query",
+            json=sample_query_response,
+            status=200,
+        )
 
-            # Test query with filters
-            filters = {"field": "isActive", "op": "eq", "value": "true"}
-            result = entity.query(filters)
+        client = AutotaskClient(mock_auth)
+        entity = ActionTypesEntity(client, "ActionTypes")
 
-            assert result.items == sample_query_response["items"]
-            assert len(result.items) == 1
+        # Test query with filters
+        filters = {"field": "isActive", "op": "eq", "value": "true"}
+        result = entity.query(filters)
+
+        assert result.items == sample_query_response["items"]
+        assert len(result.items) == 1
 
     def test_automation_rules_entity(self, mock_auth):
         """Test AutomationRulesEntity functionality."""
@@ -514,10 +530,16 @@ class TestNewEntities:
 
     def test_entity_logging(self, mock_auth, caplog):
         """Test that entities log operations correctly."""
+        import logging
+
+        # Set log level to DEBUG to capture debug messages
+        caplog.set_level(logging.DEBUG)
+
         client = AutotaskClient(mock_auth)
         entity = ActionTypesEntity(client, "ActionTypes")
 
-        with patch.object(client, "get", return_value=None):
+        # Mock the client.get method to return a valid response
+        with patch.object(client, "get", return_value={"item": {"id": 12345}}):
             entity.get(12345)
 
         # Check that debug logging occurred
