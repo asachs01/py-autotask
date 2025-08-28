@@ -81,7 +81,7 @@ class CompanyTeamsEntity(BaseEntity):
         if active_only:
             from datetime import datetime
 
-            current_date = datetime.now().isoformat()
+            datetime.now().isoformat()
 
             # Active assignments: no end date or end date in future
             filters.append(QueryFilter(field="EndDate", op="isNull", value=None))
@@ -111,7 +111,7 @@ class CompanyTeamsEntity(BaseEntity):
         if active_only:
             from datetime import datetime
 
-            current_date = datetime.now().isoformat()
+            datetime.now().isoformat()
 
             filters.append(QueryFilter(field="EndDate", op="isNull", value=None))
 

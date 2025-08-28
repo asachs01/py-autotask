@@ -2,10 +2,9 @@
 Ticket Notes entity for Autotask API operations.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from ..types import EntityDict, EntityList, QueryFilter
+from ..types import EntityDict, EntityList
 from .base import BaseEntity
 
 

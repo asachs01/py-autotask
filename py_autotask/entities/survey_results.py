@@ -7,7 +7,7 @@ and responses to help track service quality and customer satisfaction.
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

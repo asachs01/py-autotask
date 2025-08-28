@@ -184,7 +184,6 @@ class ProductCategoriesEntity(BaseEntity):
 
         # Organize into tree structure
         category_dict = {cat["id"]: cat for cat in all_categories}
-        tree = []
 
         def build_tree(parent_id=None):
             children = []

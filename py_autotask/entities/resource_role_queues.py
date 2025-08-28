@@ -4,7 +4,7 @@ ResourceRoleQueues entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import QueryFilter, ResourceData
+from ..types import QueryFilter
 from .base import BaseEntity
 
 

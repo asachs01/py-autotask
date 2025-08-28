@@ -234,7 +234,6 @@ class QuoteItemsEntity(BaseEntity):
         subtotal = 0.0
         total_discount = 0.0
         total_cost = 0.0
-        total_tax = 0.0
 
         for item in quote_items:
             quantity = item.get("Quantity", 1)
@@ -245,7 +244,7 @@ class QuoteItemsEntity(BaseEntity):
             # Calculate line totals
             line_subtotal = quantity * unit_price
             line_discount = line_subtotal * (discount_percentage / 100)
-            line_total = line_subtotal - line_discount
+            line_subtotal - line_discount
             line_cost = quantity * unit_cost
 
             subtotal += line_subtotal

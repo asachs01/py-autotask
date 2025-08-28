@@ -8,11 +8,10 @@ enabling powerful data analysis, manipulation, and visualization capabilities.
 import asyncio
 import logging
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 try:
-    import numpy as np
     import pandas as pd
 except ImportError:
     raise ImportError(
@@ -22,8 +21,6 @@ except ImportError:
 
 from .async_client import AsyncAutotaskClient
 from .client import AutotaskClient
-from .exceptions import AutotaskError
-from .types import EntityDict, QueryResponse
 
 logger = logging.getLogger(__name__)
 
@@ -458,7 +455,7 @@ class PandasIntegration:
         Returns:
             Dictionary with operation results
         """
-        records = df.to_dict("records")
+        df.to_dict("records")
 
         # Create AutotaskDataFrame for bulk operations
         autotask_df = AutotaskDataFrame(df, client=self.client, entity_type=entity_type)

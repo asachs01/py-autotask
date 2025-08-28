@@ -6,8 +6,8 @@ additional resource assignments on tasks in Autotask. Task Secondary Resources
 allow multiple team members to be assigned to tasks beyond the primary resource.
 """
 
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

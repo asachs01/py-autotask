@@ -2,7 +2,7 @@
 Ticket Additional Configuration Items entity for Autotask API operations.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..types import EntityDict, EntityList
 from .base import BaseEntity

@@ -2,7 +2,7 @@
 Ticket Checklist Items entity for Autotask API operations.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict, EntityList

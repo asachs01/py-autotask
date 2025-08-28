@@ -3,7 +3,6 @@ Currencies entity for Autotask API operations.
 """
 
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from ..types import EntityDict, EntityList

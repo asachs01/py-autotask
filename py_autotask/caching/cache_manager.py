@@ -3,11 +3,9 @@ Cache manager for coordinating caching operations across py-autotask.
 """
 
 import asyncio
-import json
 import logging
 import time
-from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ..exceptions import AutotaskCacheError
 from .backends import (

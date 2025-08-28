@@ -6,7 +6,7 @@ and delivery options in Autotask. Shipping Types define available delivery metho
 costs, and tracking capabilities for product shipments.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
@@ -381,7 +381,7 @@ class ShippingTypesEntity(BaseEntity):
                         current_zone_rate = float(shipping_type[zone_field])
                         update_data[zone_field] = current_zone_rate + adjustment
 
-                updated_type = self.update(update_data)
+                self.update(update_data)
                 results.append(
                     {
                         "shipping_type_id": shipping_type["id"],

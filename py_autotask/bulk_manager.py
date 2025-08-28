@@ -9,14 +9,13 @@ Capable of processing 10,000+ records per minute with intelligent batching.
 import asyncio
 import logging
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from .exceptions import AutotaskValidationError
-from .types import CreateResponse, EntityDict, QueryResponse
+from .types import EntityDict, QueryResponse
 
 logger = logging.getLogger(__name__)
 

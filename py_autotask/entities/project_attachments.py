@@ -592,10 +592,10 @@ class ProjectAttachmentsEntity(BaseEntity):
                     archive_folder_name,
                     f"Archive folder created on {datetime.now().date()}",
                 )
-                archive_folder_id = archive_folder_result["item_id"]
+                archive_folder_result["item_id"]
             except Exception:
                 # Folder might already exist
-                archive_folder_id = None
+                pass
 
         for attachment in old_attachments:
             try:

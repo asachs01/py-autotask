@@ -6,8 +6,8 @@ dependencies and predecessor relationships in Autotask. Task Predecessors
 define the sequential order and dependencies between project tasks.
 """
 
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

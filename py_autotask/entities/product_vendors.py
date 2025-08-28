@@ -4,7 +4,7 @@ Product Vendors entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import EntityDict, QueryFilter
+from ..types import EntityDict
 from .base import BaseEntity
 
 
@@ -153,7 +153,7 @@ class ProductVendorsEntity(BaseEntity):
                 continue
 
             try:
-                updated = self.update_vendor_cost(product_id, vendor_id, new_cost)
+                self.update_vendor_cost(product_id, vendor_id, new_cost)
                 results.append(
                     {
                         "product_id": product_id,

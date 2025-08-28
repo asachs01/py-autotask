@@ -227,7 +227,7 @@ class AutotaskAuth:
                 raise AutotaskZoneError(f"Invalid zone information format: {str(e)}")
 
         except requests.exceptions.Timeout:
-            raise AutotaskTimeoutError("Request timeout during zone detection")
+            raise AutotaskConnectionError("Request timeout during zone detection")
         except requests.exceptions.ConnectionError as e:
             raise AutotaskConnectionError(
                 f"Connection error during zone detection: {str(e)}"

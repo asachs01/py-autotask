@@ -6,8 +6,8 @@ and regional tax rules in Autotask. Tax Regions define geographic boundaries,
 applicable tax categories, and jurisdiction-specific tax regulations.
 """
 
-from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 
@@ -472,7 +472,7 @@ class TaxRegionsEntity(BaseEntity):
                 if reason:
                     update_data["statusChangeReason"] = reason
 
-                updated_region = self.update(update_data)
+                self.update(update_data)
 
                 results.append(
                     {

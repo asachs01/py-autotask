@@ -83,7 +83,6 @@ def cli(
 @cli.group()
 def export():
     """Export data from Autotask to various formats."""
-    pass
 
 
 @export.command("entities")
@@ -186,7 +185,7 @@ async def _export_entities_async(
             return
 
     # Create client
-    cache_config = config.get("cache_config")
+    config.get("cache_config")
     async with AsyncAutotaskClient.create(**config["credentials"]) as client:
 
         all_data = {}
@@ -385,7 +384,6 @@ async def _write_export_data(data, output_path, format, compress):
 @cli.group()
 def bulk():
     """Bulk operations for creating, updating, and deleting entities."""
-    pass
 
 
 @bulk.command("create")

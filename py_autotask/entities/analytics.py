@@ -1663,7 +1663,6 @@ class AnalyticsEntity(BaseEntity):
                 current_date - timedelta(days=90)
             ).isoformat()  # Last 90 days
 
-            activity_indicators = []
 
             # Recent tickets
             recent_ticket_filters = [

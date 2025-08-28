@@ -7,7 +7,7 @@ expense tracking, and financial analysis for project profitability.
 """
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
 

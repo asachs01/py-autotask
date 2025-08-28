@@ -195,7 +195,6 @@ class InventoryTransfersEntity(BaseEntity):
         Returns:
             Dictionary containing transfer statistics
         """
-        filters = []
         if location_id:
             # Get transfers either from or to the specified location
             from_transfers = self.get_transfers_from_location(location_id)

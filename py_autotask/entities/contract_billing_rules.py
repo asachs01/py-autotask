@@ -384,7 +384,7 @@ class ContractBillingRulesEntity(BaseEntity):
                     "lastModifiedDate": datetime.now().isoformat(),
                 }
 
-                result = self.update_by_id(rule_id, update_data)
+                self.update_by_id(rule_id, update_data)
                 results.append(
                     {
                         "rule_id": rule_id,
