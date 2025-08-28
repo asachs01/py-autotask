@@ -35,18 +35,18 @@ class AutotaskAuth:
     ZONE_INFO_URL = (
         "https://webservices.autotask.net/atservicesrest/v1.0/zoneInformation"
     )
-    
+
     # Zone URL mappings for all Autotask regions
     ZONE_URLS = {
-        1: "https://webservices2.autotask.net/atservicesrest",   # US East
-        2: "https://webservices6.autotask.net/atservicesrest",   # US West
+        1: "https://webservices2.autotask.net/atservicesrest",  # US East
+        2: "https://webservices6.autotask.net/atservicesrest",  # US West
         3: "https://webservices14.autotask.net/atservicesrest",  # EU London
         4: "https://webservices16.autotask.net/atservicesrest",  # Australia
-        5: "https://webservices5.autotask.net/atservicesrest",   # Germany
+        5: "https://webservices5.autotask.net/atservicesrest",  # Germany
         6: "https://webservices12.autotask.net/atservicesrest",  # China
         7: "https://webservices24.autotask.net/atservicesrest",  # India
     }
-    
+
     # Cache for zone information
     _zone_cache: Dict[str, Dict] = {}
 
@@ -90,40 +90,40 @@ class AutotaskAuth:
         """
         if not self._session:
             self._session = requests.Session()
-            
+
             # Set up authentication
             self._session.auth = HTTPBasicAuth(
                 self.credentials.username, self.credentials.secret
             )
-            
+
             # Configure headers
             self._session.headers.update(
                 {
                     "Content-Type": "application/json",
                     "ApiIntegrationcode": self.credentials.integration_code,
                     "User-Agent": "py-autotask/2.0.0",
-                    "Accept": "application/json"
+                    "Accept": "application/json",
                 }
             )
-            
+
             # Configure connection pooling for better performance
             from requests.adapters import HTTPAdapter
             from urllib3.util.retry import Retry
-            
+
             retry_strategy = Retry(
                 total=3,
                 backoff_factor=1,
                 status_forcelist=[429, 500, 502, 503, 504],
-                allowed_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"]
+                allowed_methods=["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE"],
             )
-            
+
             adapter = HTTPAdapter(
                 max_retries=retry_strategy,
                 pool_connections=10,
                 pool_maxsize=20,
-                pool_block=False
+                pool_block=False,
             )
-            
+
             self._session.mount("http://", adapter)
             self._session.mount("https://", adapter)
 
@@ -151,7 +151,7 @@ class AutotaskAuth:
                 self._zone_info = ZoneInfo(**cached_data["zone_info"])
                 logger.info(f"Using cached zone: {self._zone_info.url}")
                 return
-        
+
         try:
             logger.info("Detecting Autotask API zone...")
 
@@ -210,14 +210,14 @@ class AutotaskAuth:
 
                 self._zone_info = ZoneInfo(**zone_data)
                 logger.info(f"Detected API zone: {self._zone_info.url}")
-                
+
                 # Cache the zone information
                 self._zone_cache[cache_key] = {
                     "zone_info": {
                         "url": self._zone_info.url,
-                        "zone_id": getattr(self._zone_info, 'zone_id', None)
+                        "zone_id": getattr(self._zone_info, "zone_id", None),
                     },
-                    "timestamp": time.time()
+                    "timestamp": time.time(),
                 }
 
             except (ValueError, TypeError) as e:
@@ -234,44 +234,48 @@ class AutotaskAuth:
         except requests.exceptions.RequestException as e:
             logger.warning(f"Network error during zone detection: {e}, using fallback")
             self._fallback_zone_detection()
-    
+
     def _fallback_zone_detection(self) -> None:
         """
         Fallback zone detection using intelligent heuristics.
         """
         logger.info("Using fallback zone detection strategy")
-        
+
         # Strategy 1: Detect from email domain patterns
-        domain = self.credentials.username.split('@')[-1].lower() if '@' in self.credentials.username else ""
-        
+        domain = (
+            self.credentials.username.split("@")[-1].lower()
+            if "@" in self.credentials.username
+            else ""
+        )
+
         zone_id = 1  # Default to US East
-        
+
         # Common domain to zone mappings
-        if any(tld in domain for tld in ['.eu', '.uk', '.fr', '.es', '.it', '.nl']):
+        if any(tld in domain for tld in [".eu", ".uk", ".fr", ".es", ".it", ".nl"]):
             zone_id = 3  # Europe
-        elif '.de' in domain:
+        elif ".de" in domain:
             zone_id = 5  # Germany
-        elif '.au' in domain:
+        elif ".au" in domain:
             zone_id = 4  # Australia
-        elif any(tld in domain for tld in ['.in', '.asia']):
+        elif any(tld in domain for tld in [".in", ".asia"]):
             zone_id = 7  # India
-        elif '.cn' in domain:
+        elif ".cn" in domain:
             zone_id = 6  # China
-        elif '.ca' in domain:
+        elif ".ca" in domain:
             zone_id = 1  # US East for Canada
-        
+
         zone_url = self.ZONE_URLS.get(zone_id, self.ZONE_URLS[1])
-        
+
         self._zone_info = ZoneInfo(url=zone_url, zone_id=zone_id)
         logger.info(f"Fallback zone selected: {zone_url} (Zone {zone_id})")
-    
+
     def set_zone_manually(self, zone: Union[int, str]) -> None:
         """
         Manually set the zone instead of auto-detecting.
-        
+
         Args:
             zone: Zone ID (1-7) or zone name
-            
+
         Raises:
             ValueError: If invalid zone specified
         """
@@ -304,11 +308,11 @@ class AutotaskAuth:
         if self._session:
             self._session.close()
             self._session = None
-    
+
     def test_connection(self) -> bool:
         """
         Test the connection to Autotask API.
-        
+
         Returns:
             True if connection is successful, False otherwise
         """
@@ -316,20 +320,16 @@ class AutotaskAuth:
             # Try a simple API call to test connection
             session = self.get_session()
             test_url = f"{self.api_url}/v1.0/Companies/query"
-            
+
             # Send a minimal query to test connectivity
-            response = session.post(
-                test_url,
-                json={"maxRecords": 1},
-                timeout=10
-            )
-            
+            response = session.post(test_url, json={"maxRecords": 1}, timeout=10)
+
             return response.status_code == 200
-            
+
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
             return False
-    
+
     @classmethod
     def clear_zone_cache(cls) -> None:
         """Clear the zone detection cache."""

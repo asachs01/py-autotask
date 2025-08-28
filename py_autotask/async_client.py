@@ -1,7 +1,7 @@
 """
 Async client for the Autotask REST API.
 
-This module provides the AsyncAutotaskClient class for high-performance, 
+This module provides the AsyncAutotaskClient class for high-performance,
 non-blocking operations with the Autotask API. Supports concurrent operations,
 intelligent connection pooling, and async context management.
 """
@@ -35,35 +35,35 @@ logger = logging.getLogger(__name__)
 
 class AsyncEntityManager:
     """Manages async entity operations for the client."""
-    
-    def __init__(self, client: 'AsyncAutotaskClient'):
+
+    def __init__(self, client: "AsyncAutotaskClient"):
         self.client = client
-        
+
     @property
     def tickets(self):
         """Access to async Tickets operations."""
         return AsyncEntityProxy(self.client, "Tickets")
-    
+
     @property
     def companies(self):
         """Access to async Companies operations."""
         return AsyncEntityProxy(self.client, "Companies")
-    
+
     @property
     def resources(self):
         """Access to async Resources operations."""
         return AsyncEntityProxy(self.client, "Resources")
-    
+
     @property
     def projects(self):
         """Access to async Projects operations."""
         return AsyncEntityProxy(self.client, "Projects")
-    
+
     @property
     def time_entries(self):
         """Access to async TimeEntries operations."""
         return AsyncEntityProxy(self.client, "TimeEntries")
-    
+
     @property
     def contacts(self):
         """Access to async Contacts operations."""
@@ -72,16 +72,16 @@ class AsyncEntityManager:
 
 class AsyncEntityProxy:
     """Proxy for async entity operations."""
-    
-    def __init__(self, client: 'AsyncAutotaskClient', entity_name: str):
+
+    def __init__(self, client: "AsyncAutotaskClient", entity_name: str):
         self.client = client
         self.entity_name = entity_name
         self.logger = logging.getLogger(f"{__name__}.{entity_name}")
-    
+
     async def get_async(self, entity_id: int) -> Optional[EntityDict]:
         """Get a single entity by ID asynchronously."""
         return await self.client.get_async(self.entity_name, entity_id)
-    
+
     async def query_async(
         self,
         filters: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None,
@@ -107,15 +107,17 @@ class AsyncEntityProxy:
             query_request.max_records = max_records
 
         return await self.client.query_async(self.entity_name, query_request)
-    
+
     async def create_async(self, entity_data: EntityDict) -> CreateResponse:
         """Create a new entity asynchronously."""
         return await self.client.create_entity_async(self.entity_name, entity_data)
-    
+
     async def update_async(self, entity_id: int, entity_data: EntityDict) -> EntityDict:
         """Update an entity asynchronously."""
-        return await self.client.update_entity_async(self.entity_name, entity_id, entity_data)
-    
+        return await self.client.update_entity_async(
+            self.entity_name, entity_id, entity_data
+        )
+
     async def delete_async(self, entity_id: int) -> bool:
         """Delete an entity asynchronously."""
         return await self.client.delete_entity_async(self.entity_name, entity_id)
@@ -140,17 +142,17 @@ class AsyncAutotaskClient:
             secret="YOUR_SECRET"
         ) as client:
             # Concurrent operations
-            tickets_task = client.tickets.query_async({"status": "open"})  
+            tickets_task = client.tickets.query_async({"status": "open"})
             companies_task = client.companies.query_async({"isActive": True})
-            
+
             tickets, companies = await asyncio.gather(tickets_task, companies_task)
     """
 
     def __init__(
-        self, 
-        auth: AutotaskAuth, 
+        self,
+        auth: AutotaskAuth,
         config: Optional[RequestConfig] = None,
-        session: Optional[aiohttp.ClientSession] = None
+        session: Optional[aiohttp.ClientSession] = None,
     ) -> None:
         """
         Initialize the async client.
@@ -194,8 +196,10 @@ class AsyncAutotaskClient:
             auth = AutotaskAuth(credentials)
         else:
             if not all([username, integration_code, secret]):
-                raise ValueError("Must provide either credentials or username/integration_code/secret")
-            
+                raise ValueError(
+                    "Must provide either credentials or username/integration_code/secret"
+                )
+
             credentials = AuthCredentials(
                 username=username,
                 integration_code=integration_code,
@@ -232,7 +236,9 @@ class AsyncAutotaskClient:
         """
         client = None
         try:
-            client = await cls.create(credentials, username, integration_code, secret, api_url, config)
+            client = await cls.create(
+                credentials, username, integration_code, secret, api_url, config
+            )
             yield client
         finally:
             if client:
@@ -258,40 +264,38 @@ class AsyncAutotaskClient:
                 use_dns_cache=True,
                 enable_cleanup_closed=True,
             )
-            
+
             # Configure timeout
             timeout = ClientTimeout(
                 total=self.config.timeout,
                 connect=10,
                 sock_read=30,
             )
-            
+
             # Create session with authentication headers
             headers = {
                 "Content-Type": "application/json",
                 "ApiIntegrationcode": self.auth.credentials.integration_code,
                 "User-Agent": "py-autotask-async/2.0.0",
-                "Accept": "application/json"
+                "Accept": "application/json",
             }
-            
+
             # Set up basic auth
             auth = aiohttp.BasicAuth(
-                self.auth.credentials.username,
-                self.auth.credentials.secret
+                self.auth.credentials.username, self.auth.credentials.secret
             )
-            
+
             self._session = aiohttp.ClientSession(
-                connector=connector,
-                timeout=timeout,
-                headers=headers,
-                auth=auth
+                connector=connector, timeout=timeout, headers=headers, auth=auth
             )
 
     @property
     def session(self) -> aiohttp.ClientSession:
         """Get the aiohttp session."""
         if self._session is None:
-            raise RuntimeError("Session not initialized. Use 'async with' or call '__aenter__' first.")
+            raise RuntimeError(
+                "Session not initialized. Use 'async with' or call '__aenter__' first."
+            )
         return self._session
 
     @property
@@ -300,23 +304,23 @@ class AsyncAutotaskClient:
         if self._entities is None:
             self._entities = AsyncEntityManager(self)
         return self._entities
-    
+
     # Convenience properties for direct entity access
     @property
     def tickets(self):
         """Access to async Tickets operations."""
         return self.entities.tickets
-    
+
     @property
     def companies(self):
         """Access to async Companies operations."""
         return self.entities.companies
-    
+
     @property
     def resources(self):
         """Access to async Resources operations."""
         return self.entities.resources
-    
+
     @property
     def projects(self):
         """Access to async Projects operations."""
@@ -377,7 +381,9 @@ class AsyncAutotaskClient:
         """
         if filters is not None:
             if not isinstance(filters, list):
-                raise AutotaskValidationError("Filters must be a list of filter objects")
+                raise AutotaskValidationError(
+                    "Filters must be a list of filter objects"
+                )
 
             for filter_obj in filters:
                 validate_filter(filter_obj)
@@ -436,7 +442,9 @@ class AsyncAutotaskClient:
         except aiohttp.ClientResponseError:
             await handle_api_error(response)
 
-    async def create_entity_async(self, entity: str, entity_data: EntityDict) -> CreateResponse:
+    async def create_entity_async(
+        self, entity: str, entity_data: EntityDict
+    ) -> CreateResponse:
         """
         Create a new entity asynchronously.
 
@@ -538,7 +546,7 @@ class AsyncAutotaskClient:
         for query in queries:
             entity = query.get("entity")
             request = query.get("request", QueryRequest())
-            
+
             task = self._query_with_request_async(entity, request)
             tasks.append(task)
 
@@ -562,20 +570,19 @@ class AsyncAutotaskClient:
             List of create responses
         """
         results = []
-        
+
         # Process in batches to avoid overwhelming the API
         for i in range(0, len(entities_data), batch_size):
-            batch = entities_data[i:i + batch_size]
-            
+            batch = entities_data[i : i + batch_size]
+
             # Create tasks for concurrent execution within batch
             tasks = [
-                self.create_entity_async(entity, entity_data)
-                for entity_data in batch
+                self.create_entity_async(entity, entity_data) for entity_data in batch
             ]
-            
+
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
             results.extend(batch_results)
-            
+
             # Small delay between batches to be respectful of rate limits
             if i + batch_size < len(entities_data):
                 await asyncio.sleep(0.1)
@@ -591,13 +598,13 @@ class AsyncAutotaskClient:
         """
         try:
             test_url = f"{self.auth.api_url}/v1.0/Companies/query"
-            
+
             async with self.session.post(
                 test_url,
                 json={"maxRecords": 1},
             ) as response:
                 return response.status == 200
-                
+
         except Exception as e:
             self.logger.error(f"Async connection test failed: {e}")
             return False
@@ -607,9 +614,9 @@ class AsyncAutotaskClient:
         if self._session:
             await self._session.close()
             self._session = None
-            
+
         # Close auth session if it exists
-        if hasattr(self.auth, 'close') and callable(self.auth.close):
+        if hasattr(self.auth, "close") and callable(self.auth.close):
             self.auth.close()
 
     async def get_rate_limit_info(self) -> Dict[str, Any]:
@@ -622,20 +629,20 @@ class AsyncAutotaskClient:
         try:
             # Make a lightweight request to get headers
             url = f"{self.auth.api_url}/v1.0/Companies/query"
-            
+
             async with self.session.post(
                 url,
                 json={"maxRecords": 1},
             ) as response:
                 headers = response.headers
-                
+
                 return {
                     "requests_remaining": headers.get("X-RateLimit-Remaining"),
                     "requests_limit": headers.get("X-RateLimit-Limit"),
                     "reset_time": headers.get("X-RateLimit-Reset"),
                     "retry_after": headers.get("Retry-After"),
                 }
-                
+
         except Exception as e:
             self.logger.error(f"Failed to get rate limit info: {e}")
             return {}

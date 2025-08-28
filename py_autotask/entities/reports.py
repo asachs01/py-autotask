@@ -882,43 +882,45 @@ class ReportsEntity(BaseEntity):
             # Extract report configuration
             data_source = report.get("dataSource", "Tickets")  # Default to Tickets
             report_fields = report.get("fields", [])
-            
+
             # Build query filters combining report filters with runtime filters
             query_filters = []
-            
+
             # Add report-level filters
             if report.get("filters"):
                 query_filters.extend(report["filters"])
-            
+
             # Add runtime filters
             if filters:
                 query_filters.extend(filters)
-            
+
             # Query the actual entity data
             query_request = {
                 "filter": query_filters,
-                "maxRecords": report.get("maxRecords", 1000)
+                "maxRecords": report.get("maxRecords", 1000),
             }
-            
+
             # Include specific fields if defined
             if report_fields:
-                query_request["includeFields"] = [field["name"] for field in report_fields if field.get("name")]
-            
+                query_request["includeFields"] = [
+                    field["name"] for field in report_fields if field.get("name")
+                ]
+
             # Execute the query against the actual Autotask API
             response = self.client.query(data_source, query_request)
-            
+
             # Transform the entity data into report format
             columns = self._build_report_columns(report_fields, response.items)
             rows = self._build_report_rows(report_fields, response.items)
-            
+
             return {
                 "columns": columns,
                 "rows": rows,
                 "total_records": len(rows),
                 "data_source": data_source,
-                "generated_from": "live_api_data"
+                "generated_from": "live_api_data",
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to generate report data: {e}")
             # Return empty structure on error
@@ -928,30 +930,36 @@ class ReportsEntity(BaseEntity):
                 "total_records": 0,
                 "data_source": report.get("dataSource", "Unknown"),
                 "generated_from": "error_fallback",
-                "error": str(e)
+                "error": str(e),
             }
-    
-    def _build_report_columns(self, report_fields: List[Dict], sample_items: List[Dict]) -> List[Dict]:
+
+    def _build_report_columns(
+        self, report_fields: List[Dict], sample_items: List[Dict]
+    ) -> List[Dict]:
         """
         Build report column definitions from field config and sample data.
-        
+
         Args:
             report_fields: Report field definitions
             sample_items: Sample items to infer types from
-            
+
         Returns:
             List of column definitions
         """
         columns = []
-        
+
         if report_fields:
             # Use configured report fields
             for field in report_fields:
-                columns.append({
-                    "name": field.get("name", "Unknown"),
-                    "type": field.get("type", "text"),
-                    "display_name": field.get("displayName", field.get("name", "Unknown"))
-                })
+                columns.append(
+                    {
+                        "name": field.get("name", "Unknown"),
+                        "type": field.get("type", "text"),
+                        "display_name": field.get(
+                            "displayName", field.get("name", "Unknown")
+                        ),
+                    }
+                )
         elif sample_items:
             # Infer columns from first item
             sample_item = sample_items[0]
@@ -964,31 +972,35 @@ class ReportsEntity(BaseEntity):
                     column_type = "date"
                 elif key.lower() in ["amount", "total", "cost", "revenue", "price"]:
                     column_type = "currency"
-                
-                columns.append({
-                    "name": key,
-                    "type": column_type,
-                    "display_name": key.replace("_", " ").title()
-                })
-        
+
+                columns.append(
+                    {
+                        "name": key,
+                        "type": column_type,
+                        "display_name": key.replace("_", " ").title(),
+                    }
+                )
+
         return columns
-    
-    def _build_report_rows(self, report_fields: List[Dict], items: List[Dict]) -> List[Dict]:
+
+    def _build_report_rows(
+        self, report_fields: List[Dict], items: List[Dict]
+    ) -> List[Dict]:
         """
         Build report rows from entity items.
-        
+
         Args:
             report_fields: Report field definitions for filtering/formatting
             items: Entity items from API query
-            
+
         Returns:
             List of formatted report rows
         """
         rows = []
-        
+
         for item in items:
             row = {}
-            
+
             if report_fields:
                 # Use configured fields
                 for field in report_fields:
@@ -996,32 +1008,34 @@ class ReportsEntity(BaseEntity):
                     if field_name and field_name in item:
                         value = item[field_name]
                         # Apply any field-specific formatting
-                        row[field_name] = self._format_field_value(value, field.get("type", "text"))
+                        row[field_name] = self._format_field_value(
+                            value, field.get("type", "text")
+                        )
                     else:
                         row[field_name] = None
             else:
                 # Include all fields from item
                 for key, value in item.items():
                     row[key] = value
-            
+
             rows.append(row)
-        
+
         return rows
-    
+
     def _format_field_value(self, value: Any, field_type: str) -> Any:
         """
         Format a field value based on its type.
-        
+
         Args:
             value: Raw field value
             field_type: Field type (date, currency, number, text)
-            
+
         Returns:
             Formatted field value
         """
         if value is None:
             return None
-            
+
         try:
             if field_type == "currency":
                 return float(value) if value else 0.0

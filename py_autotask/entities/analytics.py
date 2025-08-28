@@ -1415,24 +1415,44 @@ class AnalyticsEntity(BaseEntity):
             # Query satisfaction surveys for the account
             survey_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
-                {"field": "SurveyDate", "op": "gte", "value": date_range.get("start_date")},
-                {"field": "SurveyDate", "op": "lte", "value": date_range.get("end_date")},
+                {
+                    "field": "SurveyDate",
+                    "op": "gte",
+                    "value": date_range.get("start_date"),
+                },
+                {
+                    "field": "SurveyDate",
+                    "op": "lte",
+                    "value": date_range.get("end_date"),
+                },
             ]
-            
+
             # Query survey results (assuming SatisfactionSurveys entity exists)
-            surveys_response = self.client.query("SatisfactionSurveys", {"filter": survey_filters})
-            
+            surveys_response = self.client.query(
+                "SatisfactionSurveys", {"filter": survey_filters}
+            )
+
             if not surveys_response.items:
                 # If no surveys, check ticket resolution ratings
                 ticket_filters = [
                     {"field": "AccountID", "op": "eq", "value": str(account_id)},
-                    {"field": "CompletedDate", "op": "gte", "value": date_range.get("start_date")},
-                    {"field": "CompletedDate", "op": "lte", "value": date_range.get("end_date")},
+                    {
+                        "field": "CompletedDate",
+                        "op": "gte",
+                        "value": date_range.get("start_date"),
+                    },
+                    {
+                        "field": "CompletedDate",
+                        "op": "lte",
+                        "value": date_range.get("end_date"),
+                    },
                     {"field": "Status", "op": "eq", "value": "5"},  # Completed tickets
                 ]
-                
-                tickets_response = self.client.query("Tickets", {"filter": ticket_filters})
-                
+
+                tickets_response = self.client.query(
+                    "Tickets", {"filter": ticket_filters}
+                )
+
                 # Calculate satisfaction based on ticket resolution times and priority
                 if tickets_response.items:
                     satisfaction_scores = []
@@ -1440,27 +1460,46 @@ class AnalyticsEntity(BaseEntity):
                         # Basic satisfaction heuristic based on resolution efficiency
                         priority = ticket.get("Priority", 3)
                         resolution_hours = ticket.get("ResolutionHours", 0)
-                        
+
                         # Higher satisfaction for faster resolution of high-priority tickets
-                        if priority <= 2 and resolution_hours <= 24:  # High priority resolved quickly
+                        if (
+                            priority <= 2 and resolution_hours <= 24
+                        ):  # High priority resolved quickly
                             satisfaction_scores.append(4.5)
-                        elif priority <= 3 and resolution_hours <= 72:  # Medium priority reasonable time
+                        elif (
+                            priority <= 3 and resolution_hours <= 72
+                        ):  # Medium priority reasonable time
                             satisfaction_scores.append(4.0)
                         elif resolution_hours > 168:  # Over a week to resolve
                             satisfaction_scores.append(3.0)
                         else:
-                            satisfaction_scores.append(3.8)  # Default reasonable satisfaction
-                    
-                    return round(sum(satisfaction_scores) / len(satisfaction_scores), 2) if satisfaction_scores else 3.8
-                
+                            satisfaction_scores.append(
+                                3.8
+                            )  # Default reasonable satisfaction
+
+                    return (
+                        round(sum(satisfaction_scores) / len(satisfaction_scores), 2)
+                        if satisfaction_scores
+                        else 3.8
+                    )
+
                 return 3.8  # Default neutral satisfaction if no data available
-            
+
             # Calculate average satisfaction from actual survey data
-            satisfaction_scores = [float(survey.get("SatisfactionRating", 4.0)) for survey in surveys_response.items]
-            return round(sum(satisfaction_scores) / len(satisfaction_scores), 2) if satisfaction_scores else 3.8
-            
+            satisfaction_scores = [
+                float(survey.get("SatisfactionRating", 4.0))
+                for survey in surveys_response.items
+            ]
+            return (
+                round(sum(satisfaction_scores) / len(satisfaction_scores), 2)
+                if satisfaction_scores
+                else 3.8
+            )
+
         except Exception as e:
-            self.logger.warning(f"Failed to calculate customer satisfaction for account {account_id}: {e}")
+            self.logger.warning(
+                f"Failed to calculate customer satisfaction for account {account_id}: {e}"
+            )
             return 3.8  # Return reasonable default on error
 
     def _calculate_customer_revenue(
@@ -1468,47 +1507,75 @@ class AnalyticsEntity(BaseEntity):
     ) -> Decimal:
         """Calculate customer revenue for date range from actual billing data."""
         try:
-            total_revenue = Decimal('0.00')
-            
+            total_revenue = Decimal("0.00")
+
             # Query invoices for the account in the date range
             invoice_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
-                {"field": "InvoiceDate", "op": "gte", "value": date_range.get("start_date")},
-                {"field": "InvoiceDate", "op": "lte", "value": date_range.get("end_date")},
-                {"field": "InvoiceStatus", "op": "ne", "value": "Voided"},  # Exclude voided invoices
+                {
+                    "field": "InvoiceDate",
+                    "op": "gte",
+                    "value": date_range.get("start_date"),
+                },
+                {
+                    "field": "InvoiceDate",
+                    "op": "lte",
+                    "value": date_range.get("end_date"),
+                },
+                {
+                    "field": "InvoiceStatus",
+                    "op": "ne",
+                    "value": "Voided",
+                },  # Exclude voided invoices
             ]
-            
-            invoices_response = self.client.query("Invoices", {"filter": invoice_filters})
-            
+
+            invoices_response = self.client.query(
+                "Invoices", {"filter": invoice_filters}
+            )
+
             for invoice in invoices_response.items:
                 # Add invoice total to revenue
                 invoice_total = invoice.get("TotalAmount", 0)
                 if invoice_total:
                     total_revenue += Decimal(str(invoice_total))
-            
+
             # Also check for time entries that may not be invoiced yet
             time_entry_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
-                {"field": "DateWorked", "op": "gte", "value": date_range.get("start_date")},
-                {"field": "DateWorked", "op": "lte", "value": date_range.get("end_date")},
+                {
+                    "field": "DateWorked",
+                    "op": "gte",
+                    "value": date_range.get("start_date"),
+                },
+                {
+                    "field": "DateWorked",
+                    "op": "lte",
+                    "value": date_range.get("end_date"),
+                },
                 {"field": "InvoiceID", "op": "eq", "value": "0"},  # Uninvoiced time
             ]
-            
-            time_entries_response = self.client.query("TimeEntries", {"filter": time_entry_filters})
-            
+
+            time_entries_response = self.client.query(
+                "TimeEntries", {"filter": time_entry_filters}
+            )
+
             for time_entry in time_entries_response.items:
                 # Calculate potential revenue from uninvoiced time
                 hours_worked = time_entry.get("HoursWorked", 0)
                 billing_rate = time_entry.get("BillingRate", 0)
-                
+
                 if hours_worked and billing_rate:
-                    total_revenue += Decimal(str(hours_worked)) * Decimal(str(billing_rate))
-            
+                    total_revenue += Decimal(str(hours_worked)) * Decimal(
+                        str(billing_rate)
+                    )
+
             return total_revenue
-            
+
         except Exception as e:
-            self.logger.warning(f"Failed to calculate customer revenue for account {account_id}: {e}")
-            return Decimal('0.00')
+            self.logger.warning(
+                f"Failed to calculate customer revenue for account {account_id}: {e}"
+            )
+            return Decimal("0.00")
 
     def _count_customer_projects(
         self, account_id: int, date_range: Dict[str, str]
@@ -1518,15 +1585,27 @@ class AnalyticsEntity(BaseEntity):
             # Query projects for the account in the date range
             project_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
-                {"field": "StartDate", "op": "gte", "value": date_range.get("start_date")},
-                {"field": "StartDate", "op": "lte", "value": date_range.get("end_date")},
+                {
+                    "field": "StartDate",
+                    "op": "gte",
+                    "value": date_range.get("start_date"),
+                },
+                {
+                    "field": "StartDate",
+                    "op": "lte",
+                    "value": date_range.get("end_date"),
+                },
             ]
-            
-            projects_response = self.client.query("Projects", {"filter": project_filters})
+
+            projects_response = self.client.query(
+                "Projects", {"filter": project_filters}
+            )
             return len(projects_response.items) if projects_response.items else 0
-            
+
         except Exception as e:
-            self.logger.warning(f"Failed to count customer projects for account {account_id}: {e}")
+            self.logger.warning(
+                f"Failed to count customer projects for account {account_id}: {e}"
+            )
             return 0
 
     def _count_customer_tickets(
@@ -1537,15 +1616,25 @@ class AnalyticsEntity(BaseEntity):
             # Query tickets for the account in the date range
             ticket_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
-                {"field": "CreateDate", "op": "gte", "value": date_range.get("start_date")},
-                {"field": "CreateDate", "op": "lte", "value": date_range.get("end_date")},
+                {
+                    "field": "CreateDate",
+                    "op": "gte",
+                    "value": date_range.get("start_date"),
+                },
+                {
+                    "field": "CreateDate",
+                    "op": "lte",
+                    "value": date_range.get("end_date"),
+                },
             ]
-            
+
             tickets_response = self.client.query("Tickets", {"filter": ticket_filters})
             return len(tickets_response.items) if tickets_response.items else 0
-            
+
         except Exception as e:
-            self.logger.warning(f"Failed to count customer tickets for account {account_id}: {e}")
+            self.logger.warning(
+                f"Failed to count customer tickets for account {account_id}: {e}"
+            )
             return 0
 
     def _calculate_customer_retention(
@@ -1554,68 +1643,82 @@ class AnalyticsEntity(BaseEntity):
         """Calculate customer retention rate based on actual activity data."""
         try:
             # Calculate retention based on continued activity and contract renewals
-            
+
             # Check for active contracts
             contract_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
                 {"field": "Status", "op": "eq", "value": "1"},  # Active contracts
             ]
-            
-            contracts_response = self.client.query("Contracts", {"filter": contract_filters})
-            active_contracts = len(contracts_response.items) if contracts_response.items else 0
-            
+
+            contracts_response = self.client.query(
+                "Contracts", {"filter": contract_filters}
+            )
+            active_contracts = (
+                len(contracts_response.items) if contracts_response.items else 0
+            )
+
             # Check for recent activity (tickets, time entries, invoices)
             current_date = datetime.now()
-            recent_start = (current_date - timedelta(days=90)).isoformat()  # Last 90 days
-            
+            recent_start = (
+                current_date - timedelta(days=90)
+            ).isoformat()  # Last 90 days
+
             activity_indicators = []
-            
+
             # Recent tickets
             recent_ticket_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
                 {"field": "CreateDate", "op": "gte", "value": recent_start},
             ]
-            
-            recent_tickets_response = self.client.query("Tickets", {"filter": recent_ticket_filters, "maxRecords": 1})
+
+            recent_tickets_response = self.client.query(
+                "Tickets", {"filter": recent_ticket_filters, "maxRecords": 1}
+            )
             has_recent_tickets = len(recent_tickets_response.items) > 0
-            
-            # Recent time entries  
+
+            # Recent time entries
             recent_time_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
                 {"field": "DateWorked", "op": "gte", "value": recent_start},
             ]
-            
-            recent_time_response = self.client.query("TimeEntries", {"filter": recent_time_filters, "maxRecords": 1})
+
+            recent_time_response = self.client.query(
+                "TimeEntries", {"filter": recent_time_filters, "maxRecords": 1}
+            )
             has_recent_time = len(recent_time_response.items) > 0
-            
+
             # Recent invoices
             recent_invoice_filters = [
                 {"field": "AccountID", "op": "eq", "value": str(account_id)},
                 {"field": "InvoiceDate", "op": "gte", "value": recent_start},
             ]
-            
-            recent_invoices_response = self.client.query("Invoices", {"filter": recent_invoice_filters, "maxRecords": 1})
+
+            recent_invoices_response = self.client.query(
+                "Invoices", {"filter": recent_invoice_filters, "maxRecords": 1}
+            )
             has_recent_invoices = len(recent_invoices_response.items) > 0
-            
+
             # Calculate retention score based on activity indicators
             retention_score = 0.5  # Base score
-            
+
             if active_contracts > 0:
                 retention_score += 0.3  # Strong indicator
-            
+
             if has_recent_tickets:
                 retention_score += 0.1  # Shows ongoing engagement
-            
+
             if has_recent_time:
                 retention_score += 0.2  # Shows active work
-                
+
             if has_recent_invoices:
                 retention_score += 0.2  # Shows ongoing revenue
-            
+
             return round(min(retention_score, 1.0), 3)  # Cap at 1.0
-            
+
         except Exception as e:
-            self.logger.warning(f"Failed to calculate customer retention for account {account_id}: {e}")
+            self.logger.warning(
+                f"Failed to calculate customer retention for account {account_id}: {e}"
+            )
             return 0.75  # Return reasonable default on error
 
     def _generate_customer_insights(

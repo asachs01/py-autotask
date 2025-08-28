@@ -17,7 +17,9 @@ from .appointments import AppointmentsEntity
 
 # Article/Knowledge Base entities
 from .article_attachments import ArticleAttachmentsEntity
-from .article_configuration_item_category_associations import ArticleConfigurationItemCategoryAssociationsEntity
+from .article_configuration_item_category_associations import (
+    ArticleConfigurationItemCategoryAssociationsEntity,
+)
 from .article_notes import ArticleNotesEntity
 from .article_plain_text_content import ArticlePlainTextContentEntity
 from .article_tag_associations import ArticleTagAssociationsEntity
@@ -52,19 +54,27 @@ from .company_teams import CompanyTeamsEntity
 from .company_to_dos import CompanyToDosEntity
 from .compliance_frameworks import ComplianceFrameworksEntity
 from .configuration_item_attachments import ConfigurationItemAttachmentsEntity
-from .configuration_item_billing_product_associations import ConfigurationItemBillingProductAssociationsEntity
+from .configuration_item_billing_product_associations import (
+    ConfigurationItemBillingProductAssociationsEntity,
+)
 from .configuration_item_categories import ConfigurationItemCategoriesEntity
-from .configuration_item_category_udf_associations import ConfigurationItemCategoryUdfAssociationsEntity
+from .configuration_item_category_udf_associations import (
+    ConfigurationItemCategoryUdfAssociationsEntity,
+)
 from .configuration_item_dns_records import ConfigurationItemDnsRecordsEntity
 from .configuration_item_note_attachments import ConfigurationItemNoteAttachmentsEntity
 from .configuration_item_notes import ConfigurationItemNotesEntity
 from .configuration_item_related_items import ConfigurationItemRelatedItemsEntity
-from .configuration_item_ssl_subject_alternative_name import ConfigurationItemSslSubjectAlternativeNameEntity
+from .configuration_item_ssl_subject_alternative_name import (
+    ConfigurationItemSslSubjectAlternativeNameEntity,
+)
 from .configuration_item_types import ConfigurationItemTypesEntity
 from .configuration_items import ConfigurationItemsEntity
 from .comanaged_associations import ComanagedAssociationsEntity
 from .contacts import ContactsEntity
-from .contact_billing_product_associations import ContactBillingProductAssociationsEntity
+from .contact_billing_product_associations import (
+    ContactBillingProductAssociationsEntity,
+)
 from .contact_groups import ContactGroupsEntity
 from .contact_group_contacts import ContactGroupContactsEntity
 from .contract_adjustments import ContractAdjustmentsEntity
@@ -74,8 +84,12 @@ from .contract_blocks import ContractBlocksEntity
 from .contract_charges import ContractChargesEntity
 from .contract_exclusion_billing_codes import ContractExclusionBillingCodesEntity
 from .contract_exclusion_roles import ContractExclusionRolesEntity
-from .contract_exclusion_set_excluded_roles import ContractExclusionSetExcludedRolesEntity
-from .contract_exclusion_set_excluded_work_types import ContractExclusionSetExcludedWorkTypesEntity
+from .contract_exclusion_set_excluded_roles import (
+    ContractExclusionSetExcludedRolesEntity,
+)
+from .contract_exclusion_set_excluded_work_types import (
+    ContractExclusionSetExcludedWorkTypesEntity,
+)
 from .contract_exclusions import ContractExclusionsEntity
 from .contract_milestones import ContractMilestonesEntity
 from .contract_notes import ContractNotesEntity
@@ -176,7 +190,9 @@ from .ticket_priorities import TicketPrioritiesEntity
 from .ticket_sources import TicketSourcesEntity
 from .ticket_statuses import TicketStatusesEntity
 from .ticket_additional_contacts import TicketAdditionalContactsEntity
-from .ticket_additional_configuration_items import TicketAdditionalConfigurationItemsEntity
+from .ticket_additional_configuration_items import (
+    TicketAdditionalConfigurationItemsEntity,
+)
 from .ticket_attachments import TicketAttachmentsEntity
 from .ticket_change_request_approvals import TicketChangeRequestApprovalsEntity
 from .ticket_checklist_items import TicketChecklistItemsEntity
@@ -598,7 +614,9 @@ class EntityManager:
         return self.get_entity("ArticleAttachments")
 
     @property
-    def article_configuration_item_category_associations(self) -> ArticleConfigurationItemCategoryAssociationsEntity:
+    def article_configuration_item_category_associations(
+        self,
+    ) -> ArticleConfigurationItemCategoryAssociationsEntity:
         """Access to Article Configuration Item Category Associations entity operations."""
         return self.get_entity("ArticleConfigurationItemCategoryAssociations")
 
@@ -716,7 +734,9 @@ class EntityManager:
         return self.get_entity("TicketSources")
 
     @property
-    def ticket_additional_configuration_items(self) -> TicketAdditionalConfigurationItemsEntity:
+    def ticket_additional_configuration_items(
+        self,
+    ) -> TicketAdditionalConfigurationItemsEntity:
         """Access to Ticket Additional Configuration Items entity operations."""
         return self.get_entity("TicketAdditionalConfigurationItems")
 
@@ -768,7 +788,9 @@ class EntityManager:
         return self.get_entity("ConfigurationItemAttachments")
 
     @property
-    def configuration_item_billing_product_associations(self) -> ConfigurationItemBillingProductAssociationsEntity:
+    def configuration_item_billing_product_associations(
+        self,
+    ) -> ConfigurationItemBillingProductAssociationsEntity:
         """Access to Configuration Item Billing Product Associations entity operations."""
         return self.get_entity("ConfigurationItemBillingProductAssociations")
 
@@ -778,7 +800,9 @@ class EntityManager:
         return self.get_entity("ConfigurationItemCategories")
 
     @property
-    def configuration_item_category_udf_associations(self) -> ConfigurationItemCategoryUdfAssociationsEntity:
+    def configuration_item_category_udf_associations(
+        self,
+    ) -> ConfigurationItemCategoryUdfAssociationsEntity:
         """Access to Configuration Item Category UDF Associations entity operations."""
         return self.get_entity("ConfigurationItemCategoryUdfAssociations")
 
@@ -788,7 +812,9 @@ class EntityManager:
         return self.get_entity("ConfigurationItemDnsRecords")
 
     @property
-    def configuration_item_note_attachments(self) -> ConfigurationItemNoteAttachmentsEntity:
+    def configuration_item_note_attachments(
+        self,
+    ) -> ConfigurationItemNoteAttachmentsEntity:
         """Access to Configuration Item Note Attachments entity operations."""
         return self.get_entity("ConfigurationItemNoteAttachments")
 
@@ -803,7 +829,9 @@ class EntityManager:
         return self.get_entity("ConfigurationItemRelatedItems")
 
     @property
-    def configuration_item_ssl_subject_alternative_name(self) -> ConfigurationItemSslSubjectAlternativeNameEntity:
+    def configuration_item_ssl_subject_alternative_name(
+        self,
+    ) -> ConfigurationItemSslSubjectAlternativeNameEntity:
         """Access to Configuration Item SSL Subject Alternative Name entity operations."""
         return self.get_entity("ConfigurationItemSslSubjectAlternativeName")
 
@@ -979,7 +1007,9 @@ class EntityManager:
         return self.get_entity("DocumentCategories")
 
     @property
-    def document_to_procedure_associations(self) -> DocumentToProcedureAssociationsEntity:
+    def document_to_procedure_associations(
+        self,
+    ) -> DocumentToProcedureAssociationsEntity:
         """Access to Document to Procedure Associations entity operations."""
         return self.get_entity("DocumentToProcedureAssociations")
 
@@ -994,7 +1024,9 @@ class EntityManager:
         return self.get_entity("NotificationTemplates")
 
     @property
-    def organizational_level_associations(self) -> OrganizationalLevelAssociationsEntity:
+    def organizational_level_associations(
+        self,
+    ) -> OrganizationalLevelAssociationsEntity:
         """Access to Organizational Level Associations entity operations."""
         return self.get_entity("OrganizationalLevelAssociations")
 

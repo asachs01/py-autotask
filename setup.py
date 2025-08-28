@@ -41,6 +41,7 @@ setup(
             "pytest>=7.0.0",
             "pytest-cov>=4.0.0",
             "pytest-mock>=3.10.0",
+            "responses>=0.23.0",
             "black>=23.0.0",
             "isort>=5.12.0",
             "flake8>=6.0.0",
