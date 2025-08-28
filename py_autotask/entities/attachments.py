@@ -28,9 +28,9 @@ class AttachmentsEntity(BaseEntity):
     Autotask entities including tickets, projects, and contacts.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Attachments"):
         """Initialize the attachments entity manager."""
-        super().__init__(client, "Attachments")
+        super().__init__(client, entity_name)
 
     def upload_file(
         self,

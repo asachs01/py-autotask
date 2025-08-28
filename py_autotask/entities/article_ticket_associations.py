@@ -20,9 +20,9 @@ class ArticleTicketAssociationsEntity(BaseEntity):
     and support tickets, enabling knowledge sharing and ticket resolution tracking.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticleTicketAssociations"):
         """Initialize the Article Ticket Associations entity."""
-        super().__init__(client, "ArticleTicketAssociations")
+        super().__init__(client, entity_name)
 
     def create(self, association_data: Dict[str, Any]) -> CreateResponse:
         """

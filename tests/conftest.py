@@ -17,6 +17,16 @@ from py_autotask.auth import AutotaskAuth
 from py_autotask.types import AuthCredentials, ZoneInfo
 
 
+@pytest.fixture(autouse=True)
+def clear_auth_cache():
+    """Clear authentication cache before each test."""
+    # Clear the cache before each test
+    AutotaskAuth.clear_zone_cache()
+    yield
+    # Optionally clear after test as well
+    AutotaskAuth.clear_zone_cache()
+
+
 @pytest.fixture
 def sample_credentials():
     """Sample authentication credentials for testing."""

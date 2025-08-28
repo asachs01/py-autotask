@@ -99,9 +99,9 @@ class AuditLogsEntity(BaseEntity):
         entity_name (str): The name of the entity in the Autotask API
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="AuditLogs"):
         """Initialize the Audit Logs entity."""
-        super().__init__(client, "AuditLogs")
+        super().__init__(client, entity_name)
 
     def create_audit_log(
         self,

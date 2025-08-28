@@ -231,9 +231,8 @@ from .user_defined_field_list_items import UserDefinedFieldListItemsEntity
 from .user_defined_fields import UserDefinedFieldsEntity
 from .vendor_types import VendorTypesEntity
 from .work_types import WorkTypesEntity
-from .workflow_rules import WorkflowRulesEntity as WorkflowRulesEntityActual
-from .workflows import WorkflowRulesEntity
-from .workflows import WorkflowRulesEntity as WorkflowsEntity
+from .workflow_rules import WorkflowRulesEntity
+from .workflows import WorkflowsEntity
 
 if TYPE_CHECKING:
     from ..client import AutotaskClient
@@ -354,7 +353,7 @@ class EntityManager:
         "ProjectMilestones": ProjectMilestonesEntity,
         "AllocationCodes": AllocationCodesEntity,
         "HolidaySets": HolidaySetsEntity,
-        "WorkflowRules": WorkflowRulesEntityActual,
+        "WorkflowRules": WorkflowRulesEntity,
         "Workflows": WorkflowsEntity,
         "ProjectTemplates": ProjectTemplatesEntity,
         "ResourceAllocation": ResourceAllocationEntity,

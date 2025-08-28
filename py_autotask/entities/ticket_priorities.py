@@ -19,9 +19,9 @@ class TicketPrioritiesEntity(BaseEntity):
     with SLA timers and escalation rules.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="TicketPriorities"):
         """Initialize the Ticket Priorities entity."""
-        super().__init__(client, "TicketPriorities")
+        super().__init__(client, entity_name)
 
     def create(self, priority_data: Dict[str, Any]) -> CreateResponse:
         """

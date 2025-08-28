@@ -20,9 +20,9 @@ class ArticleToArticleAssociationsEntity(BaseEntity):
     enabling content linking, navigation, and related article suggestions.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticleToArticleAssociations"):
         """Initialize the Article to Article Associations entity."""
-        super().__init__(client, "ArticleToArticleAssociations")
+        super().__init__(client, entity_name)
 
     def create(self, association_data: Dict[str, Any]) -> CreateResponse:
         """

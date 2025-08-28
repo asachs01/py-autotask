@@ -20,9 +20,9 @@ class ContractExclusionsEntity(BaseEntity):
     including resource exclusions, service exclusions, and date-based exclusions.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ContractExclusions"):
         """Initialize the Contract Exclusions entity."""
-        super().__init__(client, "ContractExclusions")
+        super().__init__(client, entity_name)
 
     def create(self, contract_exclusion_data: Dict[str, Any]) -> CreateResponse:
         """

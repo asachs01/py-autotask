@@ -201,12 +201,12 @@ class TestEntityIntegration:
         # Test create method
         create_method = getattr(entity, "create")
         sig = inspect.signature(create_method)
-        assert "data" in sig.parameters
+        assert "entity_data" in sig.parameters
 
         # Test update method
         update_method = getattr(entity, "update")
         sig = inspect.signature(update_method)
-        assert "data" in sig.parameters
+        assert "entity_data" in sig.parameters
 
         # Test delete method
         delete_method = getattr(entity, "delete")

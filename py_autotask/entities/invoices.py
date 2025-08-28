@@ -21,9 +21,9 @@ class InvoicesEntity(BaseEntity):
     time entries, expenses, and other billable items.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Invoices"):
         """Initialize the Invoices entity."""
-        super().__init__(client, "Invoices")
+        super().__init__(client, entity_name)
 
     def create(self, invoice_data: Dict[str, Any]) -> CreateResponse:
         """

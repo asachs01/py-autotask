@@ -60,9 +60,9 @@ class ProjectReportsEntity(BaseEntity):
     performance analysis, metrics, and business intelligence.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ProjectReports"):
         """Initialize the Project Reports entity."""
-        super().__init__(client, "ProjectReports")
+        super().__init__(client, entity_name)
 
     def generate_project_status_report(
         self, project_id: int, as_of_date: Optional[str] = None

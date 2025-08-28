@@ -21,9 +21,9 @@ class QuotesEntity(BaseEntity):
     for potential work, services, or products.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Quotes"):
         """Initialize the Quotes entity."""
-        super().__init__(client, "Quotes")
+        super().__init__(client, entity_name)
 
     def create(self, quote_data: Dict[str, Any]) -> CreateResponse:
         """

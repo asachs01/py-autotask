@@ -238,7 +238,7 @@ from .user_defined_fields import UserDefinedFieldsEntity
 from .vendor_types import VendorTypesEntity
 from .work_types import WorkTypesEntity
 from .workflow_rules import WorkflowRulesEntity
-from .workflows import WorkflowRulesEntity as WorkflowsEntity
+from .workflows import WorkflowsEntity
 
 __all__ = [
     # Core entities

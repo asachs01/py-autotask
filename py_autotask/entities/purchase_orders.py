@@ -21,9 +21,9 @@ class PurchaseOrdersEntity(BaseEntity):
     goods and services from vendors.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="PurchaseOrders"):
         """Initialize the Purchase Orders entity."""
-        super().__init__(client, "PurchaseOrders")
+        super().__init__(client, entity_name)
 
     def create(self, purchase_order_data: Dict[str, Any]) -> CreateResponse:
         """

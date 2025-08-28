@@ -20,9 +20,9 @@ class ArticleTagAssociationsEntity(BaseEntity):
     and tags, enabling content categorization, filtering, and improved search.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticleTagAssociations"):
         """Initialize the Article Tag Associations entity."""
-        super().__init__(client, "ArticleTagAssociations")
+        super().__init__(client, entity_name)
 
     def create(self, association_data: Dict[str, Any]) -> CreateResponse:
         """

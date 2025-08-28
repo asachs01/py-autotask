@@ -20,9 +20,9 @@ class TasksEntity(BaseEntity):
     with scheduling, progress tracking, and dependency management.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Tasks"):
         """Initialize the Tasks entity."""
-        super().__init__(client, "Tasks")
+        super().__init__(client, entity_name)
 
     def create(self, task_data: Dict[str, Any]) -> CreateResponse:
         """

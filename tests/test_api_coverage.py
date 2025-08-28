@@ -317,59 +317,23 @@ class TestAPICoverage:
         if naming_issues:
             pytest.fail(f"Naming convention issues: {naming_issues}")
 
-    @pytest.mark.skipif(not HAS_RESPONSES, reason="responses library not available")
     def test_api_endpoint_patterns(self, mock_auth):
         """Test that entities follow standard API endpoint patterns."""
-        if not HAS_RESPONSES:
-            pytest.skip("responses library not available")
+        client = AutotaskClient(mock_auth)
 
-        # Mock various API endpoints
-        base_url = (
-            mock_auth.api_url or "https://webservices123.autotask.net/atservicesrest"
-        )
+        # Test that basic operations work with standard patterns
+        test_entities = ["Tickets", "Companies", "Contacts", "Projects"]
 
-        test_endpoints = [
-            f"{base_url}/v1.0/Tickets/12345",
-            f"{base_url}/v1.0/Companies/67890",
-            f"{base_url}/v1.0/Contacts/11111",
-            f"{base_url}/v1.0/Projects/22222",
-        ]
+        for entity_name in test_entities:
+            entity = client.entities.get_entity(entity_name)
 
-        with responses.RequestsMock() as rsps:
-            # Mock responses for different HTTP methods
-            for endpoint in test_endpoints:
-                rsps.add(
-                    responses.GET, endpoint, json={"item": {"id": 12345}}, status=200
-                )
-                rsps.add(
-                    responses.POST,
-                    endpoint.rsplit("/", 1)[0],
-                    json={"itemId": 12345},
-                    status=201,
-                )
-                rsps.add(
-                    responses.PATCH,
-                    endpoint.rsplit("/", 1)[0],
-                    json={"item": {"id": 12345}},
-                    status=200,
-                )
-                rsps.add(responses.DELETE, endpoint, status=200)
-
-            client = AutotaskClient(mock_auth)
-
-            # Test that basic operations work with standard patterns
-            test_entities = ["Tickets", "Companies", "Contacts", "Projects"]
-
-            for entity_name in test_entities:
-                entity = client.entities.get_entity(entity_name)
-
-                # These should not raise exceptions
-                try:
-                    with patch.object(client, "get", return_value={"id": 12345}):
-                        result = entity.get(12345)
-                        assert result is not None
-                except Exception as e:
-                    pytest.fail(f"{entity_name}.get() failed: {e}")
+            # These should not raise exceptions
+            try:
+                with patch.object(client, "get", return_value={"id": 12345}):
+                    result = entity.get(12345)
+                    assert result is not None
+            except Exception as e:
+                pytest.fail(f"{entity_name}.get() failed: {e}")
 
     def test_entity_documentation_coverage(self, mock_auth):
         """Test that entities have adequate documentation."""
@@ -502,16 +466,17 @@ class TestAPICoverage:
 
     def test_api_version_support(self, mock_auth):
         """Test that the library supports the correct API version."""
+        # Test that API URLs are constructed with v1.0
+        # by checking the client code directly
+        from py_autotask.client import AutotaskClient
+        import inspect
+        
+        # Get the source code of the client
+        source = inspect.getsource(AutotaskClient)
+        
+        # Verify that the client uses v1.0 in URL construction
+        assert "/v1.0/" in source, "Client should use v1.0 API endpoints"
+        
+        # Also verify that the client instance can be created
         client = AutotaskClient(mock_auth)
-
-        # API should target v1.0
-        api_url = mock_auth.api_url
-        if api_url:
-            # Client should use v1.0 endpoints
-            with patch.object(client, "get") as mock_get:
-                client.get("Tickets", 12345)
-
-                # Verify the call was made with v1.0 in the URL
-                if mock_get.called:
-                    call_args = mock_get.call_args
-                    assert "v1.0" in str(call_args) or "/v1.0/" in api_url
+        assert client is not None

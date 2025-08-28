@@ -1,7 +1,7 @@
 """
-Workflow Rules Entity for py-autotask
+Workflows Entity for py-autotask
 
-This module provides the WorkflowRulesEntity class for managing workflow automation
+This module provides the WorkflowsEntity class for managing workflow automation
 rules and triggers in Autotask. Workflow rules automate business processes through
 conditions, actions, and triggers that respond to data changes and events.
 """
@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional
 from .base import BaseEntity
 
 
-class WorkflowRulesEntity(BaseEntity):
+class WorkflowsEntity(BaseEntity):
     """
-    Manages Autotask Workflow Rules - workflow automation rules & triggers.
+    Manages Autotask Workflows - workflow automation rules & triggers.
 
     Workflow rules enable automation of business processes through configurable
     conditions, actions, and triggers that respond to entity changes, time-based
@@ -25,7 +25,11 @@ class WorkflowRulesEntity(BaseEntity):
         entity_name (str): The name of the entity in the Autotask API
     """
 
-    entity_name = "WorkflowRules"
+    entity_name = "Workflows"
+
+    def __init__(self, client, entity_name="Workflows"):
+        """Initialize the Workflows entity."""
+        super().__init__(client, entity_name)
 
     def create_workflow_rule(
         self,

@@ -19,9 +19,9 @@ class TicketCategoriesEntity(BaseEntity):
     for service desk tickets, enabling better routing and reporting.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="TicketCategories"):
         """Initialize the Ticket Categories entity."""
-        super().__init__(client, "TicketCategories")
+        super().__init__(client, entity_name)
 
     def create(self, category_data: Dict[str, Any]) -> CreateResponse:
         """

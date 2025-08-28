@@ -72,9 +72,9 @@ class DataExportEntity(BaseEntity):
     tools for efficient data management and integration.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="DataExport"):
         """Initialize the Data Export entity."""
-        super().__init__(client, "DataExport")
+        super().__init__(client, entity_name)
 
     def create_export_job(
         self,

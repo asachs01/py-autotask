@@ -21,9 +21,9 @@ class ArticlePlainTextContentEntity(BaseEntity):
     which are used for full-text search, indexing, and content analysis.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticlePlainTextContent"):
         """Initialize the Article Plain Text Content entity."""
-        super().__init__(client, "ArticlePlainTextContent")
+        super().__init__(client, entity_name)
 
     def create(self, content_data: Dict[str, Any]) -> CreateResponse:
         """

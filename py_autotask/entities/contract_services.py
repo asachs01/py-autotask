@@ -19,9 +19,9 @@ class ContractServicesEntity(BaseEntity):
     including service definitions, pricing, and billing configurations.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ContractServices"):
         """Initialize the Contract Services entity."""
-        super().__init__(client, "ContractServices")
+        super().__init__(client, entity_name)
 
     def create(self, contract_service_data: Dict[str, Any]) -> CreateResponse:
         """

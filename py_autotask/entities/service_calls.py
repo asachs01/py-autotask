@@ -20,9 +20,9 @@ class ServiceCallsEntity(BaseEntity):
     with technician assignment and travel time tracking.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ServiceCalls"):
         """Initialize the Service Calls entity."""
-        super().__init__(client, "ServiceCalls")
+        super().__init__(client, entity_name)
 
     def create(self, service_call_data: Dict[str, Any]) -> CreateResponse:
         """

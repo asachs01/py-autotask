@@ -20,9 +20,9 @@ class ContractBlocksEntity(BaseEntity):
     including time blocks, expense blocks, and other billable units.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ContractBlocks"):
         """Initialize the Contract Blocks entity."""
-        super().__init__(client, "ContractBlocks")
+        super().__init__(client, entity_name)
 
     def create(self, contract_block_data: Dict[str, Any]) -> CreateResponse:
         """

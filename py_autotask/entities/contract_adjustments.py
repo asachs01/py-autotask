@@ -20,9 +20,9 @@ class ContractAdjustmentsEntity(BaseEntity):
     including pricing adjustments, service changes, and other contract modifications.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ContractAdjustments"):
         """Initialize the Contract Adjustments entity."""
-        super().__init__(client, "ContractAdjustments")
+        super().__init__(client, entity_name)
 
     def create(self, contract_adjustment_data: Dict[str, Any]) -> CreateResponse:
         """

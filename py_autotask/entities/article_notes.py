@@ -20,9 +20,9 @@ class ArticleNotesEntity(BaseEntity):
     for knowledge base articles, enabling collaboration and feedback.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticleNotes"):
         """Initialize the Article Notes entity."""
-        super().__init__(client, "ArticleNotes")
+        super().__init__(client, entity_name)
 
     def create(self, note_data: Dict[str, Any]) -> CreateResponse:
         """

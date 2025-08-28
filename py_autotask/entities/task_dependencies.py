@@ -42,9 +42,9 @@ class TaskDependenciesEntity(BaseEntity):
     sequencing and dependency tracking in project execution.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="TaskDependencies"):
         """Initialize the Task Dependencies entity."""
-        super().__init__(client, "TaskDependencies")
+        super().__init__(client, entity_name)
 
     def create_task_dependency(
         self,

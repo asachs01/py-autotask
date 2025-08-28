@@ -21,9 +21,9 @@ class ArticleAttachmentsEntity(BaseEntity):
     for knowledge base articles, supporting documentation and reference materials.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticleAttachments"):
         """Initialize the Article Attachments entity."""
-        super().__init__(client, "ArticleAttachments")
+        super().__init__(client, entity_name)
 
     def create(self, attachment_data: Dict[str, Any]) -> CreateResponse:
         """

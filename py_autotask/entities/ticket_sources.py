@@ -19,9 +19,9 @@ class TicketSourcesEntity(BaseEntity):
     integration mapping for automation and reporting.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="TicketSources"):
         """Initialize the Ticket Sources entity."""
-        super().__init__(client, "TicketSources")
+        super().__init__(client, entity_name)
 
     def create(self, source_data: Dict[str, Any]) -> CreateResponse:
         """

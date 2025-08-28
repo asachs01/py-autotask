@@ -184,9 +184,10 @@ class AutotaskAuth:
                     "Zone information could not be determined" in str(err)
                     for err in errors
                 ):
-                    # Try fallback zone detection
-                    self._fallback_zone_detection()
-                    return
+                    # This usually means invalid username or domain
+                    raise AutotaskAuthError(
+                        "Invalid API username or domain. Zone information could not be determined."
+                    )
                 elif any("IntegrationCode is invalid" in str(err) for err in errors):
                     raise AutotaskAuthError(
                         "Invalid integration code. Please check your credentials."
@@ -204,9 +205,10 @@ class AutotaskAuth:
             try:
                 zone_data = response.json()
                 if not isinstance(zone_data, dict) or "url" not in zone_data:
-                    # Try fallback if response is malformed
-                    self._fallback_zone_detection()
-                    return
+                    raise AutotaskZoneError(
+                        "Invalid zone information received from API. "
+                        "Response missing required fields."
+                    )
 
                 self._zone_info = ZoneInfo(**zone_data)
                 logger.info(f"Detected API zone: {self._zone_info.url}")
@@ -215,25 +217,23 @@ class AutotaskAuth:
                 self._zone_cache[cache_key] = {
                     "zone_info": {
                         "url": self._zone_info.url,
-                        "zone_id": getattr(self._zone_info, "zone_id", None),
+                        "dataBaseType": self._zone_info.data_base_type,
+                        "ciLevel": self._zone_info.ci_level,
                     },
                     "timestamp": time.time(),
                 }
 
             except (ValueError, TypeError) as e:
-                logger.warning(f"Failed to parse zone information: {e}")
-                self._fallback_zone_detection()
-                return
+                raise AutotaskZoneError(
+                    f"Invalid zone information format: {str(e)}"
+                )
 
         except requests.exceptions.Timeout:
-            logger.warning("Timeout during zone detection, using fallback")
-            self._fallback_zone_detection()
-        except requests.exceptions.ConnectionError:
-            logger.warning("Connection error during zone detection, using fallback")
-            self._fallback_zone_detection()
+            raise AutotaskTimeoutError("Request timeout during zone detection")
+        except requests.exceptions.ConnectionError as e:
+            raise AutotaskConnectionError(f"Connection error during zone detection: {str(e)}")
         except requests.exceptions.RequestException as e:
-            logger.warning(f"Network error during zone detection: {e}, using fallback")
-            self._fallback_zone_detection()
+            raise AutotaskConnectionError(f"Network error during zone detection: {str(e)}")
 
     def _fallback_zone_detection(self) -> None:
         """
@@ -266,7 +266,11 @@ class AutotaskAuth:
 
         zone_url = self.ZONE_URLS.get(zone_id, self.ZONE_URLS[1])
 
-        self._zone_info = ZoneInfo(url=zone_url, zone_id=zone_id)
+        self._zone_info = ZoneInfo(
+            url=zone_url, 
+            dataBaseType="Production",  # Default for production environments
+            ciLevel=1  # Default CI level
+        )
         logger.info(f"Fallback zone selected: {zone_url} (Zone {zone_id})")
 
     def set_zone_manually(self, zone: Union[int, str]) -> None:
@@ -281,7 +285,11 @@ class AutotaskAuth:
         """
         if isinstance(zone, int) and zone in self.ZONE_URLS:
             zone_url = self.ZONE_URLS[zone]
-            self._zone_info = ZoneInfo(url=zone_url, zone_id=zone)
+            self._zone_info = ZoneInfo(
+                url=zone_url,
+                dataBaseType="Production",  # Default for production environments
+                ciLevel=1  # Default CI level
+            )
             logger.info(f"Manually set zone to: {zone_url} (Zone {zone})")
         else:
             raise ValueError(f"Invalid zone: {zone}. Must be 1-7.")

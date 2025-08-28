@@ -20,9 +20,9 @@ class NotesEntity(BaseEntity):
     across various entity types with rich text and attachment support.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Notes"):
         """Initialize the Notes entity."""
-        super().__init__(client, "Notes")
+        super().__init__(client, entity_name)
 
     def create(self, note_data: Dict[str, Any]) -> CreateResponse:
         """

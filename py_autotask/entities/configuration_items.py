@@ -20,9 +20,9 @@ class ConfigurationItemsEntity(BaseEntity):
     configuration tracking for change management and inventory.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ConfigurationItems"):
         """Initialize the Configuration Items entity."""
-        super().__init__(client, "ConfigurationItems")
+        super().__init__(client, entity_name)
 
     def create(self, ci_data: Dict[str, Any]) -> CreateResponse:
         """

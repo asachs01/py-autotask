@@ -69,9 +69,9 @@ class DashboardsEntity(BaseEntity):
     dashboard creation, configuration, widget management, and usage analytics.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Dashboards"):
         """Initialize the Dashboards entity."""
-        super().__init__(client, "Dashboards")
+        super().__init__(client, entity_name)
 
     def create_dashboard(
         self,

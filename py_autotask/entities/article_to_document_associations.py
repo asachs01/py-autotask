@@ -20,9 +20,9 @@ class ArticleToDocumentAssociationsEntity(BaseEntity):
     and documents, enabling content linking and reference management.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="ArticleToDocumentAssociations"):
         """Initialize the Article to Document Associations entity."""
-        super().__init__(client, "ArticleToDocumentAssociations")
+        super().__init__(client, entity_name)
 
     def create(self, association_data: Dict[str, Any]) -> CreateResponse:
         """

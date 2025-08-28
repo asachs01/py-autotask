@@ -69,9 +69,9 @@ class AnalyticsEntity(BaseEntity):
         entity_name (str): The name of the entity in the Autotask API
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Analytics"):
         """Initialize the Analytics entity."""
-        super().__init__(client, "Analytics")
+        super().__init__(client, entity_name)
 
     def create_analytics_report(
         self,

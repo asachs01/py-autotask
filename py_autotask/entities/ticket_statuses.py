@@ -19,9 +19,9 @@ class TicketStatusesEntity(BaseEntity):
     controlling transitions and automation rules.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="TicketStatuses"):
         """Initialize the Ticket Statuses entity."""
-        super().__init__(client, "TicketStatuses")
+        super().__init__(client, entity_name)
 
     def create(self, status_data: Dict[str, Any]) -> CreateResponse:
         """

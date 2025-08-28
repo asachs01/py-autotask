@@ -160,6 +160,14 @@ class TestAutotaskAuth:
             },
             status=200,
         )
+        
+        # Mock the test connection endpoint
+        responses.add(
+            responses.POST,
+            "https://webservices123.autotask.net/atservicesrest/v1.0/Companies/query",
+            json={"items": [], "pageDetails": {"count": 0}},
+            status=200,
+        )
 
         auth = AutotaskAuth(sample_credentials)
         assert auth.validate_credentials() is True

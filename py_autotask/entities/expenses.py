@@ -21,9 +21,9 @@ class ExpensesEntity(BaseEntity):
     for tracking costs, receipts, and reimbursements.
     """
 
-    def __init__(self, client):
+    def __init__(self, client, entity_name="Expenses"):
         """Initialize the Expenses entity."""
-        super().__init__(client, "Expenses")
+        super().__init__(client, entity_name)
 
     def create(self, expense_data: Dict[str, Any]) -> CreateResponse:
         """
