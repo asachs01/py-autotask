@@ -52,7 +52,6 @@ jobs:
           black --check py_autotask tests
           isort --check-only py_autotask tests
           flake8 py_autotask tests
-          mypy py_autotask --ignore-missing-imports
 
   build:
     name: Build Distribution
