@@ -153,7 +153,9 @@ class AutotaskAuth:
                 return
 
         try:
-            logger.info(f"Detecting Autotask API zone using: {self.ZONE_INFO_URL}")
+            # Build zone detection URL with user parameter
+            zone_url = f"{self.ZONE_INFO_URL}?user={self.credentials.username}"
+            logger.info(f"Detecting Autotask API zone using: {zone_url}")
 
             # Create a temporary session for zone detection
             session = requests.Session()
@@ -169,7 +171,7 @@ class AutotaskAuth:
             )
 
             # Allow redirects and log them
-            response = session.get(self.ZONE_INFO_URL, timeout=30, allow_redirects=True)
+            response = session.get(zone_url, timeout=30, allow_redirects=True)
 
             # Log if there was a redirect
             if response.history:
@@ -180,6 +182,7 @@ class AutotaskAuth:
             if response.status_code == 404:
                 logger.error(f"Zone detection endpoint not found at {response.url}")
                 # Try with HTTP as a fallback in case of environment-specific issues
+                # Also try without user parameter as a second fallback
                 if response.url.startswith("https://"):
                     http_url = response.url.replace("https://", "http://", 1)
                     logger.warning(f"Trying HTTP fallback: {http_url}")

@@ -41,10 +41,11 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_success(self, sample_credentials):
         """Test successful zone detection."""
-        # Mock zone detection response
+        # Mock zone detection response with user parameter
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
             responses.GET,
-            AutotaskAuth.ZONE_INFO_URL,
+            zone_url_with_user,
             json={
                 "url": "https://webservices123.autotask.net/atservicesrest",
                 "dataBaseType": "Production",
@@ -63,7 +64,8 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_auth_error(self, sample_credentials):
         """Test zone detection with authentication error."""
-        responses.add(responses.GET, AutotaskAuth.ZONE_INFO_URL, status=401)
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        responses.add(responses.GET, zone_url_with_user, status=401)
 
         auth = AutotaskAuth(sample_credentials)
 
@@ -73,9 +75,10 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_invalid_integration_code(self, sample_credentials):
         """Test zone detection with invalid integration code."""
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
             responses.GET,
-            AutotaskAuth.ZONE_INFO_URL,
+            zone_url_with_user,
             json={"errors": ["IntegrationCode is invalid"]},
             status=500,
         )
@@ -88,9 +91,10 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_invalid_username(self, sample_credentials):
         """Test zone detection with invalid username."""
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
             responses.GET,
-            AutotaskAuth.ZONE_INFO_URL,
+            zone_url_with_user,
             json={"errors": ["Zone information could not be determined"]},
             status=500,
         )
@@ -103,8 +107,9 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_network_error(self, sample_credentials):
         """Test zone detection with network error."""
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
-            responses.GET, AutotaskAuth.ZONE_INFO_URL, body=responses.ConnectionError()
+            responses.GET, zone_url_with_user, body=responses.ConnectionError()
         )
 
         auth = AutotaskAuth(sample_credentials)
@@ -115,9 +120,10 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_invalid_response(self, sample_credentials):
         """Test zone detection with invalid response format."""
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
             responses.GET,
-            AutotaskAuth.ZONE_INFO_URL,
+            zone_url_with_user,
             json={"invalid": "response"},
             status=200,
         )
@@ -150,9 +156,10 @@ class TestAutotaskAuth:
     @responses.activate
     def test_validate_credentials_success(self, sample_credentials):
         """Test credential validation success."""
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
             responses.GET,
-            AutotaskAuth.ZONE_INFO_URL,
+            zone_url_with_user,
             json={
                 "url": "https://webservices123.autotask.net/atservicesrest",
                 "dataBaseType": "Production",
@@ -175,7 +182,8 @@ class TestAutotaskAuth:
     @responses.activate
     def test_validate_credentials_failure(self, sample_credentials):
         """Test credential validation failure."""
-        responses.add(responses.GET, AutotaskAuth.ZONE_INFO_URL, status=401)
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        responses.add(responses.GET, zone_url_with_user, status=401)
 
         auth = AutotaskAuth(sample_credentials)
         assert auth.validate_credentials() is False
@@ -183,9 +191,10 @@ class TestAutotaskAuth:
     @responses.activate
     def test_reset_zone_cache(self, sample_credentials):
         """Test zone cache reset."""
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         responses.add(
             responses.GET,
-            AutotaskAuth.ZONE_INFO_URL,
+            zone_url_with_user,
             json={
                 "url": "https://webservices123.autotask.net/atservicesrest",
                 "dataBaseType": "Production",
@@ -215,11 +224,14 @@ class TestAutotaskAuth:
     @responses.activate
     def test_zone_detection_404_with_http_fallback(self, sample_credentials):
         """Test zone detection handles 404 and tries HTTP fallback."""
+        # Build URLs with user parameter
+        zone_url_with_user = f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
+        
         # HTTPS returns 404
-        responses.add(responses.GET, AutotaskAuth.ZONE_INFO_URL, status=404)
+        responses.add(responses.GET, zone_url_with_user, status=404)
 
         # HTTP fallback succeeds
-        http_url = AutotaskAuth.ZONE_INFO_URL.replace("https://", "http://")
+        http_url = zone_url_with_user.replace("https://", "http://")
         responses.add(
             responses.GET,
             http_url,
