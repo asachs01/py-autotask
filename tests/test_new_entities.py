@@ -6,7 +6,7 @@ complete Autotask API coverage, focusing on entity-specific functionality
 and specialized operations.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -19,7 +19,7 @@ except ImportError:
     responses = None
 
 from py_autotask.client import AutotaskClient
-from py_autotask.entities import (  # Advanced entities from Week 6; Article/Knowledge Base entities; Business & Financial entities; Company-related entities; Configuration Item entities; Contact entities; Contract entities; Financial entities; Document entities; Expense entities; System entities; Notification entities; Product entities; Project entities; Purchase entities; Quote entities; Resource entities; Service entities; System configuration entities; Task entities; Ticket entities; Additional entities; Tax and shipping entities; Survey and subscription entities; Price list entities; Organizational entities
+from py_autotask.entities import (
     ActionTypesEntity,
     AdditionalInvoiceFieldValuesEntity,
     APIUsageMetricsEntity,
