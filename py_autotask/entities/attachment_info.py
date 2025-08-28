@@ -434,7 +434,7 @@ class AttachmentInfoEntity(BaseEntity):
                 try:
                     parent_entity = self.client.get(parent_type, int(parent_id))
                     parent_exists = parent_entity is not None
-                except:
+                except Exception:
                     parent_exists = False
 
                 if not parent_exists:

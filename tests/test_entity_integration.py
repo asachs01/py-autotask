@@ -6,7 +6,7 @@ entity manager, and provide consistent behavior across the entire API.
 """
 
 import inspect
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -226,7 +226,7 @@ class TestEntityIntegration:
     def test_all_entities_accessible_via_manager(self, mock_auth):
         """Test that all entities defined in __init__.py are accessible."""
         client = AutotaskClient(mock_auth)
-        manager = EntityManager(client)
+        EntityManager(client)
 
         # Get all entities listed in __all__ from entities module
         all_entities = getattr(entities, "__all__", [])

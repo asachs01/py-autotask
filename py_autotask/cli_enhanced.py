@@ -180,7 +180,7 @@ async def _export_entities_async(
                 filters = [date_filter]
         except ValueError:
             console.print(
-                f"[red]Invalid date range format. Use: YYYY-MM-DD,YYYY-MM-DD[/red]"
+                "[red]Invalid date range format. Use: YYYY-MM-DD,YYYY-MM-DD[/red]"
             )
             return
 
@@ -269,7 +269,7 @@ async def _export_entities_async(
 
         await _write_export_data(all_data, output, format, compress)
 
-        console.print(f"\n[bold green]✓ Export completed![/bold green]")
+        console.print("\n[bold green]✓ Export completed![/bold green]")
         console.print(f"📁 Output: {output}")
         console.print(f"📊 Total records: {total_records}")
 
