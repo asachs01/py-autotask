@@ -100,7 +100,7 @@ class AutotaskAuth:
             self._session.headers.update(
                 {
                     "Content-Type": "application/json",
-                    "ApiIntegrationcode": self.credentials.integration_code,
+                    "ApiIntegrationCode": self.credentials.integration_code,
                     "User-Agent": "py-autotask/2.0.0",
                     "Accept": "application/json",
                 }
@@ -165,7 +165,7 @@ class AutotaskAuth:
             session.headers.update(
                 {
                     "Content-Type": "application/json",
-                    "ApiIntegrationcode": self.credentials.integration_code,
+                    "ApiIntegrationCode": self.credentials.integration_code,
                     "User-Agent": "py-autotask/2.0.0",
                 }
             )
@@ -381,16 +381,16 @@ class AutotaskAuth:
             # Try a simple API call to test connection
             session = self.get_session()
             # Ensure proper URL construction
-            base_url = self.api_url.rstrip('/')
+            base_url = self.api_url.rstrip("/")
             test_url = f"{base_url}/v1.0/Companies/query"
-            
+
             logger.info(f"Sync testing connection to: {test_url}")
             logger.info(f"Sync session auth: {session.auth}")
             logger.info(f"Sync session headers: {dict(session.headers)}")
 
             # Send a minimal query to test connectivity
             response = session.post(test_url, json={"maxRecords": 1}, timeout=10)
-            
+
             logger.info(f"Sync response status: {response.status_code}")
             logger.info(f"Sync response headers: {dict(response.headers)}")
             if response.status_code != 200:
@@ -401,6 +401,7 @@ class AutotaskAuth:
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
             import traceback
+
             logger.error(f"Traceback: {traceback.format_exc()}")
             return False
 

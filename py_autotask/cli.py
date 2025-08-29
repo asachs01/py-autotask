@@ -783,8 +783,11 @@ async def _test_connection() -> None:
         # Enable debug logging
         if cli_config.verbose:
             import logging
-            logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
-            
+
+            logging.basicConfig(
+                level=logging.DEBUG, format="%(name)s - %(levelname)s - %(message)s"
+            )
+
         console.print("🔗 Testing Autotask API connection...")
 
         # Debug: Show if credentials are loaded
@@ -810,15 +813,20 @@ async def _test_connection() -> None:
 
         # Test sync auth first
         from .client import AutotaskClient
+        from .auth import AutotaskAuth
+
         console.print("[dim]Testing sync client first...[/dim]")
         try:
-            sync_client = AutotaskClient(cli_config.credentials)
+            sync_auth = AutotaskAuth(cli_config.credentials)
+            sync_client = AutotaskClient(sync_auth)
             sync_success = sync_client.auth.test_connection()
-            console.print(f"[dim]Sync test result: {'✅ SUCCESS' if sync_success else '❌ FAILED'}[/dim]")
+            console.print(
+                f"[dim]Sync test result: {'✅ SUCCESS' if sync_success else '❌ FAILED'}[/dim]"
+            )
         except Exception as e:
             console.print(f"[dim]Sync test failed: {e}[/dim]")
             sync_success = False
-        
+
         client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
             # Show zone detection result
@@ -826,7 +834,7 @@ async def _test_connection() -> None:
             if zone_info:
                 console.print(f"[dim]🌍 Detected zone: {zone_info.zone_name}[/dim]")
                 console.print(f"[dim]📍 Using API URL: {zone_info.url}[/dim]")
-            
+
             # Test connection
             success = await client.test_connection_async()
 
@@ -858,6 +866,27 @@ async def _test_connection() -> None:
                     console.print(table)
             else:
                 console.print("[red]❌ Connection failed[/red]")
+
+                # Check if zone detection worked but API calls fail (401)
+                if zone_info:
+                    console.print(
+                        "\n[yellow]⚠️  Zone detection succeeded but API authentication failed.[/yellow]"
+                    )
+                    console.print("\n[bold]This typically means:[/bold]")
+                    console.print(
+                        "• Your credentials are valid (zone detection worked)"
+                    )
+                    console.print("• But the API user lacks proper permissions")
+                    console.print("\n[bold]To fix this issue:[/bold]")
+                    console.print("1. Log into Autotask admin panel")
+                    console.print("2. Navigate to Admin → Resources → Security Levels")
+                    console.print(
+                        "3. Ensure your API user has 'API User (API-only)' security level"
+                    )
+                    console.print("4. The API user should NOT have regular user access")
+                    console.print(
+                        "\n[dim]Note: API users require a special security level that's different from regular user accounts.[/dim]"
+                    )
 
     except Exception as e:
         console.print(f"[red]❌ Connection test failed: {e}[/red]")

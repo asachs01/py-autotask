@@ -153,7 +153,7 @@ class TestAutotaskAuth:
         assert session is not None
         assert session.auth is not None
         assert (
-            session.headers["ApiIntegrationcode"] == sample_credentials.integration_code
+            session.headers["ApiIntegrationCode"] == sample_credentials.integration_code
         )
         assert "py-autotask" in session.headers["User-Agent"]
 
