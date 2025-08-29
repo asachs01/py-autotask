@@ -780,6 +780,11 @@ def test():
 async def _test_connection() -> None:
     """Test connection and display connection info."""
     try:
+        # Enable debug logging
+        if cli_config.verbose:
+            import logging
+            logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+            
         console.print("🔗 Testing Autotask API connection...")
 
         # Debug: Show if credentials are loaded
@@ -803,8 +808,25 @@ async def _test_connection() -> None:
             console.print("[dim]  AUTOTASK_SECRET[/dim]")
             return
 
+        # Test sync auth first
+        from .client import AutotaskClient
+        console.print("[dim]Testing sync client first...[/dim]")
+        try:
+            sync_client = AutotaskClient(cli_config.credentials)
+            sync_success = sync_client.auth.test_connection()
+            console.print(f"[dim]Sync test result: {'✅ SUCCESS' if sync_success else '❌ FAILED'}[/dim]")
+        except Exception as e:
+            console.print(f"[dim]Sync test failed: {e}[/dim]")
+            sync_success = False
+        
         client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
         async with client:
+            # Show zone detection result
+            zone_info = client.auth.zone_info
+            if zone_info:
+                console.print(f"[dim]🌍 Detected zone: {zone_info.zone_name}[/dim]")
+                console.print(f"[dim]📍 Using API URL: {zone_info.url}[/dim]")
+            
             # Test connection
             success = await client.test_connection_async()
 

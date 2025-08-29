@@ -380,15 +380,28 @@ class AutotaskAuth:
         try:
             # Try a simple API call to test connection
             session = self.get_session()
-            test_url = f"{self.api_url}/v1.0/Companies/query"
+            # Ensure proper URL construction
+            base_url = self.api_url.rstrip('/')
+            test_url = f"{base_url}/v1.0/Companies/query"
+            
+            logger.info(f"Sync testing connection to: {test_url}")
+            logger.info(f"Sync session auth: {session.auth}")
+            logger.info(f"Sync session headers: {dict(session.headers)}")
 
             # Send a minimal query to test connectivity
             response = session.post(test_url, json={"maxRecords": 1}, timeout=10)
+            
+            logger.info(f"Sync response status: {response.status_code}")
+            logger.info(f"Sync response headers: {dict(response.headers)}")
+            if response.status_code != 200:
+                logger.error(f"Sync response text: {response.text}")
 
             return response.status_code == 200
 
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return False
 
     @classmethod

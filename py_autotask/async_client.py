@@ -298,6 +298,12 @@ class AsyncAutotaskClient:
             )
         return self._session
 
+    def _build_url(self, path: str) -> str:
+        """Build a properly formatted API URL with the given path."""
+        base_url = self.auth.api_url.rstrip('/')
+        path = path.lstrip('/')
+        return f"{base_url}/{path}"
+
     @property
     def entities(self) -> AsyncEntityManager:
         """Access to entity managers."""
@@ -337,7 +343,7 @@ class AsyncAutotaskClient:
         Returns:
             Entity data or None if not found
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = self._build_url(f"v1.0/{entity}/{entity_id}")
 
         try:
             async with self.session.get(url) as response:
@@ -424,7 +430,7 @@ class AsyncAutotaskClient:
             for filter_item in query_request.filter:
                 validate_filter(filter_item)
 
-        url = f"{self.auth.api_url}/v1.0/{entity}/query"
+        url = self._build_url(f"v1.0/{entity}/query")
 
         try:
             async with self.session.post(
@@ -455,7 +461,7 @@ class AsyncAutotaskClient:
         Returns:
             Create response with new entity ID
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}"
+        url = self._build_url(f"v1.0/{entity}")
 
         try:
             async with self.session.post(url, json=entity_data) as response:
@@ -484,7 +490,7 @@ class AsyncAutotaskClient:
         Returns:
             Updated entity data
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = self._build_url(f"v1.0/{entity}/{entity_id}")
 
         try:
             async with self.session.patch(url, json=entity_data) as response:
@@ -510,7 +516,7 @@ class AsyncAutotaskClient:
         Returns:
             True if deletion was successful
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = self._build_url(f"v1.0/{entity}/{entity_id}")
 
         try:
             async with self.session.delete(url) as response:
@@ -597,12 +603,21 @@ class AsyncAutotaskClient:
             True if connection is successful, False otherwise
         """
         try:
-            test_url = f"{self.auth.api_url}/v1.0/Companies/query"
+            # Ensure proper URL construction - remove trailing slash from api_url if present
+            base_url = self.auth.api_url.rstrip('/')
+            test_url = f"{base_url}/v1.0/Companies/query"
+            self.logger.info(f"Testing connection to: {test_url}")
+            self.logger.info(f"Session headers: {dict(self.session.headers)}")
+            if self.session.auth:
+                self.logger.info(f"Using BasicAuth with username: {self.session.auth.login}")
 
             async with self.session.post(
                 test_url,
                 json={"maxRecords": 1},
             ) as response:
+                self.logger.info(f"Response status: {response.status}")
+                self.logger.info(f"Response headers: {dict(response.headers)}")
+                
                 if response.status != 200:
                     error_text = await response.text()
                     self.logger.error(
@@ -636,7 +651,7 @@ class AsyncAutotaskClient:
         """
         try:
             # Make a lightweight request to get headers
-            url = f"{self.auth.api_url}/v1.0/Companies/query"
+            url = self._build_url("v1.0/Companies/query")
 
             async with self.session.post(
                 url,
