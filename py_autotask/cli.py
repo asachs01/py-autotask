@@ -49,8 +49,21 @@ class CLIConfig:
 
     @classmethod
     def from_env(cls) -> "CLIConfig":
-        """Create CLI config from environment variables."""
+        """Create CLI config from environment variables.
+
+        Prioritizes local .env file over shell environment variables.
+        """
         config = cls()
+
+        # First try to load from local .env file if it exists
+        # override=True ensures local .env takes precedence over shell env
+        from dotenv import load_dotenv
+        from pathlib import Path
+
+        env_path = Path.cwd() / ".env"
+        if env_path.exists():
+            load_dotenv(env_path, override=True)
+            console.print("[dim]Loaded credentials from local .env file[/dim]")
 
         username = os.environ.get("AUTOTASK_USERNAME")
         integration_code = os.environ.get("AUTOTASK_INTEGRATION_CODE")
