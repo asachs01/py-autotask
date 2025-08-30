@@ -99,6 +99,9 @@ version = {attr = "py_autotask.__version__"}
 
 [tool.setuptools_scm]
 write_to = "py_autotask/_version.py"
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+fallback_version = "1.0.1"
 
 # Black configuration
 [tool.black]
