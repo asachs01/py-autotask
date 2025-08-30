@@ -32,7 +32,7 @@ except FileNotFoundError:
 
 setup(
     name="py-autotask",
-    version="1.0.0",
+    # Version is handled by setuptools_scm via pyproject.toml
     author="Aaron Sachs",
     author_email="asachs@wyre.engineering",
     description="A comprehensive Python client library for the Autotask REST API",
