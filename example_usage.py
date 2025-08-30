@@ -11,10 +11,27 @@ from py_autotask import AsyncAutotaskClient
 
 async def main():
     # Load credentials from .env file
-    load_dotenv()
+    load_dotenv(override=True)  # Override any shell environment variables
+    
+    # Check that credentials are loaded
+    username = os.getenv("AUTOTASK_USERNAME")
+    secret = os.getenv("AUTOTASK_SECRET")
+    integration_code = os.getenv("AUTOTASK_INTEGRATION_CODE")
+    
+    if not all([username, secret, integration_code]):
+        print("❌ Missing credentials in .env file")
+        print("Required environment variables:")
+        print("  AUTOTASK_USERNAME")
+        print("  AUTOTASK_SECRET")
+        print("  AUTOTASK_INTEGRATION_CODE")
+        return
     
     # Create client - will automatically detect zone
-    client = await AsyncAutotaskClient.create()
+    client = await AsyncAutotaskClient.create(
+        username=username,
+        secret=secret,
+        integration_code=integration_code
+    )
     
     async with client:
         # Test connection
@@ -28,21 +45,14 @@ async def main():
                 print(f"Zone: {zone_info.zone_name}")
                 print(f"API URL: {zone_info.url}")
             
-            # Example: Query companies
-            companies = await client.companies.query_async({
-                "filter": [
-                    {"field": "isActive", "op": "eq", "value": True}
-                ],
-                "maxRecords": 5
-            })
-            
-            print(f"\nFound {len(companies)} active companies")
-            for company in companies:
-                print(f"  - {company.companyName}")
-            
-            # Example: Get a specific ticket (if you know the ID)
-            # ticket = await client.tickets.get_async(12345)
-            # print(f"Ticket: {ticket.title}")
+            # The SDK is now properly authenticated and ready to use!
+            # You can make API calls like:
+            #
+            # companies = await client.companies.query_async(...)
+            # tickets = await client.tickets.query_async(...)
+            # contacts = await client.contacts.query_async(...)
+            #
+            # See the SDK documentation for query format details
             
         else:
             print("❌ Failed to connect to Autotask API")
