@@ -30,18 +30,21 @@ async def test_api():
     
     print("Testing py-autotask v1.0.2...")
     print("=" * 50)
+    print(f"API URL: {auth.api_url}")
+    print(f"Zone detected: {auth._zone_info}")
+    print("=" * 50)
     
     try:
-        # Test 1: Get Companies
+        # Test 1: Get Companies  
         print("\n1. Testing Companies endpoint...")
-        companies = await client.get_companies(max_records=5)
+        companies = await client.companies.query(max_records=5)
         print(f"   ✓ Retrieved {len(companies)} companies")
         if companies:
             print(f"   First company: {companies[0].get('companyName', 'N/A')}")
         
         # Test 2: Get Contacts
         print("\n2. Testing Contacts endpoint...")
-        contacts = await client.get_contacts(max_records=5)
+        contacts = await client.contacts.query(max_records=5)
         print(f"   ✓ Retrieved {len(contacts)} contacts")
         if contacts:
             first_contact = contacts[0]
@@ -49,14 +52,14 @@ async def test_api():
         
         # Test 3: Get Tickets
         print("\n3. Testing Tickets endpoint...")
-        tickets = await client.get_tickets(max_records=5)
+        tickets = await client.tickets.query(max_records=5)
         print(f"   ✓ Retrieved {len(tickets)} tickets")
         if tickets:
             print(f"   First ticket: #{tickets[0].get('ticketNumber', 'N/A')} - {tickets[0].get('title', 'N/A')}")
         
         # Test 4: Get Projects
         print("\n4. Testing Projects endpoint...")
-        projects = await client.get_projects(max_records=5)
+        projects = await client.projects.query(max_records=5)
         print(f"   ✓ Retrieved {len(projects)} projects")
         if projects:
             print(f"   First project: {projects[0].get('projectName', 'N/A')}")
@@ -72,8 +75,10 @@ async def test_api():
         traceback.print_exc()
     
     finally:
-        # Close the client
-        await client.close()
+        # Close the client session if it exists
+        if hasattr(client, 'session') and client.session:
+            if hasattr(client.session, 'close'):
+                await client.session.close()
 
 if __name__ == "__main__":
     asyncio.run(test_api())

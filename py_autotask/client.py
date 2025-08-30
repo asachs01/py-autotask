@@ -206,7 +206,7 @@ class AutotaskClient:
         Returns:
             Entity data or None if not found
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/{entity_id}"
 
         try:
             response = self.session.get(url, timeout=self.config.timeout)
@@ -250,7 +250,11 @@ class AutotaskClient:
         Returns:
             Query response with items and pagination info
         """
-        if filters is not None:
+        # Handle different input types for query_request
+        if isinstance(query_request, QueryRequest):
+            # Already a QueryRequest, use as-is
+            pass
+        elif filters is not None:
             # Convert list of filters to QueryRequest format
             if not isinstance(filters, list):
                 raise AutotaskValidationError(
@@ -263,6 +267,13 @@ class AutotaskClient:
             query_request = QueryRequest(filter=filters)
         elif query_request is None:
             query_request = QueryRequest()
+        elif isinstance(query_request, dict):
+            # Convert dict to QueryRequest
+            query_request = QueryRequest(**query_request)
+        else:
+            raise AutotaskValidationError(
+                f"Invalid query_request type: {type(query_request)}"
+            )
 
         # Set additional parameters
         if max_records is not None:
@@ -291,17 +302,33 @@ class AutotaskClient:
         Returns:
             Query response with items and pagination info
         """
-        # Validate filters
+        # Ensure there's always at least a minimal filter (API requirement)
+        if not query_request.filter:
+            # Add minimal filter to get all records
+            from .types import QueryFilter
+            query_request.filter = [QueryFilter(op="gte", field="id", value=0)]
+        
+        # Validate filters (convert to dict for validation)
         if query_request.filter:
             for filter_item in query_request.filter:
-                validate_filter(filter_item)
+                # Convert Pydantic model to dict for validation
+                filter_dict = filter_item.model_dump(exclude_none=True) if hasattr(filter_item, 'model_dump') else filter_item
+                validate_filter(filter_dict)
 
-        url = f"{self.auth.api_url}/v1.0/{entity}/query"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/query"
 
         try:
+            # Prepare the payload
+            payload = query_request.model_dump(exclude_unset=True, by_alias=True)
+            
+            # Log what we're sending for debugging
+            import json
+            logger.debug(f"Sending POST to: {url}")
+            logger.debug(f"Payload: {json.dumps(payload, indent=2)}")
+            
             response = self.session.post(
                 url,
-                json=query_request.dict(exclude_unset=True, by_alias=True),
+                json=payload,
                 timeout=self.config.timeout,
             )
 
@@ -328,7 +355,7 @@ class AutotaskClient:
         Returns:
             Create response with new entity ID
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}"
 
         try:
             response = self.session.post(
@@ -362,7 +389,7 @@ class AutotaskClient:
         if not entity_id:
             raise ValueError("Entity data must include 'id' field for updates")
 
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/{entity_id}"
 
         try:
             response = self.session.patch(
@@ -392,7 +419,7 @@ class AutotaskClient:
         Returns:
             True if successful
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/{entity_id}"
 
         try:
             response = self.session.delete(url, timeout=self.config.timeout)
@@ -426,12 +453,12 @@ class AutotaskClient:
         elif query_request is None:
             query_request = QueryRequest()
 
-        url = f"{self.auth.api_url}/v1.0/{entity}/query/count"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/query/count"
 
         try:
             response = self.session.post(
                 url,
-                json=query_request.dict(exclude_unset=True, by_alias=True),
+                json=query_request.model_dump(exclude_unset=True, by_alias=True),
                 timeout=self.config.timeout,
             )
 
@@ -457,7 +484,7 @@ class AutotaskClient:
         Returns:
             Field metadata information
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/entityInformation/fields"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/entityInformation/fields"
 
         try:
             response = self.session.get(url, timeout=self.config.timeout)
@@ -481,7 +508,7 @@ class AutotaskClient:
         Returns:
             Entity information
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/entityInformation"
+        url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/entityInformation"
 
         try:
             response = self.session.get(url, timeout=self.config.timeout)
@@ -538,7 +565,7 @@ class AutotaskClient:
                 f"Processing batch {batch_num}/{total_batches} ({len(batch)} entities)"
             )
 
-            url = f"{self.auth.api_url}/v1.0/{entity}/batch"
+            url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/batch"
 
             try:
                 response = self.session.post(
@@ -601,7 +628,7 @@ class AutotaskClient:
                 f"Processing update batch {batch_num}/{total_batches} ({len(batch)} entities)"
             )
 
-            url = f"{self.auth.api_url}/v1.0/{entity}/batch"
+            url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/batch"
 
             try:
                 response = self.session.patch(
@@ -657,7 +684,7 @@ class AutotaskClient:
                 f"Processing delete batch {batch_num}/{total_batches} ({len(batch)} entities)"
             )
 
-            url = f"{self.auth.api_url}/v1.0/{entity}/batch"
+            url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/batch"
 
             try:
                 response = self.session.delete(

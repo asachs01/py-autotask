@@ -331,6 +331,40 @@ def paginate_query(
     return all_items
 
 
+def convert_filter_format(filter_input: Union[Dict[str, Any], List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    """
+    Convert various filter formats to Autotask's expected format.
+    
+    Examples:
+        {'id': {'gte': 0}} -> [{'op': 'gte', 'field': 'id', 'value': 0}]
+        {'companyType': 1} -> [{'op': 'eq', 'field': 'companyType', 'value': 1}]
+        [{'op': 'gte', 'field': 'id', 'value': 0}] -> (unchanged)
+    
+    Args:
+        filter_input: Filter in various formats
+    
+    Returns:
+        List of filter dictionaries in Autotask format
+    """
+    # Already in correct format (list)
+    if isinstance(filter_input, list):
+        return filter_input
+    
+    # Convert object format
+    filter_array = []
+    for field, value in filter_input.items():
+        # Handle nested objects like { id: { gte: 0 } }
+        if isinstance(value, dict) and not isinstance(value, list):
+            # Extract operator and actual value
+            op, val = next(iter(value.items()))
+            filter_array.append({'op': op, 'field': field, 'value': val})
+        else:
+            # Simple equality
+            filter_array.append({'op': 'eq', 'field': field, 'value': value})
+    
+    return filter_array
+
+
 def validate_filter(filter_dict: Dict[str, Any]) -> None:
     """
     Validate a filter dictionary for API queries.
