@@ -26,7 +26,12 @@ Example:
     })
 """
 
-__version__ = "1.0.0"
+try:
+    from ._version import version as __version__
+except ImportError:
+    # Fallback for when setuptools_scm hasn't created _version.py yet
+    __version__ = "0.0.0+unknown"
+
 __author__ = "Aaron Sachs"
 __email__ = "asachs@wyre.engineering"
 
