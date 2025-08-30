@@ -35,26 +35,52 @@ except ImportError:
 __author__ = "Aaron Sachs"
 __email__ = "asachs@wyre.engineering"
 
-from .async_client import AsyncAutotaskClient
-from .bulk_manager import BulkConfig, BulkResult, IntelligentBulkManager
-
-# Core imports
-from .client import AutotaskClient
-from .exceptions import (
-    AutotaskAPIError,
-    AutotaskAuthError,
-    AutotaskConnectionError,
-    AutotaskError,
-    AutotaskValidationError,
-)
-
-# Type imports for better IDE support
-from .types import (
-    EntityMetadata,
-    FilterOperation,
-    PaginationInfo,
-    QueryFilter,
-)
+# Lazy imports to avoid circular dependencies during version detection
+def __getattr__(name):
+    """Lazy import mechanism to avoid importing heavy dependencies during build."""
+    if name == "AutotaskClient":
+        from .client import AutotaskClient
+        return AutotaskClient
+    elif name == "AsyncAutotaskClient":
+        from .async_client import AsyncAutotaskClient
+        return AsyncAutotaskClient
+    elif name == "IntelligentBulkManager":
+        from .bulk_manager import IntelligentBulkManager
+        return IntelligentBulkManager
+    elif name == "BulkConfig":
+        from .bulk_manager import BulkConfig
+        return BulkConfig
+    elif name == "BulkResult":
+        from .bulk_manager import BulkResult
+        return BulkResult
+    elif name == "AutotaskError":
+        from .exceptions import AutotaskError
+        return AutotaskError
+    elif name == "AutotaskAPIError":
+        from .exceptions import AutotaskAPIError
+        return AutotaskAPIError
+    elif name == "AutotaskAuthError":
+        from .exceptions import AutotaskAuthError
+        return AutotaskAuthError
+    elif name == "AutotaskConnectionError":
+        from .exceptions import AutotaskConnectionError
+        return AutotaskConnectionError
+    elif name == "AutotaskValidationError":
+        from .exceptions import AutotaskValidationError
+        return AutotaskValidationError
+    elif name == "FilterOperation":
+        from .types import FilterOperation
+        return FilterOperation
+    elif name == "QueryFilter":
+        from .types import QueryFilter
+        return QueryFilter
+    elif name == "PaginationInfo":
+        from .types import PaginationInfo
+        return PaginationInfo
+    elif name == "EntityMetadata":
+        from .types import EntityMetadata
+        return EntityMetadata
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 __all__ = [
     # Core classes
