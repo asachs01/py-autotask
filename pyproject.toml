@@ -129,6 +129,7 @@ line_length = 88
 known_first_party = ["py_autotask"]
 known_third_party = ["requests", "pydantic", "click", "rich"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip = ["py_autotask/_version.py"]
 
 # pytest configuration
 [tool.pytest.ini_options]
