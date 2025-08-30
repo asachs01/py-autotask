@@ -823,8 +823,8 @@ async def _test_connection() -> None:
             return
 
         # Test sync auth first
-        from .client import AutotaskClient
         from .auth import AutotaskAuth
+        from .client import AutotaskClient
 
         console.print("[dim]Testing sync client first...[/dim]")
         try:
