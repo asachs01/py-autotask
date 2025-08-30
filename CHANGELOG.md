@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-08-30
+
+### Fixed
+- Fixed release workflow to properly detect git tags for versioning
+- Added setuptools_scm fallback version configuration for CI/CD builds
+- Ensured tags are fetched during GitHub Actions checkout
+
+## [1.0.1] - 2025-08-30
+
+### Fixed
+- Removed unused HTTPBasicAuth import for cleaner dependencies
+- Corrected import order for isort compliance
+- Resolved all import ordering issues across the codebase
+- Fixed critical authentication to use headers instead of Basic Auth
+- Prioritized local .env file over shell environment variables
+
 ## [1.0.0] - 2025-08-28
 
 ### Major Achievement
