@@ -10,7 +10,6 @@ import time
 from typing import Dict, Optional, Union
 
 import requests
-from requests.auth import HTTPBasicAuth
 
 from .exceptions import (
     AutotaskAPIError,
