@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import click
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -57,9 +58,6 @@ class CLIConfig:
 
         # First try to load from local .env file if it exists
         # override=True ensures local .env takes precedence over shell env
-        from dotenv import load_dotenv
-        from pathlib import Path
-
         env_path = Path.cwd() / ".env"
         if env_path.exists():
             load_dotenv(env_path, override=True)
