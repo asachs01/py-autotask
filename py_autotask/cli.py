@@ -49,8 +49,21 @@ class CLIConfig:
 
     @classmethod
     def from_env(cls) -> "CLIConfig":
-        """Create CLI config from environment variables."""
+        """Create CLI config from environment variables.
+
+        Prioritizes local .env file over shell environment variables.
+        """
         config = cls()
+
+        # First try to load from local .env file if it exists
+        # override=True ensures local .env takes precedence over shell env
+        from dotenv import load_dotenv
+        from pathlib import Path
+
+        env_path = Path.cwd() / ".env"
+        if env_path.exists():
+            load_dotenv(env_path, override=True)
+            console.print("[dim]Loaded credentials from local .env file[/dim]")
 
         username = os.environ.get("AUTOTASK_USERNAME")
         integration_code = os.environ.get("AUTOTASK_INTEGRATION_CODE")
@@ -200,9 +213,8 @@ async def _export_data(
 
     try:
         # Create async client for maximum performance
-        async with AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        ) as client:
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
+        async with client:
 
             # Test connection first
             console.print("🔗 Testing connection to Autotask API...")
@@ -518,9 +530,8 @@ async def _execute_query(
 ) -> None:
     """Execute a query operation."""
     try:
-        async with AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        ) as client:
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
+        async with client:
 
             # Parse filters
             query_filters = []
@@ -679,9 +690,8 @@ async def _execute_bulk_operation(
         console.print(f"✅ Loaded {len(data)} records")
 
         # Create async client and bulk manager
-        async with AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        ) as client:
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
+        async with client:
             bulk_manager = IntelligentBulkManager(client)
 
             # Configure bulk operation
@@ -761,6 +771,16 @@ def _display_bulk_results(result) -> None:
 
 
 @main.command()
+def auth():
+    """Authenticate with Autotask API and display zone information."""
+    if not cli_config.credentials:
+        console.print("[red]❌ No credentials provided[/red]")
+        sys.exit(1)
+
+    asyncio.run(_test_connection())
+
+
+@main.command()
 def test():
     """Test connection to Autotask API and display zone information."""
     if not cli_config.credentials:
@@ -773,11 +793,61 @@ def test():
 async def _test_connection() -> None:
     """Test connection and display connection info."""
     try:
+        # Enable debug logging
+        if cli_config.verbose:
+            import logging
+
+            logging.basicConfig(
+                level=logging.DEBUG, format="%(name)s - %(levelname)s - %(message)s"
+            )
+
         console.print("🔗 Testing Autotask API connection...")
 
-        async with AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        ) as client:
+        # Debug: Show if credentials are loaded
+        if cli_config.credentials:
+            console.print(
+                f"[dim]📧 Using username: {cli_config.credentials.username}[/dim]"
+            )
+            console.print(
+                f"[dim]🔑 Integration code: {'*' * len(cli_config.credentials.integration_code) if cli_config.credentials.integration_code else 'NOT SET'}[/dim]"
+            )
+            console.print(
+                f"[dim]🔐 Secret: {'SET' if cli_config.credentials.secret else 'NOT SET'}[/dim]"
+            )
+        else:
+            console.print(
+                "[yellow]⚠️  No credentials found in environment or command line[/yellow]"
+            )
+            console.print("[dim]Expected environment variables:[/dim]")
+            console.print("[dim]  AUTOTASK_USERNAME[/dim]")
+            console.print("[dim]  AUTOTASK_INTEGRATION_CODE[/dim]")
+            console.print("[dim]  AUTOTASK_SECRET[/dim]")
+            return
+
+        # Test sync auth first
+        from .client import AutotaskClient
+        from .auth import AutotaskAuth
+
+        console.print("[dim]Testing sync client first...[/dim]")
+        try:
+            sync_auth = AutotaskAuth(cli_config.credentials)
+            sync_client = AutotaskClient(sync_auth)
+            sync_success = sync_client.auth.test_connection()
+            console.print(
+                f"[dim]Sync test result: {'✅ SUCCESS' if sync_success else '❌ FAILED'}[/dim]"
+            )
+        except Exception as e:
+            console.print(f"[dim]Sync test failed: {e}[/dim]")
+            sync_success = False
+
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
+        async with client:
+            # Show zone detection result
+            zone_info = client.auth.zone_info
+            if zone_info:
+                console.print(f"[dim]🌍 Detected zone: {zone_info.zone_name}[/dim]")
+                console.print(f"[dim]📍 Using API URL: {zone_info.url}[/dim]")
+
             # Test connection
             success = await client.test_connection_async()
 
@@ -787,9 +857,13 @@ async def _test_connection() -> None:
                 # Display zone info
                 zone_info = client.auth.zone_info
                 if zone_info:
-                    console.print(f"📍 Zone: {zone_info.url}")
-                    if hasattr(zone_info, "zone_id"):
-                        console.print(f"🌍 Zone ID: {zone_info.zone_id}")
+                    if zone_info.zone_name:
+                        console.print(f"🌍 Zone: {zone_info.zone_name}")
+                    console.print(f"📍 API URL: {zone_info.url}")
+                    if zone_info.web_url:
+                        console.print(f"🌐 Web URL: {zone_info.web_url}")
+                    if zone_info.ci is not None:
+                        console.print(f"🔢 CI: {zone_info.ci}")
 
                 # Get rate limit info
                 rate_info = await client.get_rate_limit_info()
@@ -805,6 +879,27 @@ async def _test_connection() -> None:
                     console.print(table)
             else:
                 console.print("[red]❌ Connection failed[/red]")
+
+                # Check if zone detection worked but API calls fail (401)
+                if zone_info:
+                    console.print(
+                        "\n[yellow]⚠️  Zone detection succeeded but API authentication failed.[/yellow]"
+                    )
+                    console.print("\n[bold]This typically means:[/bold]")
+                    console.print(
+                        "• Your credentials are valid (zone detection worked)"
+                    )
+                    console.print("• But the API user lacks proper permissions")
+                    console.print("\n[bold]To fix this issue:[/bold]")
+                    console.print("1. Log into Autotask admin panel")
+                    console.print("2. Navigate to Admin → Resources → Security Levels")
+                    console.print(
+                        "3. Ensure your API user has 'API User (API-only)' security level"
+                    )
+                    console.print("4. The API user should NOT have regular user access")
+                    console.print(
+                        "\n[dim]Note: API users require a special security level that's different from regular user accounts.[/dim]"
+                    )
 
     except Exception as e:
         console.print(f"[red]❌ Connection test failed: {e}[/red]")
@@ -838,9 +933,8 @@ async def _inspect_entity(
 ) -> None:
     """Inspect an entity."""
     try:
-        async with AsyncAutotaskClient.create(
-            credentials=cli_config.credentials
-        ) as client:
+        client = await AsyncAutotaskClient.create(credentials=cli_config.credentials)
+        async with client:
 
             if show_count:
                 console.print(f"📊 Counting {entity} records...")

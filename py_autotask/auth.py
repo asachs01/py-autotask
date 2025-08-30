@@ -91,16 +91,14 @@ class AutotaskAuth:
         if not self._session:
             self._session = requests.Session()
 
-            # Set up authentication
-            self._session.auth = HTTPBasicAuth(
-                self.credentials.username, self.credentials.secret
-            )
-
-            # Configure headers
+            # Autotask REST API uses headers for authentication, not Basic Auth
+            # Configure headers with authentication
             self._session.headers.update(
                 {
                     "Content-Type": "application/json",
-                    "ApiIntegrationcode": self.credentials.integration_code,
+                    "ApiIntegrationCode": self.credentials.integration_code,
+                    "UserName": self.credentials.username,
+                    "Secret": self.credentials.secret,
                     "User-Agent": "py-autotask/2.0.0",
                     "Accept": "application/json",
                 }
@@ -153,24 +151,66 @@ class AutotaskAuth:
                 return
 
         try:
-            logger.info("Detecting Autotask API zone...")
+            # Build zone detection URL with user parameter
+            zone_url = f"{self.ZONE_INFO_URL}?user={self.credentials.username}"
+            logger.info(f"Detecting Autotask API zone using: {zone_url}")
 
             # Create a temporary session for zone detection
+            # Autotask REST API uses headers for authentication
             session = requests.Session()
-            session.auth = HTTPBasicAuth(
-                self.credentials.username, self.credentials.secret
-            )
             session.headers.update(
                 {
                     "Content-Type": "application/json",
-                    "ApiIntegrationcode": self.credentials.integration_code,
+                    "ApiIntegrationCode": self.credentials.integration_code,
+                    "UserName": self.credentials.username,
+                    "Secret": self.credentials.secret,
                     "User-Agent": "py-autotask/2.0.0",
                 }
             )
 
-            response = session.get(self.ZONE_INFO_URL, timeout=30)
+            # Allow redirects and log them
+            response = session.get(zone_url, timeout=30, allow_redirects=True)
 
-            if response.status_code == 401:
+            # Log if there was a redirect
+            if response.history:
+                logger.warning(
+                    f"Zone detection was redirected from {self.ZONE_INFO_URL} to {response.url}"
+                )
+
+            if response.status_code == 404:
+                logger.error(f"Zone detection endpoint not found at {response.url}")
+                # Try with HTTP as a fallback in case of environment-specific issues
+                # Also try without user parameter as a second fallback
+                if response.url.startswith("https://"):
+                    http_url = response.url.replace("https://", "http://", 1)
+                    logger.warning(f"Trying HTTP fallback: {http_url}")
+                    try:
+                        http_response = session.get(
+                            http_url, timeout=30, allow_redirects=True
+                        )
+                        if http_response.ok:
+                            response = http_response
+                            logger.info("HTTP fallback succeeded")
+                        else:
+                            raise AutotaskConnectionError(
+                                f"Zone detection endpoint not found at either HTTPS or HTTP.\n"
+                                f"HTTPS URL: {response.url} (404)\n"
+                                f"HTTP URL: {http_url} ({http_response.status_code})\n"
+                                "Please ensure you have the latest version of py-autotask."
+                            )
+                    except requests.exceptions.RequestException:
+                        raise AutotaskConnectionError(
+                            f"Zone detection endpoint not found. URL: {response.url}\n"
+                            "This may indicate an API endpoint change. Please ensure you have "
+                            "the latest version of py-autotask or check Autotask API documentation."
+                        )
+                else:
+                    raise AutotaskConnectionError(
+                        f"Zone detection endpoint not found. URL: {response.url}\n"
+                        "This may indicate an API endpoint change. Please ensure you have "
+                        "the latest version of py-autotask or check Autotask API documentation."
+                    )
+            elif response.status_code == 401:
                 raise AutotaskAuthError(
                     "Authentication failed during zone detection. "
                     "Please check your username, integration code, and secret."
@@ -214,12 +254,20 @@ class AutotaskAuth:
                 logger.info(f"Detected API zone: {self._zone_info.url}")
 
                 # Cache the zone information
+                zone_info_dict = {"url": self._zone_info.url}
+                if self._zone_info.zone_name:
+                    zone_info_dict["zoneName"] = self._zone_info.zone_name
+                if self._zone_info.web_url:
+                    zone_info_dict["webUrl"] = self._zone_info.web_url
+                if self._zone_info.ci is not None:
+                    zone_info_dict["ci"] = self._zone_info.ci
+                if self._zone_info.data_base_type:
+                    zone_info_dict["dataBaseType"] = self._zone_info.data_base_type
+                if self._zone_info.ci_level is not None:
+                    zone_info_dict["ciLevel"] = self._zone_info.ci_level
+
                 self._zone_cache[cache_key] = {
-                    "zone_info": {
-                        "url": self._zone_info.url,
-                        "dataBaseType": self._zone_info.data_base_type,
-                        "ciLevel": self._zone_info.ci_level,
-                    },
+                    "zone_info": zone_info_dict,
                     "timestamp": time.time(),
                 }
 
@@ -240,6 +288,7 @@ class AutotaskAuth:
     def _fallback_zone_detection(self) -> None:
         """
         Fallback zone detection using intelligent heuristics.
+        Tries HTTP if HTTPS fails as some environments may have redirect issues.
         """
         logger.info("Using fallback zone detection strategy")
 
@@ -270,8 +319,8 @@ class AutotaskAuth:
 
         self._zone_info = ZoneInfo(
             url=zone_url,
-            dataBaseType="Production",  # Default for production environments
-            ciLevel=1,  # Default CI level
+            data_base_type="Production",  # Default for production environments
+            ci_level=1,  # Default CI level
         )
         logger.info(f"Fallback zone selected: {zone_url} (Zone {zone_id})")
 
@@ -289,8 +338,8 @@ class AutotaskAuth:
             zone_url = self.ZONE_URLS[zone]
             self._zone_info = ZoneInfo(
                 url=zone_url,
-                dataBaseType="Production",  # Default for production environments
-                ciLevel=1,  # Default CI level
+                data_base_type="Production",  # Default for production environments
+                ci_level=1,  # Default CI level
             )
             logger.info(f"Manually set zone to: {zone_url} (Zone {zone})")
         else:
@@ -329,15 +378,33 @@ class AutotaskAuth:
         try:
             # Try a simple API call to test connection
             session = self.get_session()
-            test_url = f"{self.api_url}/v1.0/Companies/query"
+            # Ensure proper URL construction
+            base_url = self.api_url.rstrip("/")
+            test_url = f"{base_url}/v1.0/Companies/query"
+
+            logger.info(f"Sync testing connection to: {test_url}")
+            logger.info(f"Sync session headers: {dict(session.headers)}")
 
             # Send a minimal query to test connectivity
-            response = session.post(test_url, json={"maxRecords": 1}, timeout=10)
+            # Autotask requires a filter parameter
+            query = {
+                "filter": [{"field": "id", "op": "gt", "value": 0}],
+                "maxRecords": 1,
+            }
+            response = session.post(test_url, json=query, timeout=10)
+
+            logger.info(f"Sync response status: {response.status_code}")
+            logger.info(f"Sync response headers: {dict(response.headers)}")
+            if response.status_code != 200:
+                logger.error(f"Sync response text: {response.text}")
 
             return response.status_code == 200
 
         except Exception as e:
             logger.error(f"Connection test failed: {e}")
+            import traceback
+
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return False
 
     @classmethod

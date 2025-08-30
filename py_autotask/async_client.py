@@ -272,21 +272,19 @@ class AsyncAutotaskClient:
                 sock_read=30,
             )
 
+            # Autotask REST API uses headers for authentication, not Basic Auth
             # Create session with authentication headers
             headers = {
                 "Content-Type": "application/json",
-                "ApiIntegrationcode": self.auth.credentials.integration_code,
+                "ApiIntegrationCode": self.auth.credentials.integration_code,
+                "UserName": self.auth.credentials.username,
+                "Secret": self.auth.credentials.secret,
                 "User-Agent": "py-autotask-async/2.0.0",
                 "Accept": "application/json",
             }
 
-            # Set up basic auth
-            auth = aiohttp.BasicAuth(
-                self.auth.credentials.username, self.auth.credentials.secret
-            )
-
             self._session = aiohttp.ClientSession(
-                connector=connector, timeout=timeout, headers=headers, auth=auth
+                connector=connector, timeout=timeout, headers=headers
             )
 
     @property
@@ -297,6 +295,12 @@ class AsyncAutotaskClient:
                 "Session not initialized. Use 'async with' or call '__aenter__' first."
             )
         return self._session
+
+    def _build_url(self, path: str) -> str:
+        """Build a properly formatted API URL with the given path."""
+        base_url = self.auth.api_url.rstrip("/")
+        path = path.lstrip("/")
+        return f"{base_url}/{path}"
 
     @property
     def entities(self) -> AsyncEntityManager:
@@ -337,7 +341,7 @@ class AsyncAutotaskClient:
         Returns:
             Entity data or None if not found
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = self._build_url(f"v1.0/{entity}/{entity_id}")
 
         try:
             async with self.session.get(url) as response:
@@ -424,7 +428,7 @@ class AsyncAutotaskClient:
             for filter_item in query_request.filter:
                 validate_filter(filter_item)
 
-        url = f"{self.auth.api_url}/v1.0/{entity}/query"
+        url = self._build_url(f"v1.0/{entity}/query")
 
         try:
             async with self.session.post(
@@ -455,7 +459,7 @@ class AsyncAutotaskClient:
         Returns:
             Create response with new entity ID
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}"
+        url = self._build_url(f"v1.0/{entity}")
 
         try:
             async with self.session.post(url, json=entity_data) as response:
@@ -484,7 +488,7 @@ class AsyncAutotaskClient:
         Returns:
             Updated entity data
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = self._build_url(f"v1.0/{entity}/{entity_id}")
 
         try:
             async with self.session.patch(url, json=entity_data) as response:
@@ -510,7 +514,7 @@ class AsyncAutotaskClient:
         Returns:
             True if deletion was successful
         """
-        url = f"{self.auth.api_url}/v1.0/{entity}/{entity_id}"
+        url = self._build_url(f"v1.0/{entity}/{entity_id}")
 
         try:
             async with self.session.delete(url) as response:
@@ -597,16 +601,52 @@ class AsyncAutotaskClient:
             True if connection is successful, False otherwise
         """
         try:
-            test_url = f"{self.auth.api_url}/v1.0/Companies/query"
+            # Ensure proper URL construction - remove trailing slash from api_url if present
+            base_url = self.auth.api_url.rstrip("/")
+            test_url = f"{base_url}/v1.0/Companies/query"
+            self.logger.info(f"Testing connection to: {test_url}")
+            self.logger.info(f"Session headers: {dict(self.session.headers)}")
 
-            async with self.session.post(
-                test_url,
-                json={"maxRecords": 1},
-            ) as response:
+            # Autotask requires a filter parameter in queries
+            query = {
+                "filter": [{"field": "id", "op": "gt", "value": 0}],
+                "maxRecords": 1,
+            }
+
+            async with self.session.post(test_url, json=query) as response:
+                self.logger.info(f"Response status: {response.status}")
+                self.logger.info(f"Response headers: {dict(response.headers)}")
+
+                if response.status != 200:
+                    error_text = await response.text()
+                    self.logger.error(
+                        f"Connection test failed with status {response.status}"
+                    )
+                    self.logger.error(f"Response body: {error_text}")
+
+                    # Check if response suggests we need different auth or API version
+                    if (
+                        "authentication" in error_text.lower()
+                        or "unauthorized" in error_text.lower()
+                    ):
+                        self.logger.error("Authentication issue detected in response")
+
+                    # Try a simpler endpoint to see if it's endpoint-specific
+                    simple_url = self._build_url("v1.0/Companies/count")
+                    self.logger.info(f"Testing simpler endpoint: {simple_url}")
+                    async with self.session.get(simple_url) as simple_response:
+                        self.logger.info(
+                            f"Simple endpoint status: {simple_response.status}"
+                        )
+                        simple_text = await simple_response.text()
+                        self.logger.info(f"Simple endpoint body: {simple_text[:200]}")
                 return response.status == 200
 
         except Exception as e:
             self.logger.error(f"Async connection test failed: {e}")
+            import traceback
+
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             return False
 
     async def close(self) -> None:
@@ -628,7 +668,7 @@ class AsyncAutotaskClient:
         """
         try:
             # Make a lightweight request to get headers
-            url = f"{self.auth.api_url}/v1.0/Companies/query"
+            url = self._build_url("v1.0/Companies/query")
 
             async with self.session.post(
                 url,
