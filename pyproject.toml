@@ -94,8 +94,7 @@ py-autotask = "py_autotask.cli:main"
 [tool.setuptools]
 packages = ["py_autotask"]
 
-[tool.setuptools.dynamic]
-version = {attr = "py_autotask.__version__"}
+# Dynamic version is handled by setuptools_scm, not by attribute
 
 [tool.setuptools_scm]
 write_to = "py_autotask/_version.py"
