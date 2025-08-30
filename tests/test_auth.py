@@ -151,10 +151,13 @@ class TestAutotaskAuth:
         session = auth.get_session()
 
         assert session is not None
-        assert session.auth is not None
+        # Autotask uses headers for auth, not Basic Auth
+        assert session.auth is None
         assert (
             session.headers["ApiIntegrationCode"] == sample_credentials.integration_code
         )
+        assert session.headers["UserName"] == sample_credentials.username
+        assert session.headers["Secret"] == sample_credentials.secret
         assert "py-autotask" in session.headers["User-Agent"]
 
     def test_get_session_cached(self, sample_credentials):

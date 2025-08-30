@@ -91,16 +91,14 @@ class AutotaskAuth:
         if not self._session:
             self._session = requests.Session()
 
-            # Set up authentication
-            self._session.auth = HTTPBasicAuth(
-                self.credentials.username, self.credentials.secret
-            )
-
-            # Configure headers
+            # Autotask REST API uses headers for authentication, not Basic Auth
+            # Configure headers with authentication
             self._session.headers.update(
                 {
                     "Content-Type": "application/json",
                     "ApiIntegrationCode": self.credentials.integration_code,
+                    "UserName": self.credentials.username,
+                    "Secret": self.credentials.secret,
                     "User-Agent": "py-autotask/2.0.0",
                     "Accept": "application/json",
                 }
@@ -158,14 +156,14 @@ class AutotaskAuth:
             logger.info(f"Detecting Autotask API zone using: {zone_url}")
 
             # Create a temporary session for zone detection
+            # Autotask REST API uses headers for authentication
             session = requests.Session()
-            session.auth = HTTPBasicAuth(
-                self.credentials.username, self.credentials.secret
-            )
             session.headers.update(
                 {
                     "Content-Type": "application/json",
                     "ApiIntegrationCode": self.credentials.integration_code,
+                    "UserName": self.credentials.username,
+                    "Secret": self.credentials.secret,
                     "User-Agent": "py-autotask/2.0.0",
                 }
             )
@@ -385,11 +383,15 @@ class AutotaskAuth:
             test_url = f"{base_url}/v1.0/Companies/query"
 
             logger.info(f"Sync testing connection to: {test_url}")
-            logger.info(f"Sync session auth: {session.auth}")
             logger.info(f"Sync session headers: {dict(session.headers)}")
 
             # Send a minimal query to test connectivity
-            response = session.post(test_url, json={"maxRecords": 1}, timeout=10)
+            # Autotask requires a filter parameter
+            query = {
+                "filter": [{"field": "id", "op": "gt", "value": 0}],
+                "maxRecords": 1,
+            }
+            response = session.post(test_url, json=query, timeout=10)
 
             logger.info(f"Sync response status: {response.status_code}")
             logger.info(f"Sync response headers: {dict(response.headers)}")

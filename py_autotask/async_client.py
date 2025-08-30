@@ -272,21 +272,19 @@ class AsyncAutotaskClient:
                 sock_read=30,
             )
 
+            # Autotask REST API uses headers for authentication, not Basic Auth
             # Create session with authentication headers
             headers = {
                 "Content-Type": "application/json",
                 "ApiIntegrationCode": self.auth.credentials.integration_code,
+                "UserName": self.auth.credentials.username,
+                "Secret": self.auth.credentials.secret,
                 "User-Agent": "py-autotask-async/2.0.0",
                 "Accept": "application/json",
             }
 
-            # Set up basic auth
-            auth = aiohttp.BasicAuth(
-                self.auth.credentials.username, self.auth.credentials.secret
-            )
-
             self._session = aiohttp.ClientSession(
-                connector=connector, timeout=timeout, headers=headers, auth=auth
+                connector=connector, timeout=timeout, headers=headers
             )
 
     @property
@@ -608,58 +606,14 @@ class AsyncAutotaskClient:
             test_url = f"{base_url}/v1.0/Companies/query"
             self.logger.info(f"Testing connection to: {test_url}")
             self.logger.info(f"Session headers: {dict(self.session.headers)}")
-            if self.session.auth:
-                self.logger.info(
-                    f"Using BasicAuth with username: {self.session.auth.login}"
-                )
 
-            # Try different authentication approaches for debugging
-            headers = dict(self.session.headers)
-            auth = self.session.auth
+            # Autotask requires a filter parameter in queries
+            query = {
+                "filter": [{"field": "id", "op": "gt", "value": 0}],
+                "maxRecords": 1,
+            }
 
-            # Test 1: Use session defaults
-            self.logger.info("Test 1: Using session defaults")
-            async with self.session.post(test_url, json={"maxRecords": 1}) as response:
-                self.logger.info(f"Test 1 - Status: {response.status}")
-                if response.status == 401:
-                    # Test 2: Try without auth to see if it's auth-specific
-                    self.logger.info("Test 2: Trying without auth")
-                    temp_session = aiohttp.ClientSession(headers=headers)
-                    try:
-                        async with temp_session.post(
-                            test_url, json={"maxRecords": 1}
-                        ) as response2:
-                            self.logger.info(f"Test 2 - Status: {response2.status}")
-                    finally:
-                        await temp_session.close()
-
-                    # Test 3: Try with explicit auth header
-                    import base64
-
-                    username = self.auth.credentials.username
-                    secret = self.auth.credentials.secret
-                    credentials_b64 = base64.b64encode(
-                        f"{username}:{secret}".encode()
-                    ).decode()
-
-                    self.logger.info("Test 3: Using manual Authorization header")
-                    headers_with_auth = dict(headers)
-                    headers_with_auth["Authorization"] = f"Basic {credentials_b64}"
-
-                    temp_session2 = aiohttp.ClientSession(headers=headers_with_auth)
-                    try:
-                        async with temp_session2.post(
-                            test_url, json={"maxRecords": 1}
-                        ) as response3:
-                            self.logger.info(f"Test 3 - Status: {response3.status}")
-                            if response3.status == 200:
-                                self.logger.info("Manual Authorization header works!")
-                                return True
-                    finally:
-                        await temp_session2.close()
-
-            # Return original response status check
-            async with self.session.post(test_url, json={"maxRecords": 1}) as response:
+            async with self.session.post(test_url, json=query) as response:
                 self.logger.info(f"Response status: {response.status}")
                 self.logger.info(f"Response headers: {dict(response.headers)}")
 
