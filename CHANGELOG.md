@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2025-08-31
+
+### Fixed
+- **Critical Bug Fix** - Fixed query dict parsing in entities/base.py causing widespread 500 errors
+  - Resolved malformed API payload structure that was breaking all query operations  
+  - Fixed logic to properly distinguish between complete query dicts and simple filter arrays
+  - Added proper nested filter format support for developer convenience
+- **Pydantic v2 Compatibility** - Updated deprecated method calls throughout codebase
+  - Replaced `.dict()` calls with `.model_dump()` for Pydantic v2 compatibility
+  - Fixed enum serialization in QueryFilter to output string values instead of enum objects
+  - Updated filter validation to use modern Pydantic patterns
+- **Code Formatting** - Applied Black formatting to pass CI checks
+  - Formatted all Python source files to meet GitHub Actions requirements
+  - Ensured consistent code style across the entire codebase
+- **Documentation Accuracy** - Fixed inaccurate information in README.md
+  - Removed references to non-existent documentation sites and CLI features
+  - Updated feature list to reflect actual current capabilities
+  - Corrected author information (Aaron Sachs, dev@sachshaus.net)
+
+### Added  
+- **Automatic Filter Insertion** - API now automatically adds minimal filter when none provided
+  - Ensures all queries include required filter array for Autotask API compliance
+  - Uses `{"op": "gte", "field": "id", "value": 0}` as default to retrieve all records
+- **Enhanced Filter Format Support** - Improved developer experience with flexible filter inputs
+  - Added convert_filter_format() utility for handling multiple filter input styles
+  - Support for nested format like `{"id": {"gte": 0}}` alongside standard array format
+  - Automatic conversion between different filter representations
+
+### Validated
+- **Live API Integration** - Confirmed functionality with real Autotask instance
+  - Tested tickets, companies, contacts, projects, contracts, time entries, and resources
+  - Verified authentication, zone detection, and query operations
+  - All major entity types successfully returning live data
+- **Production Readiness** - v1.0.3 successfully released to PyPI
+  - GitHub Actions pipeline passing all checks including formatting and tests
+  - Package available for installation: `pip install py-autotask==1.0.3`
+  - Zero critical issues identified in production testing
+
 ## [1.0.2] - 2025-08-30
 
 ### Fixed
