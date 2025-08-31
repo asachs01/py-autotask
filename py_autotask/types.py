@@ -39,13 +39,13 @@ class QueryFilter(BaseModel):
         None, description="Filter value"
     )
     udf: bool = Field(False, description="Whether this is a user-defined field")
-    
+
     def model_dump(self, **kwargs):
         """Override to ensure enum values are serialized as strings."""
         data = super().model_dump(**kwargs)
         # Ensure op is a string value, not enum
-        if 'op' in data and hasattr(data['op'], 'value'):
-            data['op'] = data['op'].value
+        if "op" in data and hasattr(data["op"], "value"):
+            data["op"] = data["op"].value
         return data
 
 

@@ -306,13 +306,18 @@ class AutotaskClient:
         if not query_request.filter:
             # Add minimal filter to get all records
             from .types import QueryFilter
+
             query_request.filter = [QueryFilter(op="gte", field="id", value=0)]
-        
+
         # Validate filters (convert to dict for validation)
         if query_request.filter:
             for filter_item in query_request.filter:
                 # Convert Pydantic model to dict for validation
-                filter_dict = filter_item.model_dump(exclude_none=True) if hasattr(filter_item, 'model_dump') else filter_item
+                filter_dict = (
+                    filter_item.model_dump(exclude_none=True)
+                    if hasattr(filter_item, "model_dump")
+                    else filter_item
+                )
                 validate_filter(filter_dict)
 
         url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/query"
@@ -320,12 +325,13 @@ class AutotaskClient:
         try:
             # Prepare the payload
             payload = query_request.model_dump(exclude_unset=True, by_alias=True)
-            
+
             # Log what we're sending for debugging
             import json
+
             logger.debug(f"Sending POST to: {url}")
             logger.debug(f"Payload: {json.dumps(payload, indent=2)}")
-            
+
             response = self.session.post(
                 url,
                 json=payload,

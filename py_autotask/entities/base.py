@@ -87,13 +87,21 @@ class BaseEntity:
 
         if filters:
             from ..types import QueryFilter
+
             if isinstance(filters, dict):
                 # Check if this is a query dict with filter/maxRecords/etc keys
-                if "filter" in filters or "maxRecords" in filters or "includeFields" in filters:
+                if (
+                    "filter" in filters
+                    or "maxRecords" in filters
+                    or "includeFields" in filters
+                ):
                     # This is a complete query dict, extract the filter part
                     actual_filters = filters.get("filter", [])
                     if actual_filters:
-                        query_request.filter = [QueryFilter(**f) if isinstance(f, dict) else f for f in actual_filters]
+                        query_request.filter = [
+                            QueryFilter(**f) if isinstance(f, dict) else f
+                            for f in actual_filters
+                        ]
                     # Extract other query parameters
                     if "maxRecords" in filters:
                         max_records = filters["maxRecords"]
@@ -105,11 +113,14 @@ class BaseEntity:
                 else:
                     # Might be nested format like {"id": {"gte": 0}}
                     from ..utils import convert_filter_format
+
                     converted_filters = convert_filter_format(filters)
                     query_request.filter = [QueryFilter(**f) for f in converted_filters]
             elif isinstance(filters, list):
                 # List of filter dicts
-                query_request.filter = [QueryFilter(**f) if isinstance(f, dict) else f for f in filters]
+                query_request.filter = [
+                    QueryFilter(**f) if isinstance(f, dict) else f for f in filters
+                ]
             else:
                 raise AutotaskValidationError("Filters must be dict or list of dicts")
 
@@ -160,6 +171,7 @@ class BaseEntity:
 
         if filters:
             from ..types import QueryFilter
+
             if isinstance(filters, dict):
                 # Single filter dict or nested filter format
                 if "op" in filters and "field" in filters:
@@ -168,11 +180,14 @@ class BaseEntity:
                 else:
                     # Might be nested format like {"id": {"gte": 0}}
                     from ..utils import convert_filter_format
+
                     converted_filters = convert_filter_format(filters)
                     query_request.filter = [QueryFilter(**f) for f in converted_filters]
             elif isinstance(filters, list):
                 # List of filter dicts
-                query_request.filter = [QueryFilter(**f) if isinstance(f, dict) else f for f in filters]
+                query_request.filter = [
+                    QueryFilter(**f) if isinstance(f, dict) else f for f in filters
+                ]
 
         if include_fields:
             query_request.include_fields = include_fields
