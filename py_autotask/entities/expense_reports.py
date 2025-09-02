@@ -5,6 +5,11 @@ ExpenseReports entity for Autotask API operations.
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
+from ..constants import (
+    ExpenseReportConstants,
+    ExpenseReportStatus,
+    validate_status_filter,
+)
 from ..types import EntityDict, QueryFilter
 from .base import BaseEntity
 
@@ -26,7 +31,7 @@ class ExpenseReportsEntity(BaseEntity):
         name: str,
         period_start: date,
         period_end: date,
-        status: int = 1,  # Draft
+        status: int = ExpenseReportStatus.DRAFT,
         **kwargs,
     ) -> EntityDict:
         """
@@ -37,7 +42,7 @@ class ExpenseReportsEntity(BaseEntity):
             name: Name/title of the expense report
             period_start: Start date of expense period
             period_end: End date of expense period
-            status: Status of the report (1=Draft, 2=Submitted, 3=Approved, etc.)
+            status: Status of the report (use ExpenseReportStatus enum)
             **kwargs: Additional expense report properties
 
         Returns:
@@ -211,7 +216,7 @@ class ExpenseReportsEntity(BaseEntity):
         Returns:
             List of expense reports pending approval
         """
-        return self.get_reports_by_status(2, limit)  # Submitted status
+        return self.get_reports_by_status(ExpenseReportStatus.SUBMITTED, limit)
 
     def get_draft_reports(
         self, resource_id: Optional[int] = None, limit: Optional[int] = None
@@ -353,7 +358,7 @@ class ExpenseReportsEntity(BaseEntity):
             statistics["total_amount"] += amount
 
             # Approval time tracking
-            if status == 2:  # Submitted/Pending
+            if status == ExpenseReportStatus.SUBMITTED:  # Submitted/Pending
                 statistics["approval_time_stats"]["pending_approval_count"] += 1
 
         # Calculate averages

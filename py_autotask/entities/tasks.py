@@ -8,6 +8,13 @@ task creation, assignment, and progress tracking.
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
+from ..constants import (
+    TaskConstants,
+    TaskStatus,
+    TaskPriority,
+    TaskDependencyType,
+    validate_status_filter,
+)
 from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
@@ -40,8 +47,8 @@ class TasksEntity(BaseEntity):
                 Optional fields:
                 - startDate: Planned start date
                 - endDate: Planned end date
-                - status: Task status
-                - priorityLevel: Priority level (1-4)
+                - status: Task status (use TaskStatus enum)
+                - priorityLevel: Priority level (use TaskPriority enum: 1=Critical, 2=High, 3=Medium, 4=Low)
                 - percentComplete: Completion percentage
                 - taskCategoryID: Category ID
                 - dependencies: Task dependencies
@@ -66,8 +73,8 @@ class TasksEntity(BaseEntity):
 
         # Validate estimated hours is positive
         estimated_hours = task_data.get("estimatedHours", 0)
-        if float(estimated_hours) <= 0:
-            raise ValueError("Estimated hours must be positive")
+        if float(estimated_hours) < TaskConstants.MIN_ESTIMATED_HOURS:
+            raise ValueError(f"Estimated hours must be at least {TaskConstants.MIN_ESTIMATED_HOURS}")
 
         return self._create(task_data)
 
@@ -143,15 +150,8 @@ class TasksEntity(BaseEntity):
             filters.append(QueryFilter(field="phaseID", op="eq", value=phase_id))
 
         if status_filter:
-            status_map = {
-                "open": [1, 2, 3],  # New, In Progress, Waiting
-                "completed": [5],  # Complete
-                "in_progress": [2],  # In Progress
-                "waiting": [3],  # Waiting
-            }
-
-            if status_filter.lower() in status_map:
-                status_ids = status_map[status_filter.lower()]
+            try:
+                status_ids = validate_status_filter(TaskConstants, status_filter)
                 if len(status_ids) == 1:
                     filters.append(
                         QueryFilter(field="status", op="eq", value=status_ids[0])
@@ -160,6 +160,8 @@ class TasksEntity(BaseEntity):
                     filters.append(
                         QueryFilter(field="status", op="in", value=status_ids)
                     )
+            except ValueError as e:
+                raise ValueError(f"Invalid status filter for tasks: {e}")
 
         return self.query(filters=filters, max_records=limit)
 
@@ -210,23 +212,23 @@ class TasksEntity(BaseEntity):
             )
 
         if status_filter:
-            status_map = {
-                "open": [1, 2, 3],
-                "completed": [5],
-                "in_progress": [2],
-                "overdue": [1, 2, 3],  # Will filter by date separately
-            }
-
-            if status_filter.lower() in status_map:
-                status_ids = status_map[status_filter.lower()]
-                if len(status_ids) == 1:
-                    filters.append(
-                        QueryFilter(field="status", op="eq", value=status_ids[0])
-                    )
-                else:
-                    filters.append(
-                        QueryFilter(field="status", op="in", value=status_ids)
-                    )
+            # Handle special case for overdue tasks 
+            if status_filter.lower() == "overdue":
+                status_ids = TaskConstants.OPEN_STATUSES
+            else:
+                try:
+                    status_ids = validate_status_filter(TaskConstants, status_filter)
+                except ValueError as e:
+                    raise ValueError(f"Invalid status filter for tasks: {e}")
+                    
+            if len(status_ids) == 1:
+                filters.append(
+                    QueryFilter(field="status", op="eq", value=status_ids[0])
+                )
+            else:
+                filters.append(
+                    QueryFilter(field="status", op="in", value=status_ids)
+                )
 
         tasks = self.query(filters=filters, max_records=limit)
 
@@ -262,7 +264,7 @@ class TasksEntity(BaseEntity):
             List of overdue tasks
         """
         filters = [
-            QueryFilter(field="status", op="in", value=[1, 2, 3]),  # Open statuses
+            QueryFilter(field="status", op="in", value=TaskConstants.OPEN_STATUSES),
             QueryFilter(field="endDate", op="lt", value=datetime.now().isoformat()),
         ]
 
@@ -285,7 +287,7 @@ class TasksEntity(BaseEntity):
             Updated task data
         """
         update_data = {
-            "status": 2,  # In Progress
+            "status": TaskStatus.IN_PROGRESS,
             "actualStartDate": datetime.now().isoformat(),
             "lastActivityDate": datetime.now().isoformat(),
         }
@@ -313,8 +315,8 @@ class TasksEntity(BaseEntity):
             Updated task data
         """
         update_data = {
-            "status": 5,  # Complete
-            "percentComplete": 100,
+            "status": TaskStatus.COMPLETE,
+            "percentComplete": TaskConstants.MAX_PERCENT_COMPLETE,
             "completionDate": datetime.now().isoformat(),
             "lastActivityDate": datetime.now().isoformat(),
         }
@@ -341,8 +343,8 @@ class TasksEntity(BaseEntity):
         Returns:
             Updated task data
         """
-        if not 0 <= percent_complete <= 100:
-            raise ValueError("Percent complete must be between 0 and 100")
+        if not TaskConstants.MIN_PERCENT_COMPLETE <= percent_complete <= TaskConstants.MAX_PERCENT_COMPLETE:
+            raise ValueError(f"Percent complete must be between {TaskConstants.MIN_PERCENT_COMPLETE} and {TaskConstants.MAX_PERCENT_COMPLETE}")
 
         update_data = {
             "percentComplete": percent_complete,
@@ -350,14 +352,14 @@ class TasksEntity(BaseEntity):
         }
 
         # Auto-complete if 100%
-        if percent_complete == 100:
-            update_data["status"] = 5  # Complete
+        if percent_complete == TaskConstants.MAX_PERCENT_COMPLETE:
+            update_data["status"] = TaskStatus.COMPLETE
             update_data["completionDate"] = datetime.now().isoformat()
-        elif percent_complete > 0:
+        elif percent_complete > TaskConstants.MIN_PERCENT_COMPLETE:
             # Mark as in progress if not already
             task = self.get(task_id)
-            if task and task.get("status", 1) == 1:  # New status
-                update_data["status"] = 2  # In Progress
+            if task and task.get("status", TaskStatus.NEW) == TaskStatus.NEW:
+                update_data["status"] = TaskStatus.IN_PROGRESS
                 update_data["actualStartDate"] = datetime.now().isoformat()
 
         if progress_note:
@@ -401,9 +403,10 @@ class TasksEntity(BaseEntity):
         Returns:
             Updated task data
         """
-        if priority_level not in [1, 2, 3, 4]:
+        valid_priorities = [TaskPriority.CRITICAL, TaskPriority.HIGH, TaskPriority.MEDIUM, TaskPriority.LOW]
+        if priority_level not in valid_priorities:
             raise ValueError(
-                "Priority level must be 1 (Critical), 2 (High), 3 (Medium), or 4 (Low)"
+                f"Priority level must be one of {valid_priorities} (1=Critical, 2=High, 3=Medium, 4=Low)"
             )
 
         update_data = {
@@ -417,7 +420,7 @@ class TasksEntity(BaseEntity):
         self,
         task_id: int,
         predecessor_task_id: int,
-        dependency_type: str = "finish_to_start",
+        dependency_type: str = TaskDependencyType.FINISH_TO_START,
     ) -> UpdateResponse:
         """
         Add a dependency to a task.
@@ -425,7 +428,7 @@ class TasksEntity(BaseEntity):
         Args:
             task_id: Task ID to add dependency to
             predecessor_task_id: ID of the predecessor task
-            dependency_type: Type of dependency ('finish_to_start', 'start_to_start', etc.)
+            dependency_type: Type of dependency (use TaskDependencyType constants)
 
         Returns:
             Updated task data
@@ -538,19 +541,19 @@ class TasksEntity(BaseEntity):
         completed_tasks = 0
 
         status_map = {
-            1: "new",
-            2: "in_progress",
-            3: "waiting",
-            5: "complete",
-            4: "cancelled",
+            TaskStatus.NEW: "new",
+            TaskStatus.IN_PROGRESS: "in_progress", 
+            TaskStatus.WAITING: "waiting",
+            TaskStatus.COMPLETE: "complete",
+            TaskStatus.CANCELLED: "cancelled",
         }
 
         for task in tasks:
-            status_id = task.get("status", 1)
+            status_id = task.get("status", TaskStatus.NEW)
             status_name = status_map.get(status_id, "new")
             analytics["by_status"][status_name] += 1
 
-            priority = task.get("priorityLevel", 4)
+            priority = task.get("priorityLevel", TaskPriority.LOW)
             if priority in analytics["by_priority"]:
                 analytics["by_priority"][priority] += 1
 
@@ -564,7 +567,7 @@ class TasksEntity(BaseEntity):
                 actual_hours.append(float(act_hours))
 
             # Completion time analysis
-            if status_id == 5:  # Complete
+            if status_id == TaskStatus.COMPLETE:
                 completed_tasks += 1
                 start_date = task.get("actualStartDate") or task.get("startDate")
                 completion_date = task.get("completionDate")
@@ -595,7 +598,7 @@ class TasksEntity(BaseEntity):
 
             # Overdue analysis
             end_date = task.get("endDate")
-            if end_date and status_id in [1, 2, 3]:  # Open statuses
+            if end_date and status_id in TaskConstants.OPEN_STATUSES:
                 try:
                     planned_end = datetime.fromisoformat(
                         end_date.replace("Z", "+00:00")
@@ -666,7 +669,7 @@ class TasksEntity(BaseEntity):
 
         for task in tasks:
             estimated = task.get("estimatedHours", 0)
-            priority = task.get("priorityLevel", 4)
+            priority = task.get("priorityLevel", TaskPriority.LOW)
             project_id = task.get("projectID", "Unknown")
             end_date = task.get("endDate")
 
@@ -751,21 +754,21 @@ class TasksEntity(BaseEntity):
         # Validate title
         title = task_data.get("title", "")
         if title:
-            if len(title) < 3:
-                errors.append("Task title must be at least 3 characters")
-            elif len(title) > 255:
-                errors.append("Task title must not exceed 255 characters")
+            if len(title) < TaskConstants.MIN_TITLE_LENGTH:
+                errors.append(f"Task title must be at least {TaskConstants.MIN_TITLE_LENGTH} characters")
+            elif len(title) > TaskConstants.MAX_TITLE_LENGTH:
+                errors.append(f"Task title must not exceed {TaskConstants.MAX_TITLE_LENGTH} characters")
 
         # Validate estimated hours
         estimated_hours = task_data.get("estimatedHours")
         if estimated_hours is not None:
             try:
                 est_val = float(estimated_hours)
-                if est_val <= 0:
-                    errors.append("Estimated hours must be positive")
-                elif est_val > 1000:
+                if est_val < TaskConstants.MIN_ESTIMATED_HOURS:
+                    errors.append(f"Estimated hours must be at least {TaskConstants.MIN_ESTIMATED_HOURS}")
+                elif est_val > TaskConstants.MAX_ESTIMATED_HOURS:
                     warnings.append(
-                        "Estimated hours seems unusually high (over 1000 hours)"
+                        f"Estimated hours seems unusually high (over {TaskConstants.MAX_ESTIMATED_HOURS} hours)"
                     )
             except (ValueError, TypeError):
                 errors.append("Estimated hours must be a valid number")
@@ -799,8 +802,8 @@ class TasksEntity(BaseEntity):
         if percent_complete is not None:
             try:
                 percent_val = int(percent_complete)
-                if not 0 <= percent_val <= 100:
-                    errors.append("Percent complete must be between 0 and 100")
+                if not TaskConstants.MIN_PERCENT_COMPLETE <= percent_val <= TaskConstants.MAX_PERCENT_COMPLETE:
+                    errors.append(f"Percent complete must be between {TaskConstants.MIN_PERCENT_COMPLETE} and {TaskConstants.MAX_PERCENT_COMPLETE}")
             except (ValueError, TypeError):
                 errors.append("Percent complete must be a valid integer")
 
