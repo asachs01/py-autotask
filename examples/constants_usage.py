@@ -6,27 +6,22 @@ This example shows how the new constants module eliminates magic numbers
 and provides clear, readable code when working with Autotask entities.
 """
 
-from py_autotask.constants import (
-    # Task constants
-    TaskStatus,
-    TaskPriority,
-    TaskConstants,
-    TaskDependencyType,
-    # Ticket constants
-    TicketStatus,
-    TicketPriority,
-    TicketConstants,
-    # Project constants
-    ProjectStatus,
-    ProjectType,
-    ProjectConstants,
-    # Contract constants
+from py_autotask.constants import (  # Task constants; Ticket constants; Project constants; Contract constants; Utility functions
+    ContractConstants,
     ContractStatus,
     ContractType,
-    ContractConstants,
-    # Utility functions
-    get_status_name,
+    ProjectConstants,
+    ProjectStatus,
+    ProjectType,
+    TaskConstants,
+    TaskDependencyType,
+    TaskPriority,
+    TaskStatus,
+    TicketConstants,
+    TicketPriority,
+    TicketStatus,
     get_priority_description,
+    get_status_name,
     validate_status_filter,
 )
 
@@ -188,13 +183,13 @@ def demonstrate_backwards_compatibility():
 
     # Import legacy constants
     from py_autotask.constants import (
-        TASK_STATUS_NEW,
-        TASK_STATUS_IN_PROGRESS,
-        TASK_STATUS_COMPLETE,
         TASK_PRIORITY_CRITICAL,
         TASK_PRIORITY_HIGH,
-        TASK_PRIORITY_MEDIUM,
         TASK_PRIORITY_LOW,
+        TASK_PRIORITY_MEDIUM,
+        TASK_STATUS_COMPLETE,
+        TASK_STATUS_IN_PROGRESS,
+        TASK_STATUS_NEW,
     )
 
     print("Legacy constants still work:")

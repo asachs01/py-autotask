@@ -4,9 +4,10 @@ Final verification test for py-autotask SDK against Autotask REST API.
 Tests key functionality based on learnings from the Notion guide.
 """
 
-import os
 import json
 import logging
+import os
+
 from py_autotask import AutotaskClient
 
 # Enable debug logging

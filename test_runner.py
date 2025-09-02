@@ -6,9 +6,9 @@ This script performs basic validation of our test files to ensure they are
 correctly structured and importable.
 """
 
-import sys
-import os
 import importlib.util
+import os
+import sys
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

@@ -2,8 +2,9 @@
 """Debug the flow to see where the conversion goes wrong."""
 
 import os
+
 from py_autotask import AutotaskClient
-from py_autotask.types import QueryRequest, QueryFilter
+from py_autotask.types import QueryFilter, QueryRequest
 
 # Get credentials from environment
 username = os.getenv("AUTOTASK_USERNAME")
@@ -24,7 +25,7 @@ input_dict = {"filter": [{"op": "gte", "field": "id", "value": 0}], "maxRecords"
 print(f"1. Input dict: {input_dict}")
 
 # See what entities/base.py does
-from py_autotask.types import QueryRequest, QueryFilter
+from py_autotask.types import QueryFilter, QueryRequest
 
 # From entities/base.py query() method
 filters = input_dict

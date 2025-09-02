@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Test with Version endpoint which is simpler."""
 
-import os
-import requests
 import json
+import os
+
+import requests
 
 # Get credentials
 username = os.getenv("AUTOTASK_USERNAME")

@@ -6,7 +6,9 @@ Shows how to authenticate and make API calls to Autotask.
 
 import asyncio
 import os
+
 from dotenv import load_dotenv
+
 from py_autotask import AsyncAutotaskClient
 
 

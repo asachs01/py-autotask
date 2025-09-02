@@ -8,8 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from py_autotask.entities.tickets import TicketsEntity
 from py_autotask.constants import TicketStatus
+from py_autotask.entities.tickets import TicketsEntity
 
 
 class TestTicketsEntity:
