@@ -61,17 +61,17 @@ class ServiceTypes:
 
 class SLAThresholds:
     """Constants for SLA compliance thresholds."""
-    
+
     EXCELLENT_COMPLIANCE = 95
     GOOD_COMPLIANCE = 90
     POOR_COMPLIANCE = 80
     DEFAULT_EVALUATION_DAYS = 30
     DEFAULT_INVOICE_DUE_DAYS = 30
-    
+
 
 class ContractDefaults:
     """Default values for contract operations."""
-    
+
     DEFAULT_MILESTONE_STATUS = "pending"
     DEFAULT_MILESTONE_PROGRESS = 0
     DEFAULT_AMENDMENT_STATUS = "pending"
@@ -99,8 +99,15 @@ class ContractsEntity(BaseEntity):
         super().__init__(client, entity_name)
 
     def create_contract(
-        self, contract_name: str, account_id: int, contract_type: int = 1, 
-        start_date: Optional[str] = None, end_date: Optional[str] = None, contract_value: Optional[float] = None, **kwargs, ) -> ContractData:
+        self,
+        contract_name: str,
+        account_id: int,
+        contract_type: int = 1,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        contract_value: Optional[float] = None,
+        **kwargs,
+    ) -> ContractData:
         """
         Create a new contract with required and optional fields.
 
@@ -117,7 +124,11 @@ class ContractsEntity(BaseEntity):
             Created contract data
         """
         contract_data = {
-            "ContractName": contract_name, "AccountID": account_id, "ContractType": contract_type, **kwargs, }
+            "ContractName": contract_name,
+            "AccountID": account_id,
+            "ContractType": contract_type,
+            **kwargs,
+        }
 
         if start_date:
             contract_data["StartDate"] = start_date
@@ -142,12 +153,12 @@ class ContractsEntity(BaseEntity):
         Returns:
             List of contracts for the account
         """
-        filters = [QueryFilter(field = "AccountID", op = "eq", value = account_id)]
+        filters = [QueryFilter(field="AccountID", op="eq", value=account_id)]
 
         if active_only:
-            filters.append(QueryFilter(field = "Status", op = "eq", value = 1))  # Active
+            filters.append(QueryFilter(field="Status", op="eq", value=1))  # Active
 
-        return self.query(filters = filters, max_records = limit)
+        return self.query(filters=filters, max_records=limit)
 
     def get_active_contracts(self, limit: Optional[int] = None) -> List[ContractData]:
         """
@@ -159,8 +170,8 @@ class ContractsEntity(BaseEntity):
         Returns:
             List of active contracts
         """
-        filters = [QueryFilter(field = "Status", op = "eq", value = 1)]  # Active
-        return self.query(filters = filters, max_records = limit)
+        filters = [QueryFilter(field="Status", op="eq", value=1)]  # Active
+        return self.query(filters=filters, max_records=limit)
 
     def get_expiring_contracts(
         self, days_ahead: int = 30, limit: Optional[int] = None
@@ -177,18 +188,22 @@ class ContractsEntity(BaseEntity):
         """
         from datetime import datetime, timedelta
 
-        future_date = (datetime.now() + timedelta(days = days_ahead)).isoformat()
+        future_date = (datetime.now() + timedelta(days=days_ahead)).isoformat()
 
         filters = [
-            QueryFilter(field = "EndDate", op = "lte", value = future_date), QueryFilter(field = "Status", op = "eq", value = 1), 
+            QueryFilter(field="EndDate", op="lte", value=future_date),
+            QueryFilter(field="Status", op="eq", value=1),
         ]
 
-        return self.query(filters = filters, max_records = limit)
+        return self.query(filters=filters, max_records=limit)
 
     # ======================================== Billing and Invoicing Integration
     # =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
     def generate_invoice(
-        self, contract_id: int, period: Optional[Dict[str, str]] = None, invoice_data: Optional[Dict[str, Any]] = None
+        self,
+        contract_id: int,
+        period: Optional[Dict[str, str]] = None,
+        invoice_data: Optional[Dict[str, Any]] = None,
     ) -> CreateResponse:
         """
         Generate an invoice for a contract billing period.
@@ -213,27 +228,42 @@ class ContractsEntity(BaseEntity):
             period = self._get_default_billing_period()
 
         invoice_request = {
-            "contractID": contract_id, "billingPeriodStart": period["start_date"], "billingPeriodEnd": period["end_date"], "invoiceDate": datetime.now().isoformat(), "dueDate": (datetime.now() + timedelta(days=SLAThresholds.DEFAULT_INVOICE_DUE_DAYS)).isoformat(), **(invoice_data or {})
+            "contractID": contract_id,
+            "billingPeriodStart": period["start_date"],
+            "billingPeriodEnd": period["end_date"],
+            "invoiceDate": datetime.now().isoformat(),
+            "dueDate": (
+                datetime.now() + timedelta(days=SLAThresholds.DEFAULT_INVOICE_DUE_DAYS)
+            ).isoformat(),
+            **(invoice_data or {}),
         }
 
         return self.client.create("Invoices", invoice_request)
-    
+
     def _get_default_billing_period(self) -> Dict[str, str]:
         """Get default billing period (current month)."""
         now = datetime.now()
         start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if now.month == 12:
-            end_of_month = start_of_month.replace(year=now.year + 1, month=1) - timedelta(days=1)
+            end_of_month = start_of_month.replace(
+                year=now.year + 1, month=1
+            ) - timedelta(days=1)
         else:
-            end_of_month = start_of_month.replace(month=now.month + 1) - timedelta(days=1)
-        
+            end_of_month = start_of_month.replace(month=now.month + 1) - timedelta(
+                days=1
+            )
+
         return {
             "start_date": start_of_month.isoformat(),
-            "end_date": end_of_month.isoformat()
+            "end_date": end_of_month.isoformat(),
         }
 
     def get_billing_history(
-        self, contract_id: int, limit: Optional[int] = None, date_range: Optional[tuple] = None, ) -> List[Dict[str, Any]]:
+        self,
+        contract_id: int,
+        limit: Optional[int] = None,
+        date_range: Optional[tuple] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Get billing history for a contract.
 
@@ -245,22 +275,41 @@ class ContractsEntity(BaseEntity):
         Returns:
             List of billing history records
         """
-        filters = [QueryFilter(field = "contractID", op = "eq", value = contract_id)]
+        filters = [QueryFilter(field="contractID", op="eq", value=contract_id)]
 
         if date_range:
             start_date, end_date = date_range
-            filters.extend([
-                QueryFilter(
-                    field = "invoiceDate", op = "gte", value = start_date.isoformat() if hasattr(start_date, "isoformat") else start_date
-                ), QueryFilter(
-                    field = "invoiceDate", op = "lte", value = end_date.isoformat() if hasattr(end_date, "isoformat") else end_date
-                )
-            ])
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="invoiceDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
+                    ),
+                    QueryFilter(
+                        field="invoiceDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
+                    ),
+                ]
+            )
 
-        return self.client.query("Invoices", filters = filters, max_records = limit)
+        return self.client.query("Invoices", filters=filters, max_records=limit)
 
     def calculate_contract_value(
-        self, contract_id: int, include_pending: bool = True, date_range: Optional[tuple] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        include_pending: bool = True,
+        date_range: Optional[tuple] = None,
+    ) -> Dict[str, Any]:
         """
         Calculate total contract value including actual vs. projected billing.
 
@@ -274,24 +323,26 @@ class ContractsEntity(BaseEntity):
         """
         contract = self._get_contract_or_raise(contract_id)
         billing_history = self.get_billing_history(contract_id, date_range=date_range)
-        
+
         value_breakdown = self._initialize_value_breakdown(contract_id, contract)
         total_billed = self._calculate_billed_amounts(billing_history, value_breakdown)
         self._calculate_utilization_metrics(contract, total_billed, value_breakdown)
-        
+
         if include_pending:
             self._add_pending_billing(contract_id, value_breakdown)
-            
+
         return value_breakdown
-    
+
     def _get_contract_or_raise(self, contract_id: int) -> Dict[str, Any]:
         """Get contract by ID or raise ValueError if not found."""
         contract = self.get(contract_id)
         if not contract:
             raise ValueError(f"Contract {contract_id} not found")
         return contract
-    
-    def _initialize_value_breakdown(self, contract_id: int, contract: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _initialize_value_breakdown(
+        self, contract_id: int, contract: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Initialize the value breakdown dictionary structure."""
         return {
             "contract_id": contract_id,
@@ -301,28 +352,28 @@ class ContractsEntity(BaseEntity):
             "remaining_value": 0,
             "billing_utilization": 0,
             "by_period": {},
-            "payment_status": {
-                "paid": 0,
-                "outstanding": 0,
-                "overdue": 0
-            }
+            "payment_status": {"paid": 0, "outstanding": 0, "overdue": 0},
         }
-    
-    def _calculate_billed_amounts(self, billing_history: List[Dict[str, Any]], value_breakdown: Dict[str, Any]) -> float:
+
+    def _calculate_billed_amounts(
+        self, billing_history: List[Dict[str, Any]], value_breakdown: Dict[str, Any]
+    ) -> float:
         """Calculate total billed amounts and update breakdown by payment status and period."""
         total_billed = 0
-        
+
         for invoice in billing_history:
             amount = float(invoice.get("amount", 0))
             total_billed += amount
-            
+
             self._update_payment_status(invoice, amount, value_breakdown)
             self._update_period_breakdown(invoice, amount, value_breakdown)
-            
+
         value_breakdown["billed_to_date"] = total_billed
         return total_billed
-    
-    def _update_payment_status(self, invoice: Dict[str, Any], amount: float, value_breakdown: Dict[str, Any]) -> None:
+
+    def _update_payment_status(
+        self, invoice: Dict[str, Any], amount: float, value_breakdown: Dict[str, Any]
+    ) -> None:
         """Update payment status breakdown for an invoice."""
         status = invoice.get("status", "").lower()
         if status == "paid":
@@ -331,35 +382,50 @@ class ContractsEntity(BaseEntity):
             value_breakdown["payment_status"]["overdue"] += amount
         else:
             value_breakdown["payment_status"]["outstanding"] += amount
-    
-    def _update_period_breakdown(self, invoice: Dict[str, Any], amount: float, value_breakdown: Dict[str, Any]) -> None:
+
+    def _update_period_breakdown(
+        self, invoice: Dict[str, Any], amount: float, value_breakdown: Dict[str, Any]
+    ) -> None:
         """Update period breakdown for an invoice."""
         invoice_date = invoice.get("invoiceDate", "")
         if invoice_date:
             try:
-                period_key = datetime.fromisoformat(invoice_date.replace("Z", "+00:00")).strftime("%Y-%m")
+                period_key = datetime.fromisoformat(
+                    invoice_date.replace("Z", "+00:00")
+                ).strftime("%Y-%m")
                 if period_key not in value_breakdown["by_period"]:
                     value_breakdown["by_period"][period_key] = 0
                 value_breakdown["by_period"][period_key] += amount
             except ValueError:
                 pass
-    
-    def _calculate_utilization_metrics(self, contract: Dict[str, Any], total_billed: float, value_breakdown: Dict[str, Any]) -> None:
+
+    def _calculate_utilization_metrics(
+        self,
+        contract: Dict[str, Any],
+        total_billed: float,
+        value_breakdown: Dict[str, Any],
+    ) -> None:
         """Calculate remaining value and billing utilization."""
         contract_value = float(contract.get("ContractValue", 0))
         if contract_value > 0:
             value_breakdown["remaining_value"] = contract_value - total_billed
-            value_breakdown["billing_utilization"] = (total_billed / contract_value) * 100
-    
-    def _add_pending_billing(self, contract_id: int, value_breakdown: Dict[str, Any]) -> None:
+            value_breakdown["billing_utilization"] = (
+                total_billed / contract_value
+            ) * 100
+
+    def _add_pending_billing(
+        self, contract_id: int, value_breakdown: Dict[str, Any]
+    ) -> None:
         """Add pending billing amounts to value breakdown."""
         pending_filters = [
             QueryFilter(field="contractID", op="eq", value=contract_id),
-            QueryFilter(field="invoiced", op="eq", value=False)
+            QueryFilter(field="invoiced", op="eq", value=False),
         ]
-        
+
         try:
-            pending_time_entries = self.client.query("TimeEntries", filters=pending_filters)
+            pending_time_entries = self.client.query(
+                "TimeEntries", filters=pending_filters
+            )
             pending_amount = sum(
                 float(entry.get("billingAmount", 0)) for entry in pending_time_entries
             )
@@ -398,18 +464,29 @@ class ContractsEntity(BaseEntity):
             AutotaskAPIError: If the API request fails
         """
         required_fields = ["service_type", "delivery_date", "metrics"]
-        missing_fields = [field for field in required_fields if field not in service_data]
+        missing_fields = [
+            field for field in required_fields if field not in service_data
+        ]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
         service_record = {
-            "contractID": contract_id, "serviceType": service_data["service_type"], "deliveryDate": service_data["delivery_date"], "metrics": service_data["metrics"], "recordedDate": datetime.now().isoformat(), **{k: v for k, v in service_data.items() if k not in required_fields}
+            "contractID": contract_id,
+            "serviceType": service_data["service_type"],
+            "deliveryDate": service_data["delivery_date"],
+            "metrics": service_data["metrics"],
+            "recordedDate": datetime.now().isoformat(),
+            **{k: v for k, v in service_data.items() if k not in required_fields},
         }
 
         return self.client.create("ServiceDeliveryRecords", service_record)
 
     def get_service_metrics(
-        self, contract_id: int, date_range: Optional[tuple] = None, service_type: Optional[str] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        date_range: Optional[tuple] = None,
+        service_type: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Get service delivery metrics for a contract.
 
@@ -421,23 +498,42 @@ class ContractsEntity(BaseEntity):
         Returns:
             Dictionary with service metrics and analytics
         """
-        filters = [QueryFilter(field = "contractID", op = "eq", value = contract_id)]
+        filters = [QueryFilter(field="contractID", op="eq", value=contract_id)]
 
         if date_range:
             start_date, end_date = date_range
-            filters.extend([
-                QueryFilter(
-                    field = "deliveryDate", op = "gte", value = start_date.isoformat() if hasattr(start_date, "isoformat") else start_date
-                ), QueryFilter(
-                    field = "deliveryDate", op = "lte", value = end_date.isoformat() if hasattr(end_date, "isoformat") else end_date
-                )
-            ])
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="deliveryDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
+                    ),
+                    QueryFilter(
+                        field="deliveryDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
+                    ),
+                ]
+            )
 
         if service_type:
-            filters.append(QueryFilter(field = "serviceType", op = "eq", value = service_type))
+            filters.append(
+                QueryFilter(field="serviceType", op="eq", value=service_type)
+            )
 
         try:
-            service_records = self.client.query("ServiceDeliveryRecords", filters = filters)
+            service_records = self.client.query(
+                "ServiceDeliveryRecords", filters=filters
+            )
         except Exception:
             # Fallback if ServiceDeliveryRecords doesn't exist
             service_records = []
@@ -445,62 +541,69 @@ class ContractsEntity(BaseEntity):
         metrics_summary = self._initialize_metrics_summary(contract_id, service_records)
         self._process_service_records(service_records, metrics_summary)
         self._calculate_compliance_rate(metrics_summary)
-        
+
         return metrics_summary
-    
-    def _initialize_metrics_summary(self, contract_id: int, service_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    def _initialize_metrics_summary(
+        self, contract_id: int, service_records: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Initialize the metrics summary structure."""
         return {
             "contract_id": contract_id,
             "total_services": len(service_records),
             "by_service_type": {},
-            "sla_compliance": {
-                "total_slas": 0,
-                "met_slas": 0,
-                "compliance_rate": 0
-            },
+            "sla_compliance": {"total_slas": 0, "met_slas": 0, "compliance_rate": 0},
             "performance_trends": [],
-            "summary_metrics": {}
+            "summary_metrics": {},
         }
-    
-    def _process_service_records(self, service_records: List[Dict[str, Any]], metrics_summary: Dict[str, Any]) -> None:
+
+    def _process_service_records(
+        self, service_records: List[Dict[str, Any]], metrics_summary: Dict[str, Any]
+    ) -> None:
         """Process service records and update metrics."""
         for record in service_records:
             service_type_key = record.get("serviceType", "Unknown")
             self._ensure_service_type_entry(service_type_key, metrics_summary)
-            
+
             metrics_summary["by_service_type"][service_type_key]["count"] += 1
             self._track_sla_compliance(record, metrics_summary)
-    
-    def _ensure_service_type_entry(self, service_type: str, metrics_summary: Dict[str, Any]) -> None:
+
+    def _ensure_service_type_entry(
+        self, service_type: str, metrics_summary: Dict[str, Any]
+    ) -> None:
         """Ensure service type entry exists in metrics summary."""
         if service_type not in metrics_summary["by_service_type"]:
             metrics_summary["by_service_type"][service_type] = {
                 "count": 0,
                 "avg_performance": 0,
-                "sla_compliance": 0
+                "sla_compliance": 0,
             }
-    
-    def _track_sla_compliance(self, record: Dict[str, Any], metrics_summary: Dict[str, Any]) -> None:
+
+    def _track_sla_compliance(
+        self, record: Dict[str, Any], metrics_summary: Dict[str, Any]
+    ) -> None:
         """Track SLA compliance for a service record."""
         sla_target = record.get("slaTarget")
         actual_performance = record.get("actualPerformance")
-        
+
         if sla_target and actual_performance:
             metrics_summary["sla_compliance"]["total_slas"] += 1
             if float(actual_performance) >= float(sla_target):
                 metrics_summary["sla_compliance"]["met_slas"] += 1
-    
+
     def _calculate_compliance_rate(self, metrics_summary: Dict[str, Any]) -> None:
         """Calculate overall compliance rate."""
         if metrics_summary["sla_compliance"]["total_slas"] > 0:
             metrics_summary["sla_compliance"]["compliance_rate"] = (
-                metrics_summary["sla_compliance"]["met_slas"] /
-                metrics_summary["sla_compliance"]["total_slas"]
+                metrics_summary["sla_compliance"]["met_slas"]
+                / metrics_summary["sla_compliance"]["total_slas"]
             ) * 100
 
     def check_sla_compliance(
-        self, contract_id: int, sla_thresholds: Optional[Dict[str, float]] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        sla_thresholds: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, Any]:
         """
         Check SLA compliance for a contract.
 
@@ -518,40 +621,61 @@ class ContractsEntity(BaseEntity):
         start_date = end_date - timedelta(days=SLAThresholds.DEFAULT_EVALUATION_DAYS)
 
         metrics = self.get_service_metrics(
-            contract_id, date_range = (start_date, end_date)
+            contract_id, date_range=(start_date, end_date)
         )
 
         compliance_status = {
-            "contract_id": contract_id, "evaluation_period": {
-                "start_date": start_date.isoformat(), "end_date": end_date.isoformat()
-            }, "overall_compliance": metrics["sla_compliance"]["compliance_rate"], "compliant": metrics["sla_compliance"]["compliance_rate"] >= SLAThresholds.EXCELLENT_COMPLIANCE, 
-        "violations": [], "warnings": [], "recommendations": []
+            "contract_id": contract_id,
+            "evaluation_period": {
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+            },
+            "overall_compliance": metrics["sla_compliance"]["compliance_rate"],
+            "compliant": metrics["sla_compliance"]["compliance_rate"]
+            >= SLAThresholds.EXCELLENT_COMPLIANCE,
+            "violations": [],
+            "warnings": [],
+            "recommendations": [],
         }
 
         # Check for violations
         if compliance_status["overall_compliance"] < SLAThresholds.EXCELLENT_COMPLIANCE:
-            severity = "high" if compliance_status["overall_compliance"] < SLAThresholds.GOOD_COMPLIANCE else "medium"
-            compliance_status["violations"].append({
-                "type": "overall_compliance",
-                "severity": severity,
-                "message": f"Overall SLA compliance at {compliance_status['overall_compliance']:.1f}%"
-            })
+            severity = (
+                "high"
+                if compliance_status["overall_compliance"]
+                < SLAThresholds.GOOD_COMPLIANCE
+                else "medium"
+            )
+            compliance_status["violations"].append(
+                {
+                    "type": "overall_compliance",
+                    "severity": severity,
+                    "message": f"Overall SLA compliance at {compliance_status['overall_compliance']:.1f}%",
+                }
+            )
 
         # Service-specific compliance checks
         for service_type, service_metrics in metrics["by_service_type"].items():
             if service_metrics["sla_compliance"] < SLAThresholds.GOOD_COMPLIANCE:
-                compliance_status["violations"].append({
-                    "type": "service_compliance",
-                    "service_type": service_type,
-                    "severity": "high",
-                    "message": f"{service_type} SLA compliance below {SLAThresholds.GOOD_COMPLIANCE}%"
-                })
+                compliance_status["violations"].append(
+                    {
+                        "type": "service_compliance",
+                        "service_type": service_type,
+                        "severity": "high",
+                        "message": f"{service_type} SLA compliance below {SLAThresholds.GOOD_COMPLIANCE}%",
+                    }
+                )
 
         # Add recommendations
         if compliance_status["violations"]:
-            compliance_status["recommendations"].extend([
-                "Review service delivery processes", "Consider additional resource allocation", "Implement proactive monitoring", "Schedule client review meeting"
-            ])
+            compliance_status["recommendations"].extend(
+                [
+                    "Review service delivery processes",
+                    "Consider additional resource allocation",
+                    "Implement proactive monitoring",
+                    "Schedule client review meeting",
+                ]
+            )
 
         return compliance_status
 
@@ -585,18 +709,36 @@ class ContractsEntity(BaseEntity):
             AutotaskAPIError: If the API request fails
         """
         required_fields = ["title", "description", "due_date", "value"]
-        missing_fields = [field for field in required_fields if field not in milestone_data]
+        missing_fields = [
+            field for field in required_fields if field not in milestone_data
+        ]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
         milestone_record = {
-            "contractID": contract_id, "title": milestone_data["title"], "description": milestone_data["description"], "dueDate": milestone_data["due_date"], "value": milestone_data["value"], "status": milestone_data.get("status", "pending"), "createdDate": datetime.now().isoformat(), "progress": 0, **{k: v for k, v in milestone_data.items() if k not in required_fields + ["status"]}
+            "contractID": contract_id,
+            "title": milestone_data["title"],
+            "description": milestone_data["description"],
+            "dueDate": milestone_data["due_date"],
+            "value": milestone_data["value"],
+            "status": milestone_data.get("status", "pending"),
+            "createdDate": datetime.now().isoformat(),
+            "progress": 0,
+            **{
+                k: v
+                for k, v in milestone_data.items()
+                if k not in required_fields + ["status"]
+            },
         }
 
         return self.client.create("ContractMilestones", milestone_record)
 
     def update_milestone_progress(
-        self, milestone_id: int, progress: int, progress_notes: Optional[str] = None, ) -> UpdateResponse:
+        self,
+        milestone_id: int,
+        progress: int,
+        progress_notes: Optional[str] = None,
+    ) -> UpdateResponse:
         """
         Update milestone progress.
 
@@ -616,7 +758,9 @@ class ContractsEntity(BaseEntity):
             raise ValueError("Progress must be between 0 and 100")
 
         update_data = {
-            "progress": progress, "lastUpdated": datetime.now().isoformat(), }
+            "progress": progress,
+            "lastUpdated": datetime.now().isoformat(),
+        }
 
         # Auto-complete milestone if 100%
         if progress == 100:
@@ -635,7 +779,10 @@ class ContractsEntity(BaseEntity):
         return self.client.update("ContractMilestones", milestone_id, update_data)
 
     def get_upcoming_milestones(
-        self, contract_id: int, days_ahead: int = 30, ) -> List[Dict[str, Any]]:
+        self,
+        contract_id: int,
+        days_ahead: int = 30,
+    ) -> List[Dict[str, Any]]:
         """
         Get upcoming milestones for a contract.
 
@@ -646,25 +793,30 @@ class ContractsEntity(BaseEntity):
         Returns:
             List of upcoming milestones
         """
-        future_date = (datetime.now() + timedelta(days = days_ahead)).isoformat()
+        future_date = (datetime.now() + timedelta(days=days_ahead)).isoformat()
 
         filters = [
-            QueryFilter(field = "contractID", op = "eq", value = contract_id), QueryFilter(field = "dueDate", op = "lte", value = future_date), QueryFilter(field = "status", op = "in", value = ["pending", "in_progress"])
+            QueryFilter(field="contractID", op="eq", value=contract_id),
+            QueryFilter(field="dueDate", op="lte", value=future_date),
+            QueryFilter(field="status", op="in", value=["pending", "in_progress"]),
         ]
 
         try:
-            milestones = self.client.query("ContractMilestones", filters = filters)
+            milestones = self.client.query("ContractMilestones", filters=filters)
         except Exception:
             # Fallback if ContractMilestones doesn't exist
             milestones = []
 
         # Sort by due date
-        milestones.sort(key = lambda x: x.get("dueDate", ""))
+        milestones.sort(key=lambda x: x.get("dueDate", ""))
 
         return milestones
 
     def get_milestone_analytics(
-        self, contract_id: int, date_range: Optional[tuple] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        date_range: Optional[tuple] = None,
+    ) -> Dict[str, Any]:
         """
         Get milestone analytics for a contract.
 
@@ -675,32 +827,61 @@ class ContractsEntity(BaseEntity):
         Returns:
             Dictionary with milestone analytics
         """
-        filters = [QueryFilter(field = "contractID", op = "eq", value = contract_id)]
+        filters = [QueryFilter(field="contractID", op="eq", value=contract_id)]
 
         if date_range:
             start_date, end_date = date_range
-            filters.extend([
-                QueryFilter(
-                    field = "dueDate", op = "gte", value = start_date.isoformat() if hasattr(start_date, "isoformat") else start_date
-                ), QueryFilter(
-                    field = "dueDate", op = "lte", value = end_date.isoformat() if hasattr(end_date, "isoformat") else end_date
-                )
-            ])
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="dueDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
+                    ),
+                    QueryFilter(
+                        field="dueDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
+                    ),
+                ]
+            )
 
         try:
-            milestones = self.client.query("ContractMilestones", filters = filters)
+            milestones = self.client.query("ContractMilestones", filters=filters)
         except Exception:
             milestones = []
 
         analytics = {
-            "contract_id": contract_id, "total_milestones": len(milestones), "by_status": {
-                "pending": 0, "in_progress": 0, "completed": 0, "overdue": 0, "cancelled": 0
-            }, "total_value": 0, "completed_value": 0, "pending_value": 0, "completion_rate": 0, "value_realization": 0, "overdue_milestones": [], "avg_completion_time": 0, "upcoming_deadlines": []
+            "contract_id": contract_id,
+            "total_milestones": len(milestones),
+            "by_status": {
+                "pending": 0,
+                "in_progress": 0,
+                "completed": 0,
+                "overdue": 0,
+                "cancelled": 0,
+            },
+            "total_value": 0,
+            "completed_value": 0,
+            "pending_value": 0,
+            "completion_rate": 0,
+            "value_realization": 0,
+            "overdue_milestones": [],
+            "avg_completion_time": 0,
+            "upcoming_deadlines": [],
         }
 
         now = datetime.now()
         completion_times = []
-        one_week = now + timedelta(weeks = 1)
+        one_week = now + timedelta(weeks=1)
 
         for milestone in milestones:
             status = milestone.get("status", "pending")
@@ -722,9 +903,15 @@ class ContractsEntity(BaseEntity):
                 completed_date = milestone.get("completedDate")
                 if started_date and completed_date:
                     try:
-                        started = datetime.fromisoformat(started_date.replace("Z", "+00: 00"))
-                        completed = datetime.fromisoformat(completed_date.replace("Z", "+00: 00"))
-                        completion_time = (completed - started).total_seconds() / 86400  # Days
+                        started = datetime.fromisoformat(
+                            started_date.replace("Z", "+00: 00")
+                        )
+                        completed = datetime.fromisoformat(
+                            completed_date.replace("Z", "+00: 00")
+                        )
+                        completion_time = (
+                            completed - started
+                        ).total_seconds() / 86400  # Days
                         completion_times.append(completion_time)
                     except ValueError:
                         pass
@@ -737,13 +924,25 @@ class ContractsEntity(BaseEntity):
                     deadline = datetime.fromisoformat(due_date.replace("Z", "+00: 00"))
                     if deadline < now:
                         analytics["by_status"]["overdue"] += 1
-                        analytics["overdue_milestones"].append({
-                            "id": milestone.get("id"), "title": milestone.get("title", ""), "due_date": due_date, "days_overdue": (now - deadline).days, "value": value
-                        })
+                        analytics["overdue_milestones"].append(
+                            {
+                                "id": milestone.get("id"),
+                                "title": milestone.get("title", ""),
+                                "due_date": due_date,
+                                "days_overdue": (now - deadline).days,
+                                "value": value,
+                            }
+                        )
                     elif deadline <= one_week:
-                        analytics["upcoming_deadlines"].append({
-                            "id": milestone.get("id"), "title": milestone.get("title", ""), "due_date": due_date, "days_remaining": (deadline - now).days, "value": value
-                        })
+                        analytics["upcoming_deadlines"].append(
+                            {
+                                "id": milestone.get("id"),
+                                "title": milestone.get("title", ""),
+                                "due_date": due_date,
+                                "days_remaining": (deadline - now).days,
+                                "value": value,
+                            }
+                        )
                 except ValueError:
                     pass
 
@@ -759,7 +958,9 @@ class ContractsEntity(BaseEntity):
             ) * 100
 
         if completion_times:
-            analytics["avg_completion_time"] = sum(completion_times) / len(completion_times)
+            analytics["avg_completion_time"] = sum(completion_times) / len(
+                completion_times
+            )
 
         return analytics
 
@@ -796,13 +997,23 @@ class ContractsEntity(BaseEntity):
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
         alert_record = {
-            "contractID": contract_id, "alertDate": alert_data["alert_date"], "alertType": alert_data["alert_type"], "recipients": alert_data["recipients"], "status": "scheduled", "createdDate": datetime.now().isoformat(), **{k: v for k, v in alert_data.items() if k not in required_fields}
+            "contractID": contract_id,
+            "alertDate": alert_data["alert_date"],
+            "alertType": alert_data["alert_type"],
+            "recipients": alert_data["recipients"],
+            "status": "scheduled",
+            "createdDate": datetime.now().isoformat(),
+            **{k: v for k, v in alert_data.items() if k not in required_fields},
         }
 
         return self.client.create("ContractRenewalAlerts", alert_record)
 
     def get_expiring_contracts(
-        self, days_ahead: int = 60, account_id: Optional[int] = None, include_auto_renew: bool = False, ) -> List[Dict[str, Any]]:
+        self,
+        days_ahead: int = 60,
+        account_id: Optional[int] = None,
+        include_auto_renew: bool = False,
+    ) -> List[Dict[str, Any]]:
         """
         Get contracts expiring within a specified timeframe.
 
@@ -814,16 +1025,17 @@ class ContractsEntity(BaseEntity):
         Returns:
             List of expiring contracts with renewal status
         """
-        future_date = (datetime.now() + timedelta(days = days_ahead)).isoformat()
+        future_date = (datetime.now() + timedelta(days=days_ahead)).isoformat()
 
         filters = [
-            QueryFilter(field = "EndDate", op = "lte", value = future_date), QueryFilter(field = "Status", op = "eq", value = ContractStatuses.ACTIVE)
+            QueryFilter(field="EndDate", op="lte", value=future_date),
+            QueryFilter(field="Status", op="eq", value=ContractStatuses.ACTIVE),
         ]
 
         if account_id:
-            filters.append(QueryFilter(field = "AccountID", op = "eq", value = account_id))
+            filters.append(QueryFilter(field="AccountID", op="eq", value=account_id))
 
-        contracts = self.query(filters = filters)
+        contracts = self.query(filters=filters)
 
         # Enhance with renewal status
         enhanced_contracts = []
@@ -831,7 +1043,9 @@ class ContractsEntity(BaseEntity):
             end_date = contract.get("EndDate", "")
             if end_date:
                 try:
-                    contract_end = datetime.fromisoformat(end_date.replace("Z", "+00: 00"))
+                    contract_end = datetime.fromisoformat(
+                        end_date.replace("Z", "+00: 00")
+                    )
                     days_until_expiry = (contract_end - datetime.now()).days
 
                     # Check auto-renewal status
@@ -840,7 +1054,13 @@ class ContractsEntity(BaseEntity):
                         continue
 
                     enhanced_contract = {
-                        **contract, "days_until_expiry": days_until_expiry, "renewal_priority": self._calculate_renewal_priority(contract, days_until_expiry), "renewal_status": self._get_renewal_status(contract), "auto_renew_enabled": auto_renew
+                        **contract,
+                        "days_until_expiry": days_until_expiry,
+                        "renewal_priority": self._calculate_renewal_priority(
+                            contract, days_until_expiry
+                        ),
+                        "renewal_status": self._get_renewal_status(contract),
+                        "auto_renew_enabled": auto_renew,
                     }
 
                     enhanced_contracts.append(enhanced_contract)
@@ -849,12 +1069,15 @@ class ContractsEntity(BaseEntity):
                     continue
 
         # Sort by expiry date (soonest first)
-        enhanced_contracts.sort(key = lambda x: x.get("days_until_expiry", float('inf')))
+        enhanced_contracts.sort(key=lambda x: x.get("days_until_expiry", float("inf")))
 
         return enhanced_contracts
 
     def renew_contract(
-        self, contract_id: int, renewal_data: Dict[str, Any], ) -> CreateResponse:
+        self,
+        contract_id: int,
+        renewal_data: Dict[str, Any],
+    ) -> CreateResponse:
         """
         Renew a contract with new terms.
 
@@ -887,19 +1110,32 @@ class ContractsEntity(BaseEntity):
         if current_end:
             try:
                 end_date = datetime.fromisoformat(current_end.replace("Z", "+00: 00"))
-                new_start = end_date + timedelta(days = 1)
+                new_start = end_date + timedelta(days=1)
             except ValueError:
                 new_start = now
         else:
             new_start = now
 
-        new_end = new_start + timedelta(days = 365)  # Default 1-year renewal
+        new_end = new_start + timedelta(days=365)  # Default 1-year renewal
 
         # Build renewal contract
         renewal_contract = {
-            "ContractName": f"{original_contract.get('ContractName', '')} - Renewal {now.year}", "AccountID": original_contract.get("AccountID"), "ContractType": original_contract.get("ContractType"), "StartDate": renewal_data.get("new_start_date", new_start.isoformat()), "EndDate": renewal_data.get("new_end_date", new_end.isoformat()), "ContractValue": renewal_data.get("new_value", original_contract.get("ContractValue")), "Status": ContractStatuses.ACTIVE, "ParentContractID": contract_id, 
-        "RenewalDate": now.isoformat(), **{k: v for k, v in renewal_data.items()
-               if k not in ["new_start_date", "new_end_date", "new_value"]}
+            "ContractName": f"{original_contract.get('ContractName', '')} - Renewal {now.year}",
+            "AccountID": original_contract.get("AccountID"),
+            "ContractType": original_contract.get("ContractType"),
+            "StartDate": renewal_data.get("new_start_date", new_start.isoformat()),
+            "EndDate": renewal_data.get("new_end_date", new_end.isoformat()),
+            "ContractValue": renewal_data.get(
+                "new_value", original_contract.get("ContractValue")
+            ),
+            "Status": ContractStatuses.ACTIVE,
+            "ParentContractID": contract_id,
+            "RenewalDate": now.isoformat(),
+            **{
+                k: v
+                for k, v in renewal_data.items()
+                if k not in ["new_start_date", "new_end_date", "new_value"]
+            },
         }
 
         # Create the renewal contract
@@ -907,14 +1143,22 @@ class ContractsEntity(BaseEntity):
 
         # Update original contract status
         if renewal_response.get("success"):
-            self.update(contract_id, {
-                "Status": ContractStatuses.EXPIRED, "RenewalContractID": renewal_response.get("id"), "RenewalDate": now.isoformat()
-            })
+            self.update(
+                contract_id,
+                {
+                    "Status": ContractStatuses.EXPIRED,
+                    "RenewalContractID": renewal_response.get("id"),
+                    "RenewalDate": now.isoformat(),
+                },
+            )
 
         return renewal_response
 
     def get_renewal_analytics(
-        self, date_range: Optional[tuple] = None, account_id: Optional[int] = None, ) -> Dict[str, Any]:
+        self,
+        date_range: Optional[tuple] = None,
+        account_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """
         Get contract renewal analytics and trends.
 
@@ -926,34 +1170,61 @@ class ContractsEntity(BaseEntity):
             Dictionary with renewal analytics
         """
         # Get expiring contracts for next 90 days
-        expiring_contracts = self.get_expiring_contracts(days_ahead = 90, account_id = account_id)
+        expiring_contracts = self.get_expiring_contracts(
+            days_ahead=90, account_id=account_id
+        )
 
         # Get recently renewed contracts
-        filters = [QueryFilter(field = "ParentContractID", op = "isNotNull", value = None)]
+        filters = [QueryFilter(field="ParentContractID", op="isNotNull", value=None)]
 
         if date_range:
             start_date, end_date = date_range
-            filters.extend([
-                QueryFilter(
-                    field = "RenewalDate", op = "gte", value = start_date.isoformat() if hasattr(start_date, "isoformat") else start_date
-                ), QueryFilter(
-                    field = "RenewalDate", op = "lte", value = end_date.isoformat() if hasattr(end_date, "isoformat") else end_date
-                )
-            ])
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="RenewalDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
+                    ),
+                    QueryFilter(
+                        field="RenewalDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
+                    ),
+                ]
+            )
 
         if account_id:
-            filters.append(QueryFilter(field = "AccountID", op = "eq", value = account_id))
+            filters.append(QueryFilter(field="AccountID", op="eq", value=account_id))
 
-        renewed_contracts = self.query(filters = filters)
+        renewed_contracts = self.query(filters=filters)
 
         analytics = {
             "renewal_pipeline": {
-                "next_30_days": 0, "next_60_days": 0, "next_90_days": 0, "total_pipeline_value": 0, "high_priority_renewals": 0
-            }, "renewal_performance": {
-                "total_renewed": len(renewed_contracts), "renewal_rate": 0, "avg_renewal_value": 0, "value_growth": 0, "renewal_cycle_time": 0
-            }, "by_priority": {
-                "high": 0, "medium": 0, "low": 0
-            }, "at_risk_renewals": [], "top_renewal_opportunities": []
+                "next_30_days": 0,
+                "next_60_days": 0,
+                "next_90_days": 0,
+                "total_pipeline_value": 0,
+                "high_priority_renewals": 0,
+            },
+            "renewal_performance": {
+                "total_renewed": len(renewed_contracts),
+                "renewal_rate": 0,
+                "avg_renewal_value": 0,
+                "value_growth": 0,
+                "renewal_cycle_time": 0,
+            },
+            "by_priority": {"high": 0, "medium": 0, "low": 0},
+            "at_risk_renewals": [],
+            "top_renewal_opportunities": [],
         }
 
         # Pipeline analysis
@@ -981,34 +1252,52 @@ class ContractsEntity(BaseEntity):
 
             # At-risk renewals
             if priority == "high" and days_until_expiry <= 30:
-                analytics["at_risk_renewals"].append({
-                    "contract_id": contract.get("id"), "name": contract.get("ContractName", ""), "account_id": contract.get("AccountID"), "value": value, "days_until_expiry": days_until_expiry
-                })
+                analytics["at_risk_renewals"].append(
+                    {
+                        "contract_id": contract.get("id"),
+                        "name": contract.get("ContractName", ""),
+                        "account_id": contract.get("AccountID"),
+                        "value": value,
+                        "days_until_expiry": days_until_expiry,
+                    }
+                )
 
             # Top opportunities
             if value > 50000:  # High-value contracts
-                analytics["top_renewal_opportunities"].append({
-                    "contract_id": contract.get("id"), "name": contract.get("ContractName", ""), "value": value, "days_until_expiry": days_until_expiry
-                })
+                analytics["top_renewal_opportunities"].append(
+                    {
+                        "contract_id": contract.get("id"),
+                        "name": contract.get("ContractName", ""),
+                        "value": value,
+                        "days_until_expiry": days_until_expiry,
+                    }
+                )
 
         analytics["renewal_pipeline"]["total_pipeline_value"] = total_pipeline_value
 
         # Performance analysis
         if renewed_contracts:
             total_renewed_value = sum(
-                float(contract.get("ContractValue", 0)) for contract in renewed_contracts
+                float(contract.get("ContractValue", 0))
+                for contract in renewed_contracts
             )
             analytics["renewal_performance"]["avg_renewal_value"] = (
                 total_renewed_value / len(renewed_contracts)
             )
 
         # Sort opportunities by value
-        analytics["top_renewal_opportunities"].sort(key = lambda x: x["value"], reverse = True)
-        analytics["top_renewal_opportunities"] = analytics["top_renewal_opportunities"][: 10]
+        analytics["top_renewal_opportunities"].sort(
+            key=lambda x: x["value"], reverse=True
+        )
+        analytics["top_renewal_opportunities"] = analytics["top_renewal_opportunities"][
+            :10
+        ]
 
         return analytics
 
-    def _calculate_renewal_priority(self, contract: Dict[str, Any], days_until_expiry: int) -> str:
+    def _calculate_renewal_priority(
+        self, contract: Dict[str, Any], days_until_expiry: int
+    ) -> str:
         """Calculate renewal priority based on contract characteristics."""
         value = float(contract.get("ContractValue", 0))
 
@@ -1077,13 +1366,23 @@ class ContractsEntity(BaseEntity):
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
         usage_record = {
-            "contractID": contract_id, "usageType": usage_data["usage_type"], "amount": usage_data["amount"], "period": usage_data["period"], "usageDate": usage_data["date"], "recordedDate": datetime.now().isoformat(), "billable": usage_data.get("billable", True), **{k: v for k, v in usage_data.items() if k not in required_fields}
+            "contractID": contract_id,
+            "usageType": usage_data["usage_type"],
+            "amount": usage_data["amount"],
+            "period": usage_data["period"],
+            "usageDate": usage_data["date"],
+            "recordedDate": datetime.now().isoformat(),
+            "billable": usage_data.get("billable", True),
+            **{k: v for k, v in usage_data.items() if k not in required_fields},
         }
 
         return self.client.create("ContractUsageRecords", usage_record)
 
     def check_usage_limits(
-        self, contract_id: int, period: str = "month", ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        period: str = "month",
+    ) -> Dict[str, Any]:
         """
         Check usage against contract limits.
 
@@ -1102,64 +1401,100 @@ class ContractsEntity(BaseEntity):
         usage_limits = contract.get("usageLimits", {})
         if not usage_limits:
             return {
-                "contract_id": contract_id, "has_limits": False, "message": "No usage limits defined for this contract"
+                "contract_id": contract_id,
+                "has_limits": False,
+                "message": "No usage limits defined for this contract",
             }
 
         # Calculate period start/end
         now = datetime.now()
         if period == "month":
-            period_start = now.replace(day = 1, hour = 0, minute = 0, second = 0, microsecond = 0)
+            period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         elif period == "quarter":
             quarter_month = ((now.month - 1) // 3) * 3 + 1
-            period_start = now.replace(month = quarter_month, day = 1, hour = 0, minute = 0, second = 0, microsecond = 0)
+            period_start = now.replace(
+                month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
         elif period == "year":
-            period_start = now.replace(month = 1, day = 1, hour = 0, minute = 0, second = 0, microsecond = 0)
+            period_start = now.replace(
+                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
         else:
             raise ValueError(f"Unsupported period: {period}")
 
         # Get usage for period
-        current_usage = self.get_usage_report(
-            contract_id, period = (period_start, now)
-        )
+        current_usage = self.get_usage_report(contract_id, period=(period_start, now))
 
         limit_status = {
-            "contract_id": contract_id, "period": period, "period_start": period_start.isoformat(), "period_end": now.isoformat(), "has_limits": True, "limits": {}, "violations": [], "warnings": [], "total_usage": current_usage.get("total_usage", {})
+            "contract_id": contract_id,
+            "period": period,
+            "period_start": period_start.isoformat(),
+            "period_end": now.isoformat(),
+            "has_limits": True,
+            "limits": {},
+            "violations": [],
+            "warnings": [],
+            "total_usage": current_usage.get("total_usage", {}),
         }
 
         # Check each limit
         for usage_type, limit_data in usage_limits.items():
             limit_amount = float(limit_data.get("amount", 0))
-            warning_threshold = float(limit_data.get("warning_threshold", 0.8))  # 80% default
+            warning_threshold = float(
+                limit_data.get("warning_threshold", 0.8)
+            )  # 80% default
 
             current_amount = 0
             for usage_record in current_usage.get("usage_records", []):
                 if usage_record.get("usageType") == usage_type:
                     current_amount += float(usage_record.get("amount", 0))
 
-            usage_percentage = (current_amount / limit_amount * 100) if limit_amount > 0 else 0
+            usage_percentage = (
+                (current_amount / limit_amount * 100) if limit_amount > 0 else 0
+            )
 
             limit_info = {
-                "limit": limit_amount, "current_usage": current_amount, "remaining": max(0, limit_amount - current_amount), "percentage_used": usage_percentage, "status": "ok"
+                "limit": limit_amount,
+                "current_usage": current_amount,
+                "remaining": max(0, limit_amount - current_amount),
+                "percentage_used": usage_percentage,
+                "status": "ok",
             }
 
             # Check for violations and warnings
             if current_amount > limit_amount:
                 limit_info["status"] = "exceeded"
-                limit_status["violations"].append({
-                    "usage_type": usage_type, "limit": limit_amount, "current_usage": current_amount, "overage": current_amount - limit_amount, "message": f"{usage_type} usage exceeded limit by {current_amount - limit_amount: .2f}"
-                })
+                limit_status["violations"].append(
+                    {
+                        "usage_type": usage_type,
+                        "limit": limit_amount,
+                        "current_usage": current_amount,
+                        "overage": current_amount - limit_amount,
+                        "message": f"{usage_type} usage exceeded limit by {current_amount - limit_amount: .2f}",
+                    }
+                )
             elif usage_percentage >= (warning_threshold * 100):
                 limit_info["status"] = "warning"
-                limit_status["warnings"].append({
-                    "usage_type": usage_type, "limit": limit_amount, "current_usage": current_amount, "percentage": usage_percentage, "message": f"{usage_type} usage at {usage_percentage: .1f}% of limit"
-                })
+                limit_status["warnings"].append(
+                    {
+                        "usage_type": usage_type,
+                        "limit": limit_amount,
+                        "current_usage": current_amount,
+                        "percentage": usage_percentage,
+                        "message": f"{usage_type} usage at {usage_percentage: .1f}% of limit",
+                    }
+                )
 
             limit_status["limits"][usage_type] = limit_info
 
         return limit_status
 
     def get_usage_report(
-        self, contract_id: int, period: Optional[tuple] = None, usage_type: Optional[str] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        period: Optional[tuple] = None,
+        usage_type: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Get usage report for a contract.
 
@@ -1171,33 +1506,71 @@ class ContractsEntity(BaseEntity):
         Returns:
             Dictionary with usage report data
         """
-        filters = [QueryFilter(field = "contractID", op = "eq", value = contract_id)]
+        filters = [QueryFilter(field="contractID", op="eq", value=contract_id)]
 
         if period:
             start_date, end_date = period
-            filters.extend([
-                QueryFilter(
-                    field = "usageDate", op = "gte", value = start_date.isoformat() if hasattr(start_date, "isoformat") else start_date
-                ), QueryFilter(
-                    field = "usageDate", op = "lte", value = end_date.isoformat() if hasattr(end_date, "isoformat") else end_date
-                )
-            ])
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="usageDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
+                    ),
+                    QueryFilter(
+                        field="usageDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
+                    ),
+                ]
+            )
 
         if usage_type:
-            filters.append(QueryFilter(field = "usageType", op = "eq", value = usage_type))
+            filters.append(QueryFilter(field="usageType", op="eq", value=usage_type))
 
         try:
-            usage_records = self.client.query("ContractUsageRecords", filters = filters)
+            usage_records = self.client.query("ContractUsageRecords", filters=filters)
         except Exception:
             # Fallback if ContractUsageRecords doesn't exist
             usage_records = []
 
         report = {
-            "contract_id": contract_id, "period": {
-                "start": period[0].isoformat() if period and hasattr(period[0], "isoformat") else period[0] if period else None, "end": period[1].isoformat() if period and hasattr(period[1], "isoformat") else period[1] if period else None
-            } if period else None, "total_records": len(usage_records), "usage_records": usage_records, "by_type": {}, "by_period": {}, "total_usage": {}, "billable_usage": {}, "cost_summary": {
-                "total_cost": 0, "billable_cost": 0, "non_billable_cost": 0
-            }
+            "contract_id": contract_id,
+            "period": (
+                {
+                    "start": (
+                        period[0].isoformat()
+                        if period and hasattr(period[0], "isoformat")
+                        else period[0] if period else None
+                    ),
+                    "end": (
+                        period[1].isoformat()
+                        if period and hasattr(period[1], "isoformat")
+                        else period[1] if period else None
+                    ),
+                }
+                if period
+                else None
+            ),
+            "total_records": len(usage_records),
+            "usage_records": usage_records,
+            "by_type": {},
+            "by_period": {},
+            "total_usage": {},
+            "billable_usage": {},
+            "cost_summary": {
+                "total_cost": 0,
+                "billable_cost": 0,
+                "non_billable_cost": 0,
+            },
         }
 
         for record in usage_records:
@@ -1210,7 +1583,11 @@ class ContractsEntity(BaseEntity):
             # By type aggregation
             if usage_type_key not in report["by_type"]:
                 report["by_type"][usage_type_key] = {
-                    "total_amount": 0, "total_cost": 0, "record_count": 0, "billable_amount": 0, "non_billable_amount": 0
+                    "total_amount": 0,
+                    "total_cost": 0,
+                    "record_count": 0,
+                    "billable_amount": 0,
+                    "non_billable_amount": 0,
                 }
 
             report["by_type"][usage_type_key]["total_amount"] += amount
@@ -1244,12 +1621,16 @@ class ContractsEntity(BaseEntity):
             # By period aggregation
             if usage_date:
                 try:
-                    date_obj = datetime.fromisoformat(usage_date.replace("Z", "+00: 00"))
+                    date_obj = datetime.fromisoformat(
+                        usage_date.replace("Z", "+00: 00")
+                    )
                     period_key = date_obj.strftime("%Y-%m")
 
                     if period_key not in report["by_period"]:
                         report["by_period"][period_key] = {
-                            "total_amount": 0, "total_cost": 0, "by_type": {}
+                            "total_amount": 0,
+                            "total_cost": 0,
+                            "by_type": {},
                         }
 
                     report["by_period"][period_key]["total_amount"] += amount
@@ -1265,7 +1646,10 @@ class ContractsEntity(BaseEntity):
         return report
 
     def get_usage_analytics(
-        self, contract_id: int, date_range: Optional[tuple] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        date_range: Optional[tuple] = None,
+    ) -> Dict[str, Any]:
         """
         Get advanced usage analytics for a contract.
 
@@ -1276,19 +1660,29 @@ class ContractsEntity(BaseEntity):
         Returns:
             Dictionary with usage analytics and trends
         """
-        usage_report = self.get_usage_report(contract_id, period = date_range)
+        usage_report = self.get_usage_report(contract_id, period=date_range)
         usage_limits = self.check_usage_limits(contract_id)
 
         analytics = {
-            "contract_id": contract_id, "summary": {
-                "total_usage_types": len(usage_report["by_type"]), "total_cost": usage_report["cost_summary"]["total_cost"], "billable_percentage": 0, "avg_daily_usage": {}, "peak_usage_day": None
-            }, "trends": {
-                "monthly_growth": {}, "usage_patterns": {}, "cost_trends": {}
-            }, "efficiency_metrics": {
-                "cost_per_unit": {}, "utilization_rates": {}, "waste_indicators": []
-            }, "forecasts": {
-                "projected_monthly_cost": 0, "limit_breach_risk": {}, "optimization_opportunities": []
-            }
+            "contract_id": contract_id,
+            "summary": {
+                "total_usage_types": len(usage_report["by_type"]),
+                "total_cost": usage_report["cost_summary"]["total_cost"],
+                "billable_percentage": 0,
+                "avg_daily_usage": {},
+                "peak_usage_day": None,
+            },
+            "trends": {"monthly_growth": {}, "usage_patterns": {}, "cost_trends": {}},
+            "efficiency_metrics": {
+                "cost_per_unit": {},
+                "utilization_rates": {},
+                "waste_indicators": [],
+            },
+            "forecasts": {
+                "projected_monthly_cost": 0,
+                "limit_breach_risk": {},
+                "optimization_opportunities": [],
+            },
         }
 
         # Summary calculations
@@ -1296,15 +1690,23 @@ class ContractsEntity(BaseEntity):
         billable_cost = usage_report["cost_summary"]["billable_cost"]
 
         if total_cost > 0:
-            analytics["summary"]["billable_percentage"] = (billable_cost / total_cost) * 100
+            analytics["summary"]["billable_percentage"] = (
+                billable_cost / total_cost
+            ) * 100
 
         # Calculate daily averages
         if date_range:
             start_date, end_date = date_range
-            days = (end_date - start_date).days + 1 if hasattr(start_date, "total_seconds") else 30
+            days = (
+                (end_date - start_date).days + 1
+                if hasattr(start_date, "total_seconds")
+                else 30
+            )
 
             for usage_type, total_amount in usage_report["total_usage"].items():
-                analytics["summary"]["avg_daily_usage"][usage_type] = total_amount / days
+                analytics["summary"]["avg_daily_usage"][usage_type] = (
+                    total_amount / days
+                )
 
         # Trend analysis
         periods = list(usage_report["by_period"].keys())
@@ -1313,7 +1715,7 @@ class ContractsEntity(BaseEntity):
         if len(periods) >= 2:
             for i in range(1, len(periods)):
                 current_period = periods[i]
-                previous_period = periods[i-1]
+                previous_period = periods[i - 1]
 
                 current_cost = usage_report["by_period"][current_period]["total_cost"]
                 previous_cost = usage_report["by_period"][previous_period]["total_cost"]
@@ -1348,7 +1750,8 @@ class ContractsEntity(BaseEntity):
                         breach_risk = "medium"
 
                     analytics["forecasts"]["limit_breach_risk"][usage_type] = {
-                        "projected_monthly": projected_monthly, "risk_level": breach_risk
+                        "projected_monthly": projected_monthly,
+                        "risk_level": breach_risk,
                     }
 
         # Optimization opportunities
@@ -1395,7 +1798,9 @@ class ContractsEntity(BaseEntity):
             AutotaskAPIError: If the API request fails
         """
         required_fields = ["amendment_type", "description", "effective_date"]
-        missing_fields = [field for field in required_fields if field not in amendment_data]
+        missing_fields = [
+            field for field in required_fields if field not in amendment_data
+        ]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
@@ -1405,13 +1810,25 @@ class ContractsEntity(BaseEntity):
             raise ValueError(f"Contract {contract_id} not found")
 
         amendment_record = {
-            "contractID": contract_id, "amendmentType": amendment_data["amendment_type"], "description": amendment_data["description"], "effectiveDate": amendment_data["effective_date"], "status": "pending", "createdDate": datetime.now().isoformat(), "createdBy": amendment_data.get("created_by", "system"), "approvalRequired": amendment_data.get("approval_required", True), **{k: v for k, v in amendment_data.items() if k not in required_fields}
+            "contractID": contract_id,
+            "amendmentType": amendment_data["amendment_type"],
+            "description": amendment_data["description"],
+            "effectiveDate": amendment_data["effective_date"],
+            "status": "pending",
+            "createdDate": datetime.now().isoformat(),
+            "createdBy": amendment_data.get("created_by", "system"),
+            "approvalRequired": amendment_data.get("approval_required", True),
+            **{k: v for k, v in amendment_data.items() if k not in required_fields},
         }
 
         return self.client.create("ContractAmendments", amendment_record)
 
     def approve_amendment(
-        self, amendment_id: int, approver_id: int, approval_notes: Optional[str] = None, ) -> UpdateResponse:
+        self,
+        amendment_id: int,
+        approver_id: int,
+        approval_notes: Optional[str] = None,
+    ) -> UpdateResponse:
         """
         Approve a contract amendment.
 
@@ -1436,13 +1853,18 @@ class ContractsEntity(BaseEntity):
             raise ValueError(f"Amendment {amendment_id} not found")
 
         update_data = {
-            "status": "approved", "approvedBy": approver_id, "approvedDate": datetime.now().isoformat(), }
+            "status": "approved",
+            "approvedBy": approver_id,
+            "approvedDate": datetime.now().isoformat(),
+        }
 
         if approval_notes:
             update_data["approvalNotes"] = approval_notes
 
         # Apply the amendment to the contract
-        amendment_response = self.client.update("ContractAmendments", amendment_id, update_data)
+        amendment_response = self.client.update(
+            "ContractAmendments", amendment_id, update_data
+        )
 
         if amendment_response.get("success"):
             self._apply_amendment(amendment)
@@ -1455,7 +1877,8 @@ class ContractsEntity(BaseEntity):
         amendment_type = amendment.get("amendmentType")
 
         contract_updates = {
-            "lastModified": datetime.now().isoformat(), "amendmentCount": (amendment.get("amendmentCount", 0)) + 1
+            "lastModified": datetime.now().isoformat(),
+            "amendmentCount": (amendment.get("amendmentCount", 0)) + 1,
         }
 
         # Apply specific amendment types
@@ -1474,7 +1897,11 @@ class ContractsEntity(BaseEntity):
             self.update(contract_id, contract_updates)
 
     def get_contract_history(
-        self, contract_id: int, include_amendments: bool = True, include_renewals: bool = True, ) -> Dict[str, Any]:
+        self,
+        contract_id: int,
+        include_amendments: bool = True,
+        include_renewals: bool = True,
+    ) -> Dict[str, Any]:
         """
         Get complete history of a contract including amendments and renewals.
 
@@ -1491,64 +1918,112 @@ class ContractsEntity(BaseEntity):
             raise ValueError(f"Contract {contract_id} not found")
 
         history = {
-            "contract_id": contract_id, "contract_name": contract.get("ContractName", ""), "current_status": contract.get("Status"), "created_date": contract.get("CreateDate"), "timeline": [], "amendments": [], "renewals": [], "value_changes": [], "status_changes": []
+            "contract_id": contract_id,
+            "contract_name": contract.get("ContractName", ""),
+            "current_status": contract.get("Status"),
+            "created_date": contract.get("CreateDate"),
+            "timeline": [],
+            "amendments": [],
+            "renewals": [],
+            "value_changes": [],
+            "status_changes": [],
         }
 
         # Add contract creation to timeline
         if contract.get("CreateDate"):
-            history["timeline"].append({
-                "date": contract["CreateDate"], "type": "creation", "description": f"Contract '{contract.get('ContractName', '')}' created", "value": contract.get("ContractValue")
-            })
+            history["timeline"].append(
+                {
+                    "date": contract["CreateDate"],
+                    "type": "creation",
+                    "description": f"Contract '{contract.get('ContractName', '')}' created",
+                    "value": contract.get("ContractValue"),
+                }
+            )
 
         # Get amendments if requested
         if include_amendments:
-            amendment_filters = [QueryFilter(field = "contractID", op = "eq", value = contract_id)]
+            amendment_filters = [
+                QueryFilter(field="contractID", op="eq", value=contract_id)
+            ]
             try:
-                amendments = self.client.query("ContractAmendments", filters = amendment_filters)
+                amendments = self.client.query(
+                    "ContractAmendments", filters=amendment_filters
+                )
                 history["amendments"] = amendments
 
                 # Add amendments to timeline
                 for amendment in amendments:
-                    history["timeline"].append({
-                        "date": amendment.get("effectiveDate"), "type": "amendment", "amendment_type": amendment.get("amendmentType"), "description": amendment.get("description"), "status": amendment.get("status"), "value_change": amendment.get("valueChange")
-                    })
+                    history["timeline"].append(
+                        {
+                            "date": amendment.get("effectiveDate"),
+                            "type": "amendment",
+                            "amendment_type": amendment.get("amendmentType"),
+                            "description": amendment.get("description"),
+                            "status": amendment.get("status"),
+                            "value_change": amendment.get("valueChange"),
+                        }
+                    )
 
                     # Track value changes
                     if amendment.get("valueChange"):
-                        history["value_changes"].append({
-                            "date": amendment.get("effectiveDate"), "old_value": contract.get("ContractValue"), "new_value": amendment["valueChange"], "reason": amendment.get("description")
-                        })
+                        history["value_changes"].append(
+                            {
+                                "date": amendment.get("effectiveDate"),
+                                "old_value": contract.get("ContractValue"),
+                                "new_value": amendment["valueChange"],
+                                "reason": amendment.get("description"),
+                            }
+                        )
             except Exception:
                 # Fallback if ContractAmendments doesn't exist
                 pass
 
         # Get renewals if requested
         if include_renewals:
-            renewal_filters = [QueryFilter(field = "ParentContractID", op = "eq", value = contract_id)]
+            renewal_filters = [
+                QueryFilter(field="ParentContractID", op="eq", value=contract_id)
+            ]
             try:
-                renewals = self.query(filters = renewal_filters)
+                renewals = self.query(filters=renewal_filters)
                 history["renewals"] = renewals
 
                 # Add renewals to timeline
                 for renewal in renewals:
-                    history["timeline"].append({
-                        "date": renewal.get("RenewalDate"), "type": "renewal", "description": f"Contract renewed as {renewal.get('ContractName', '')}", "new_contract_id": renewal.get("id"), "value": renewal.get("ContractValue")
-                    })
+                    history["timeline"].append(
+                        {
+                            "date": renewal.get("RenewalDate"),
+                            "type": "renewal",
+                            "description": f"Contract renewed as {renewal.get('ContractName', '')}",
+                            "new_contract_id": renewal.get("id"),
+                            "value": renewal.get("ContractValue"),
+                        }
+                    )
             except Exception:
                 pass
 
         # Sort timeline by date
-        history["timeline"].sort(key = lambda x: x.get("date", "") or "")
+        history["timeline"].sort(key=lambda x: x.get("date", "") or "")
 
         # Calculate history metrics
         history["metrics"] = {
-            "total_amendments": len(history["amendments"]), "total_renewals": len(history["renewals"]), "contract_age_days": self._calculate_contract_age(contract), "average_amendment_frequency": self._calculate_amendment_frequency(history["amendments"]), "value_volatility": self._calculate_value_volatility(history["value_changes"])
+            "total_amendments": len(history["amendments"]),
+            "total_renewals": len(history["renewals"]),
+            "contract_age_days": self._calculate_contract_age(contract),
+            "average_amendment_frequency": self._calculate_amendment_frequency(
+                history["amendments"]
+            ),
+            "value_volatility": self._calculate_value_volatility(
+                history["value_changes"]
+            ),
         }
 
         return history
 
     def get_amendment_analytics(
-        self, contract_id: Optional[int] = None, date_range: Optional[tuple] = None, ) -> Dict[str, Any]:
+        self,
+        contract_id: Optional[int] = None,
+        date_range: Optional[tuple] = None,
+    ) -> Dict[str, Any]:
         """
         Get analytics on contract amendments.
 
@@ -1562,33 +2037,53 @@ class ContractsEntity(BaseEntity):
         filters = []
 
         if contract_id:
-            filters.append(QueryFilter(field = "contractID", op = "eq", value = contract_id))
+            filters.append(QueryFilter(field="contractID", op="eq", value=contract_id))
 
         if date_range:
             start_date, end_date = date_range
-            filters.extend([
-                QueryFilter(
-                    field = "createdDate", op = "gte", value = start_date.isoformat() if hasattr(start_date, "isoformat") else start_date
-                ), QueryFilter(
-                    field = "createdDate", op = "lte", value = end_date.isoformat() if hasattr(end_date, "isoformat") else end_date
-                )
-            ])
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="createdDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
+                    ),
+                    QueryFilter(
+                        field="createdDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
+                    ),
+                ]
+            )
 
         try:
-            amendments = self.client.query("ContractAmendments", filters = filters)
+            amendments = self.client.query("ContractAmendments", filters=filters)
         except Exception:
             amendments = []
 
         analytics = {
-            "total_amendments": len(amendments), "by_type": {}, "by_status": {
-                "pending": 0, "approved": 0, "rejected": 0, "cancelled": 0
-            }, "approval_metrics": {
-                "approval_rate": 0, "avg_approval_time": 0, "pending_approvals": 0
-            }, "value_impact": {
-                "total_value_increase": 0, "total_value_decrease": 0, "net_value_change": 0
-            }, "trends": {
-                "monthly_amendments": {}, "most_common_types": []
-            }
+            "total_amendments": len(amendments),
+            "by_type": {},
+            "by_status": {"pending": 0, "approved": 0, "rejected": 0, "cancelled": 0},
+            "approval_metrics": {
+                "approval_rate": 0,
+                "avg_approval_time": 0,
+                "pending_approvals": 0,
+            },
+            "value_impact": {
+                "total_value_increase": 0,
+                "total_value_decrease": 0,
+                "net_value_change": 0,
+            },
+            "trends": {"monthly_amendments": {}, "most_common_types": []},
         }
 
         approval_times = []
@@ -1612,8 +2107,12 @@ class ContractsEntity(BaseEntity):
 
             if created_date and approved_date:
                 try:
-                    created = datetime.fromisoformat(created_date.replace("Z", "+00: 00"))
-                    approved = datetime.fromisoformat(approved_date.replace("Z", "+00: 00"))
+                    created = datetime.fromisoformat(
+                        created_date.replace("Z", "+00: 00")
+                    )
+                    approved = datetime.fromisoformat(
+                        approved_date.replace("Z", "+00: 00")
+                    )
                     approval_time = (approved - created).total_seconds() / 86400  # Days
                     approval_times.append(approval_time)
                 except ValueError:
@@ -1622,18 +2121,24 @@ class ContractsEntity(BaseEntity):
             # Value impact analysis
             value_change = amendment.get("valueChange")
             if value_change:
-                change_amount = float(value_change) - float(amendment.get("originalValue", value_change))
+                change_amount = float(value_change) - float(
+                    amendment.get("originalValue", value_change)
+                )
                 value_changes.append(change_amount)
 
                 if change_amount > 0:
                     analytics["value_impact"]["total_value_increase"] += change_amount
                 else:
-                    analytics["value_impact"]["total_value_decrease"] += abs(change_amount)
+                    analytics["value_impact"]["total_value_decrease"] += abs(
+                        change_amount
+                    )
 
             # Monthly trends
             if created_date:
                 try:
-                    month_key = datetime.fromisoformat(created_date.replace("Z", "+00: 00")).strftime("%Y-%m")
+                    month_key = datetime.fromisoformat(
+                        created_date.replace("Z", "+00: 00")
+                    ).strftime("%Y-%m")
                     if month_key not in analytics["trends"]["monthly_amendments"]:
                         analytics["trends"]["monthly_amendments"][month_key] = 0
                     analytics["trends"]["monthly_amendments"][month_key] += 1
@@ -1644,19 +2149,27 @@ class ContractsEntity(BaseEntity):
         total_amendments = len(amendments)
         if total_amendments > 0:
             approved_count = analytics["by_status"]["approved"]
-            analytics["approval_metrics"]["approval_rate"] = (approved_count / total_amendments) * 100
-            analytics["approval_metrics"]["pending_approvals"] = analytics["by_status"]["pending"]
+            analytics["approval_metrics"]["approval_rate"] = (
+                approved_count / total_amendments
+            ) * 100
+            analytics["approval_metrics"]["pending_approvals"] = analytics["by_status"][
+                "pending"
+            ]
 
         if approval_times:
-            analytics["approval_metrics"]["avg_approval_time"] = sum(approval_times) / len(approval_times)
+            analytics["approval_metrics"]["avg_approval_time"] = sum(
+                approval_times
+            ) / len(approval_times)
 
         if value_changes:
             analytics["value_impact"]["net_value_change"] = sum(value_changes)
 
         # Most common amendment types
-        type_counts = [(type_name, count) for type_name, count in analytics["by_type"].items()]
-        type_counts.sort(key = lambda x: x[1], reverse = True)
-        analytics["trends"]["most_common_types"] = type_counts[: 5]
+        type_counts = [
+            (type_name, count) for type_name, count in analytics["by_type"].items()
+        ]
+        type_counts.sort(key=lambda x: x[1], reverse=True)
+        analytics["trends"]["most_common_types"] = type_counts[:5]
 
         return analytics
 
@@ -1669,7 +2182,7 @@ class ContractsEntity(BaseEntity):
         try:
             created = datetime.fromisoformat(created_date.replace("Z", "+00: 00"))
             # Convert to naive datetime for comparison
-            created_naive = created.replace(tzinfo = None)
+            created_naive = created.replace(tzinfo=None)
             return (datetime.now() - created_naive).days
         except ValueError:
             return 0
@@ -1684,7 +2197,9 @@ class ContractsEntity(BaseEntity):
             created_date = amendment.get("createdDate")
             if created_date:
                 try:
-                    dates.append(datetime.fromisoformat(created_date.replace("Z", "+00: 00")))
+                    dates.append(
+                        datetime.fromisoformat(created_date.replace("Z", "+00: 00"))
+                    )
                 except ValueError:
                     pass
 
@@ -1694,7 +2209,7 @@ class ContractsEntity(BaseEntity):
         dates.sort()
         intervals = []
         for i in range(1, len(dates)):
-            interval = (dates[i] - dates[i-1]).days
+            interval = (dates[i] - dates[i - 1]).days
             intervals.append(interval)
 
         return sum(intervals) / len(intervals) if intervals else 0
@@ -1717,7 +2232,7 @@ class ContractsEntity(BaseEntity):
 
         mean_change = sum(changes) / len(changes)
         variance = sum((x - mean_change) ** 2 for x in changes) / len(changes)
-        return variance ** 0.5  # Standard deviation
+        return variance**0.5  # Standard deviation
 
     # ======================================== Validation and Helper Methods
     # =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
@@ -1732,22 +2247,31 @@ class ContractsEntity(BaseEntity):
             Dictionary with validation results including errors and warnings
         """
         validation_result = {
-            "is_valid": True, "errors": [], "warnings": [], "recommendations": []
+            "is_valid": True,
+            "errors": [],
+            "warnings": [],
+            "recommendations": [],
         }
 
         # Required field validation
         required_fields = ["ContractName", "AccountID"]
         for field in required_fields:
             if field not in contract_data or not contract_data[field]:
-                validation_result["errors"].append(f"Required field '{field}' is missing or empty")
+                validation_result["errors"].append(
+                    f"Required field '{field}' is missing or empty"
+                )
 
         # Contract name validation
         contract_name = contract_data.get("ContractName", "")
         if contract_name:
             if len(contract_name) < 3:
-                validation_result["errors"].append("Contract name must be at least 3 characters long")
+                validation_result["errors"].append(
+                    "Contract name must be at least 3 characters long"
+                )
             elif len(contract_name) > 255:
-                validation_result["errors"].append("Contract name cannot exceed 255 characters")
+                validation_result["errors"].append(
+                    "Contract name cannot exceed 255 characters"
+                )
 
         # Date validation
         start_date = contract_data.get("StartDate")
@@ -1759,7 +2283,9 @@ class ContractsEntity(BaseEntity):
                 end_dt = datetime.fromisoformat(end_date.replace("Z", "+00: 00"))
 
                 if end_dt <= start_dt:
-                    validation_result["errors"].append("End date must be after start date")
+                    validation_result["errors"].append(
+                        "End date must be after start date"
+                    )
 
                 # Check for reasonable contract duration
                 duration_days = (end_dt - start_dt).days
@@ -1781,41 +2307,65 @@ class ContractsEntity(BaseEntity):
             try:
                 value = float(contract_value)
                 if value < 0:
-                    validation_result["errors"].append("Contract value cannot be negative")
+                    validation_result["errors"].append(
+                        "Contract value cannot be negative"
+                    )
                 elif value == 0:
-                    validation_result["warnings"].append("Contract value is zero. Consider if this is intentional.")
+                    validation_result["warnings"].append(
+                        "Contract value is zero. Consider if this is intentional."
+                    )
                 elif value > 10000000:  # More than $10M
                     validation_result["warnings"].append(
                         "Contract value is very high. Ensure proper approval processes are followed."
                     )
             except (ValueError, TypeError):
-                validation_result["errors"].append("Contract value must be a valid number")
+                validation_result["errors"].append(
+                    "Contract value must be a valid number"
+                )
 
         # Contract type validation
         contract_type = contract_data.get("ContractType")
         if contract_type is not None:
             valid_types = [
-                ContractTypes.RECURRING_SERVICE, ContractTypes.FIXED_PRICE, ContractTypes.TIME_AND_MATERIALS, ContractTypes.MILESTONE, ContractTypes.SUBSCRIPTION, ContractTypes.MAINTENANCE, ContractTypes.RETAINER
+                ContractTypes.RECURRING_SERVICE,
+                ContractTypes.FIXED_PRICE,
+                ContractTypes.TIME_AND_MATERIALS,
+                ContractTypes.MILESTONE,
+                ContractTypes.SUBSCRIPTION,
+                ContractTypes.MAINTENANCE,
+                ContractTypes.RETAINER,
             ]
             if contract_type not in valid_types:
-                validation_result["errors"].append(f"Invalid contract type: {contract_type}")
+                validation_result["errors"].append(
+                    f"Invalid contract type: {contract_type}"
+                )
 
         # Status validation
         status = contract_data.get("Status")
         if status is not None:
             valid_statuses = [
-                ContractStatuses.ACTIVE, ContractStatuses.INACTIVE, ContractStatuses.CANCELLED, ContractStatuses.EXPIRED, ContractStatuses.ON_HOLD, ContractStatuses.PENDING_APPROVAL, ContractStatuses.DRAFT
+                ContractStatuses.ACTIVE,
+                ContractStatuses.INACTIVE,
+                ContractStatuses.CANCELLED,
+                ContractStatuses.EXPIRED,
+                ContractStatuses.ON_HOLD,
+                ContractStatuses.PENDING_APPROVAL,
+                ContractStatuses.DRAFT,
             ]
             if status not in valid_statuses:
                 validation_result["errors"].append(f"Invalid contract status: {status}")
 
         # Business logic recommendations
-        if contract_type == ContractTypes.MILESTONE and not contract_data.get("milestones"):
+        if contract_type == ContractTypes.MILESTONE and not contract_data.get(
+            "milestones"
+        ):
             validation_result["recommendations"].append(
                 "Milestone-based contracts should have defined milestones"
             )
 
-        if contract_type == ContractTypes.RECURRING_SERVICE and not contract_data.get("billingFrequency"):
+        if contract_type == ContractTypes.RECURRING_SERVICE and not contract_data.get(
+            "billingFrequency"
+        ):
             validation_result["recommendations"].append(
                 "Recurring service contracts should specify billing frequency"
             )
@@ -1856,13 +2406,34 @@ class ContractsEntity(BaseEntity):
             milestone_analytics = {"completion_rate": 0, "total_milestones": 0}
 
         summary = {
-            "contract_id": contract_id, "basic_info": {
-                "name": contract.get("ContractName", ""), "account_id": contract.get("AccountID"), "status": contract.get("Status"), "type": contract.get("ContractType"), "start_date": contract.get("StartDate"), "end_date": contract.get("EndDate"), "value": contract.get("ContractValue", 0)
-            }, "financial_summary": {
-                "total_value": billing_data.get("contract_value", 0), "billed_to_date": billing_data.get("billed_to_date", 0), "remaining_value": billing_data.get("remaining_value", 0), "billing_utilization": billing_data.get("billing_utilization", 0)
-            }, "performance_summary": {
-                "sla_compliance_rate": service_metrics.get("sla_compliance", {}).get("compliance_rate", 0), "milestone_completion_rate": milestone_analytics.get("completion_rate", 0), "total_milestones": milestone_analytics.get("total_milestones", 0)
-            }, "key_metrics": {}, "health_indicators": {}, "recommendations": []
+            "contract_id": contract_id,
+            "basic_info": {
+                "name": contract.get("ContractName", ""),
+                "account_id": contract.get("AccountID"),
+                "status": contract.get("Status"),
+                "type": contract.get("ContractType"),
+                "start_date": contract.get("StartDate"),
+                "end_date": contract.get("EndDate"),
+                "value": contract.get("ContractValue", 0),
+            },
+            "financial_summary": {
+                "total_value": billing_data.get("contract_value", 0),
+                "billed_to_date": billing_data.get("billed_to_date", 0),
+                "remaining_value": billing_data.get("remaining_value", 0),
+                "billing_utilization": billing_data.get("billing_utilization", 0),
+            },
+            "performance_summary": {
+                "sla_compliance_rate": service_metrics.get("sla_compliance", {}).get(
+                    "compliance_rate", 0
+                ),
+                "milestone_completion_rate": milestone_analytics.get(
+                    "completion_rate", 0
+                ),
+                "total_milestones": milestone_analytics.get("total_milestones", 0),
+            },
+            "key_metrics": {},
+            "health_indicators": {},
+            "recommendations": [],
         }
 
         # Calculate key metrics
@@ -1870,7 +2441,9 @@ class ContractsEntity(BaseEntity):
         billed_amount = summary["financial_summary"]["billed_to_date"]
 
         if contract_value > 0:
-            summary["key_metrics"]["revenue_recognition"] = (billed_amount / contract_value) * 100
+            summary["key_metrics"]["revenue_recognition"] = (
+                billed_amount / contract_value
+            ) * 100
         else:
             summary["key_metrics"]["revenue_recognition"] = 0
 
@@ -1904,14 +2477,21 @@ class ContractsEntity(BaseEntity):
                 summary["health_indicators"]["renewal_urgency"] = "unknown"
 
         # Generate recommendations
-        if summary["health_indicators"].get("sla_health") in ["needs_attention", "critical"]:
-            summary["recommendations"].append("Review service delivery processes to improve SLA compliance")
+        if summary["health_indicators"].get("sla_health") in [
+            "needs_attention",
+            "critical",
+        ]:
+            summary["recommendations"].append(
+                "Review service delivery processes to improve SLA compliance"
+            )
 
         if summary["health_indicators"].get("renewal_urgency") == "urgent":
             summary["recommendations"].append("Schedule renewal discussion immediately")
 
         if summary["financial_summary"]["billing_utilization"] < 50:
-            summary["recommendations"].append("Review billing processes - low utilization rate")
+            summary["recommendations"].append(
+                "Review billing processes - low utilization rate"
+            )
 
         return summary
 
@@ -1930,9 +2510,18 @@ class ContractsEntity(BaseEntity):
             raise ValueError(f"Contract {contract_id} not found")
 
         health_check = {
-            "contract_id": contract_id, "overall_health": "unknown", "health_score": 0, "checks": {
-                "financial_health": {"status": "unknown", "score": 0, "issues": []}, "operational_health": {"status": "unknown", "score": 0, "issues": []}, "compliance_health": {"status": "unknown", "score": 0, "issues": []}, "lifecycle_health": {"status": "unknown", "score": 0, "issues": []}
-            }, "critical_issues": [], "recommendations": [], "action_items": []
+            "contract_id": contract_id,
+            "overall_health": "unknown",
+            "health_score": 0,
+            "checks": {
+                "financial_health": {"status": "unknown", "score": 0, "issues": []},
+                "operational_health": {"status": "unknown", "score": 0, "issues": []},
+                "compliance_health": {"status": "unknown", "score": 0, "issues": []},
+                "lifecycle_health": {"status": "unknown", "score": 0, "issues": []},
+            },
+            "critical_issues": [],
+            "recommendations": [],
+            "action_items": [],
         }
 
         # Financial health check
@@ -1942,51 +2531,71 @@ class ContractsEntity(BaseEntity):
 
             financial_score = 100
             if utilization > 100:
-                health_check["checks"]["financial_health"]["issues"].append("Billing over contract value")
+                health_check["checks"]["financial_health"]["issues"].append(
+                    "Billing over contract value"
+                )
                 financial_score -= 30
             elif utilization < 25:
-                health_check["checks"]["financial_health"]["issues"].append("Low billing utilization")
+                health_check["checks"]["financial_health"]["issues"].append(
+                    "Low billing utilization"
+                )
                 financial_score -= 20
 
             payment_status = billing_data.get("payment_status", {})
             overdue_amount = payment_status.get("overdue", 0)
             if overdue_amount > 0:
-                health_check["checks"]["financial_health"]["issues"].append(f"Overdue payments: ${overdue_amount: , .2f}")
+                health_check["checks"]["financial_health"]["issues"].append(
+                    f"Overdue payments: ${overdue_amount: , .2f}"
+                )
                 financial_score -= 25
 
-            health_check["checks"]["financial_health"]["score"] = max(0, financial_score)
+            health_check["checks"]["financial_health"]["score"] = max(
+                0, financial_score
+            )
 
         except Exception:
-            health_check["checks"]["financial_health"]["issues"].append("Unable to retrieve financial data")
+            health_check["checks"]["financial_health"]["issues"].append(
+                "Unable to retrieve financial data"
+            )
 
         # Operational health check
         try:
             service_metrics = self.get_service_metrics(contract_id)
-            sla_compliance = service_metrics.get("sla_compliance", {}).get("compliance_rate", 0)
+            sla_compliance = service_metrics.get("sla_compliance", {}).get(
+                "compliance_rate", 0
+            )
 
             operational_score = sla_compliance
             if sla_compliance < 90:
-                health_check["checks"]["operational_health"]["issues"].append(f"SLA compliance at {sla_compliance: .1f}%")
+                health_check["checks"]["operational_health"]["issues"].append(
+                    f"SLA compliance at {sla_compliance: .1f}%"
+                )
             if sla_compliance < 80:
                 health_check["critical_issues"].append("Critical SLA compliance issue")
 
             health_check["checks"]["operational_health"]["score"] = operational_score
 
         except Exception:
-            health_check["checks"]["operational_health"]["issues"].append("Unable to retrieve service metrics")
+            health_check["checks"]["operational_health"]["issues"].append(
+                "Unable to retrieve service metrics"
+            )
 
         # Compliance health check
         compliance_score = 100
         try:
             validation_result = self.validate_contract_data(contract)
             if not validation_result["is_valid"]:
-                health_check["checks"]["compliance_health"]["issues"].extend(validation_result["errors"])
+                health_check["checks"]["compliance_health"]["issues"].extend(
+                    validation_result["errors"]
+                )
                 compliance_score = 50  # Failed validation
 
             health_check["checks"]["compliance_health"]["score"] = compliance_score
 
         except Exception:
-            health_check["checks"]["compliance_health"]["issues"].append("Unable to validate contract data")
+            health_check["checks"]["compliance_health"]["issues"].append(
+                "Unable to validate contract data"
+            )
 
         # Lifecycle health check
         lifecycle_score = 100
@@ -1997,20 +2606,28 @@ class ContractsEntity(BaseEntity):
                 days_remaining = (end_dt - datetime.now()).days
 
                 if days_remaining <= 0:
-                    health_check["checks"]["lifecycle_health"]["issues"].append("Contract has expired")
+                    health_check["checks"]["lifecycle_health"]["issues"].append(
+                        "Contract has expired"
+                    )
                     health_check["critical_issues"].append("Contract expired")
                     lifecycle_score = 0
                 elif days_remaining <= 30:
-                    health_check["checks"]["lifecycle_health"]["issues"].append(f"Contract expires in {days_remaining} days")
+                    health_check["checks"]["lifecycle_health"]["issues"].append(
+                        f"Contract expires in {days_remaining} days"
+                    )
                     lifecycle_score = 60
                 elif days_remaining <= 90:
-                    health_check["checks"]["lifecycle_health"]["issues"].append("Contract renewal needed soon")
+                    health_check["checks"]["lifecycle_health"]["issues"].append(
+                        "Contract renewal needed soon"
+                    )
                     lifecycle_score = 80
 
                 health_check["checks"]["lifecycle_health"]["score"] = lifecycle_score
 
             except ValueError:
-                health_check["checks"]["lifecycle_health"]["issues"].append("Invalid contract end date")
+                health_check["checks"]["lifecycle_health"]["issues"].append(
+                    "Invalid contract end date"
+                )
 
         # Calculate overall health
         scores = [check["score"] for check in health_check["checks"].values()]
@@ -2034,11 +2651,15 @@ class ContractsEntity(BaseEntity):
         # Generate recommendations and action items
         if health_check["overall_health"] in ["needs_attention", "critical"]:
             health_check["recommendations"].append("Schedule immediate contract review")
-            health_check["action_items"].append("Investigate root causes of health issues")
+            health_check["action_items"].append(
+                "Investigate root causes of health issues"
+            )
 
         for check_name, check_data in health_check["checks"].items():
             if check_data["score"] < 70:
-                health_check["action_items"].append(f"Address {check_name.replace('_', ' ')} issues")
+                health_check["action_items"].append(
+                    f"Address {check_name.replace('_', ' ')} issues"
+                )
 
         # Set health status for each check
         for check_data in health_check["checks"].values():
@@ -2054,8 +2675,14 @@ class ContractsEntity(BaseEntity):
 
         return health_check
 
-    def _validate_required_fields(self, data: Dict[str, Any], required_fields: List[str]) -> None:
+    def _validate_required_fields(
+        self, data: Dict[str, Any], required_fields: List[str]
+    ) -> None:
         """Helper method to validate required fields."""
-        missing_fields = [field for field in required_fields if field not in data or data[field] is None]
+        missing_fields = [
+            field
+            for field in required_fields
+            if field not in data or data[field] is None
+        ]
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")

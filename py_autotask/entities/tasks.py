@@ -14,40 +14,40 @@ from .base import BaseEntity
 
 class TaskConstants:
     """Constants for task management."""
-    
+
     # Task Statuses
     STATUS_NEW = 1
     STATUS_IN_PROGRESS = 2
     STATUS_WAITING = 3
     STATUS_CANCELLED = 4
     STATUS_COMPLETE = 5
-    
+
     # Priority Levels
     PRIORITY_CRITICAL = 1
     PRIORITY_HIGH = 2
     PRIORITY_MEDIUM = 3
     PRIORITY_LOW = 4
-    
+
     # Defaults
     DEFAULT_WORK_HOURS_PER_WEEK = 40
     MAX_REASONABLE_HOURS = 1000
     MIN_TITLE_LENGTH = 3
     MAX_TITLE_LENGTH = 255
-    
+
     # Status mapping
     STATUS_NAMES = {
         1: "new",
         2: "in_progress",
         3: "waiting",
         4: "cancelled",
-        5: "complete"
+        5: "complete",
     }
-    
+
     @classmethod
     def get_open_statuses(cls) -> List[int]:
         """Get list of open status IDs."""
         return [cls.STATUS_NEW, cls.STATUS_IN_PROGRESS, cls.STATUS_WAITING]
-    
+
     @classmethod
     def get_closed_statuses(cls) -> List[int]:
         """Get list of closed status IDs."""
@@ -304,7 +304,9 @@ class TasksEntity(BaseEntity):
             List of overdue tasks
         """
         filters = [
-            QueryFilter(field="status", op="in", value=TaskConstants.get_open_statuses()),
+            QueryFilter(
+                field="status", op="in", value=TaskConstants.get_open_statuses()
+            ),
             QueryFilter(field="endDate", op="lt", value=datetime.now().isoformat()),
         ]
 
@@ -398,7 +400,11 @@ class TasksEntity(BaseEntity):
         elif percent_complete > 0:
             # Mark as in progress if not already
             task = self.get(task_id)
-            if task and task.get("status", TaskConstants.STATUS_NEW) == TaskConstants.STATUS_NEW:
+            if (
+                task
+                and task.get("status", TaskConstants.STATUS_NEW)
+                == TaskConstants.STATUS_NEW
+            ):
                 update_data["status"] = TaskConstants.STATUS_IN_PROGRESS
                 update_data["actualStartDate"] = datetime.now().isoformat()
 
@@ -443,8 +449,12 @@ class TasksEntity(BaseEntity):
         Returns:
             Updated task data
         """
-        valid_priorities = [TaskConstants.PRIORITY_CRITICAL, TaskConstants.PRIORITY_HIGH, 
-                           TaskConstants.PRIORITY_MEDIUM, TaskConstants.PRIORITY_LOW]
+        valid_priorities = [
+            TaskConstants.PRIORITY_CRITICAL,
+            TaskConstants.PRIORITY_HIGH,
+            TaskConstants.PRIORITY_MEDIUM,
+            TaskConstants.PRIORITY_LOW,
+        ]
         if priority_level not in valid_priorities:
             raise ValueError(
                 f"Priority level must be {TaskConstants.PRIORITY_CRITICAL} (Critical), "
@@ -529,46 +539,52 @@ class TasksEntity(BaseEntity):
         """
         filters = self._build_analytics_filters(project_id, date_range)
         tasks = self.query(filters=filters)
-        
+
         analytics = self._initialize_analytics_structure(tasks)
         task_data = self._analyze_tasks(tasks, analytics)
         self._calculate_analytics_metrics(task_data, analytics)
-        
+
         return analytics
-    
-    def _build_analytics_filters(self, project_id: Optional[int], date_range: Optional[tuple]) -> List[QueryFilter]:
+
+    def _build_analytics_filters(
+        self, project_id: Optional[int], date_range: Optional[tuple]
+    ) -> List[QueryFilter]:
         """Build filters for task analytics query."""
         filters = []
-        
+
         if project_id:
             filters.append(QueryFilter(field="projectID", op="eq", value=project_id))
-        
+
         if date_range:
             start_date, end_date = date_range
-            filters.extend([
-                QueryFilter(
-                    field="createDate",
-                    op="gte",
-                    value=(
-                        start_date.isoformat()
-                        if hasattr(start_date, "isoformat")
-                        else start_date
+            filters.extend(
+                [
+                    QueryFilter(
+                        field="createDate",
+                        op="gte",
+                        value=(
+                            start_date.isoformat()
+                            if hasattr(start_date, "isoformat")
+                            else start_date
+                        ),
                     ),
-                ),
-                QueryFilter(
-                    field="createDate",
-                    op="lte",
-                    value=(
-                        end_date.isoformat()
-                        if hasattr(end_date, "isoformat")
-                        else end_date
+                    QueryFilter(
+                        field="createDate",
+                        op="lte",
+                        value=(
+                            end_date.isoformat()
+                            if hasattr(end_date, "isoformat")
+                            else end_date
+                        ),
                     ),
-                ),
-            ])
-        
+                ]
+            )
+
         return filters
-    
-    def _initialize_analytics_structure(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    def _initialize_analytics_structure(
+        self, tasks: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Initialize the analytics data structure."""
         return {
             "total_tasks": len(tasks),
@@ -593,71 +609,85 @@ class TasksEntity(BaseEntity):
             "actual_hours": [],
             "completion_times": [],
             "on_time_completions": 0,
-            "completed_tasks": 0
+            "completed_tasks": 0,
         }
 
         for task in tasks:
             self._analyze_single_task(task, analytics, task_data)
 
         return analytics
-    
-    def _analyze_tasks(self, tasks: List[Dict[str, Any]], analytics: Dict[str, Any]) -> Dict[str, Any]:
+
+    def _analyze_tasks(
+        self, tasks: List[Dict[str, Any]], analytics: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze list of tasks and collect metrics data."""
         task_data = {
             "estimated_hours": [],
             "actual_hours": [],
             "completion_times": [],
             "on_time_completions": 0,
-            "completed_tasks": 0
+            "completed_tasks": 0,
         }
-        
+
         for task in tasks:
             self._analyze_single_task(task, analytics, task_data)
-        
+
         return task_data
-    
-    def _analyze_single_task(self, task: Dict[str, Any], analytics: Dict[str, Any], task_data: Dict[str, Any]) -> None:
+
+    def _analyze_single_task(
+        self, task: Dict[str, Any], analytics: Dict[str, Any], task_data: Dict[str, Any]
+    ) -> None:
         """Analyze a single task and update metrics."""
         status_id = task.get("status", TaskConstants.STATUS_NEW)
         status_name = TaskConstants.STATUS_NAMES.get(status_id, "new")
         analytics["by_status"][status_name] += 1
-        
+
         priority = task.get("priorityLevel", TaskConstants.PRIORITY_LOW)
         if priority in analytics["by_priority"]:
             analytics["by_priority"][priority] += 1
-        
+
         self._analyze_task_hours(task, task_data)
         self._analyze_completion_metrics(task, status_id, task_data)
         self._analyze_overdue_status(task, status_id, analytics)
-    
-    def _analyze_task_hours(self, task: Dict[str, Any], task_data: Dict[str, Any]) -> None:
+
+    def _analyze_task_hours(
+        self, task: Dict[str, Any], task_data: Dict[str, Any]
+    ) -> None:
         """Analyze task hours data."""
         est_hours = task.get("estimatedHours", 0)
         act_hours = task.get("actualHours", 0)
-        
+
         if est_hours > 0:
             task_data["estimated_hours"].append(float(est_hours))
         if act_hours > 0:
             task_data["actual_hours"].append(float(act_hours))
-    
-    def _analyze_completion_metrics(self, task: Dict[str, Any], status_id: int, task_data: Dict[str, Any]) -> None:
+
+    def _analyze_completion_metrics(
+        self, task: Dict[str, Any], status_id: int, task_data: Dict[str, Any]
+    ) -> None:
         """Analyze completion timing metrics."""
         if status_id == TaskConstants.STATUS_COMPLETE:
             task_data["completed_tasks"] += 1
-            
+
             start_date = task.get("actualStartDate") or task.get("startDate")
             completion_date = task.get("completionDate")
             planned_end = task.get("endDate")
-            
+
             if start_date and completion_date:
-                completion_time = self._calculate_completion_time(start_date, completion_date)
+                completion_time = self._calculate_completion_time(
+                    start_date, completion_date
+                )
                 if completion_time is not None:
                     task_data["completion_times"].append(completion_time)
-                    
-                    if planned_end and self._is_completed_on_time(completion_date, planned_end):
+
+                    if planned_end and self._is_completed_on_time(
+                        completion_date, planned_end
+                    ):
                         task_data["on_time_completions"] += 1
-    
-    def _calculate_completion_time(self, start_date: str, completion_date: str) -> Optional[float]:
+
+    def _calculate_completion_time(
+        self, start_date: str, completion_date: str
+    ) -> Optional[float]:
         """Calculate completion time in hours."""
         try:
             start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
@@ -665,7 +695,7 @@ class TasksEntity(BaseEntity):
             return (completed - start).total_seconds() / 3600
         except ValueError:
             return None
-    
+
     def _is_completed_on_time(self, completion_date: str, planned_end: str) -> bool:
         """Check if task was completed on time."""
         try:
@@ -674,8 +704,10 @@ class TasksEntity(BaseEntity):
             return completed <= planned
         except ValueError:
             return False
-    
-    def _analyze_overdue_status(self, task: Dict[str, Any], status_id: int, analytics: Dict[str, Any]) -> None:
+
+    def _analyze_overdue_status(
+        self, task: Dict[str, Any], status_id: int, analytics: Dict[str, Any]
+    ) -> None:
         """Analyze if task is overdue."""
         end_date = task.get("endDate")
         if end_date and status_id in TaskConstants.get_open_statuses():
@@ -685,26 +717,38 @@ class TasksEntity(BaseEntity):
                     analytics["overdue_count"] += 1
             except ValueError:
                 pass
-    
-    def _calculate_analytics_metrics(self, task_data: Dict[str, Any], analytics: Dict[str, Any]) -> None:
+
+    def _calculate_analytics_metrics(
+        self, task_data: Dict[str, Any], analytics: Dict[str, Any]
+    ) -> None:
         """Calculate final analytics metrics from collected data."""
         # Calculate completion rate
         if analytics["total_tasks"] > 0:
-            analytics["completion_rate"] = (task_data["completed_tasks"] / analytics["total_tasks"]) * 100
-        
+            analytics["completion_rate"] = (
+                task_data["completed_tasks"] / analytics["total_tasks"]
+            ) * 100
+
         # Calculate averages
         if task_data["estimated_hours"]:
-            analytics["avg_estimated_hours"] = sum(task_data["estimated_hours"]) / len(task_data["estimated_hours"])
-        
+            analytics["avg_estimated_hours"] = sum(task_data["estimated_hours"]) / len(
+                task_data["estimated_hours"]
+            )
+
         if task_data["actual_hours"]:
-            analytics["avg_actual_hours"] = sum(task_data["actual_hours"]) / len(task_data["actual_hours"])
-        
+            analytics["avg_actual_hours"] = sum(task_data["actual_hours"]) / len(
+                task_data["actual_hours"]
+            )
+
         if task_data["completion_times"]:
-            analytics["avg_completion_time"] = sum(task_data["completion_times"]) / len(task_data["completion_times"])
-        
+            analytics["avg_completion_time"] = sum(task_data["completion_times"]) / len(
+                task_data["completion_times"]
+            )
+
         # Calculate on-time completion rate
         if task_data["completed_tasks"] > 0:
-            analytics["on_time_completion_rate"] = (task_data["on_time_completions"] / task_data["completed_tasks"]) * 100
+            analytics["on_time_completion_rate"] = (
+                task_data["on_time_completions"] / task_data["completed_tasks"]
+            ) * 100
 
     def get_resource_workload(
         self, resource_id: int, date_range: Optional[tuple] = None
@@ -817,27 +861,39 @@ class TasksEntity(BaseEntity):
         self._validate_percent_complete(task_data, errors)
 
         return {"is_valid": len(errors) == 0, "errors": errors, "warnings": warnings}
-    
-    def _validate_required_fields(self, task_data: Dict[str, Any], errors: List[str]) -> None:
+
+    def _validate_required_fields(
+        self, task_data: Dict[str, Any], errors: List[str]
+    ) -> None:
         """Validate required fields are present."""
         required_fields = [
-            "title", "description", "projectID", "phaseID", 
-            "assignedResourceID", "estimatedHours"
+            "title",
+            "description",
+            "projectID",
+            "phaseID",
+            "assignedResourceID",
+            "estimatedHours",
         ]
         for field in required_fields:
             if field not in task_data or task_data[field] is None:
                 errors.append(f"Required field '{field}' is missing")
-    
+
     def _validate_title(self, task_data: Dict[str, Any], errors: List[str]) -> None:
         """Validate task title length."""
         title = task_data.get("title", "")
         if title:
             if len(title) < TaskConstants.MIN_TITLE_LENGTH:
-                errors.append(f"Task title must be at least {TaskConstants.MIN_TITLE_LENGTH} characters")
+                errors.append(
+                    f"Task title must be at least {TaskConstants.MIN_TITLE_LENGTH} characters"
+                )
             elif len(title) > TaskConstants.MAX_TITLE_LENGTH:
-                errors.append(f"Task title must not exceed {TaskConstants.MAX_TITLE_LENGTH} characters")
-    
-    def _validate_estimated_hours(self, task_data: Dict[str, Any], errors: List[str], warnings: List[str]) -> None:
+                errors.append(
+                    f"Task title must not exceed {TaskConstants.MAX_TITLE_LENGTH} characters"
+                )
+
+    def _validate_estimated_hours(
+        self, task_data: Dict[str, Any], errors: List[str], warnings: List[str]
+    ) -> None:
         """Validate estimated hours value."""
         estimated_hours = task_data.get("estimatedHours")
         if estimated_hours is not None:
@@ -851,19 +907,21 @@ class TasksEntity(BaseEntity):
                     )
             except (ValueError, TypeError):
                 errors.append("Estimated hours must be a valid number")
-    
+
     def _validate_dates(self, task_data: Dict[str, Any], errors: List[str]) -> None:
         """Validate start and end dates."""
         start_date = task_data.get("startDate")
         end_date = task_data.get("endDate")
-        
+
         start_dt = self._validate_single_date(start_date, "Start date", errors)
         end_dt = self._validate_single_date(end_date, "End date", errors)
-        
+
         if start_dt and end_dt and end_dt <= start_dt:
             errors.append("End date must be after start date")
-    
-    def _validate_single_date(self, date_value: Any, field_name: str, errors: List[str]) -> Optional[datetime]:
+
+    def _validate_single_date(
+        self, date_value: Any, field_name: str, errors: List[str]
+    ) -> Optional[datetime]:
         """Validate a single date field."""
         if date_value:
             try:
@@ -872,8 +930,10 @@ class TasksEntity(BaseEntity):
             except ValueError:
                 errors.append(f"{field_name} must be a valid date")
         return None
-    
-    def _validate_percent_complete(self, task_data: Dict[str, Any], errors: List[str]) -> None:
+
+    def _validate_percent_complete(
+        self, task_data: Dict[str, Any], errors: List[str]
+    ) -> None:
         """Validate percent complete value."""
         percent_complete = task_data.get("percentComplete")
         if percent_complete is not None:
