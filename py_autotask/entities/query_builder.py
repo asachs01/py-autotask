@@ -429,22 +429,24 @@ from .query_helpers import (
 )
 from ..types import QueryFilter
 
-    def query_builder(self) -> QueryBuilder:
-        """
-        Create a new query builder for this entity.
 
-        Returns:
-            New QueryBuilder instance
+def query_builder(self) -> "QueryBuilder":
+    """
+    Create a new query builder for this entity.
 
-        Example:
-            tickets = (client.tickets.query_builder()
-                      .where("status", "eq", "1")
-                      .where("priority", "gte", 3)
-                      .order_by("createDateTime", "desc")
-                      .limit(100)
-                      .execute_all())
-        """
-        return QueryBuilder(self)
+    Returns:
+        New QueryBuilder instance
 
-    # Add method to BaseEntity class
-    BaseEntity.query_builder = query_builder
+    Example:
+        tickets = (client.tickets.query_builder()
+                  .where("status", "eq", "1")
+                  .where("priority", "gte", 3)
+                  .order_by("createDateTime", "desc")
+                  .limit(100)
+                  .execute_all())
+    """
+    return QueryBuilder(self)
+
+
+# Add method to BaseEntity class
+BaseEntity.query_builder = query_builder
