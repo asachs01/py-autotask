@@ -16,7 +16,6 @@ clear mapping between human-readable names and API values.
 from enum import IntEnum
 from typing import Dict, List
 
-
 # =============================================================================
 # API Configuration Constants
 # =============================================================================

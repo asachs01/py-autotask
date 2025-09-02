@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional
 
 from ..constants import (
     TaskConstants,
-    TaskStatus,
-    TaskPriority,
     TaskDependencyType,
+    TaskPriority,
+    TaskStatus,
     validate_status_filter,
 )
 from ..types import CreateResponse, QueryFilter, UpdateResponse

@@ -6,60 +6,46 @@ to ensure they provide correct values and maintain backward compatibility.
 """
 
 import pytest
-from py_autotask.constants import (
-    # API Configuration
-    APILimits,
-    FieldLengths,
-    # Common Enums
-    Priority,
-    PriorityMap,
-    # Task Constants
-    TaskStatus,
-    TaskPriority,
-    TaskDependencyType,
-    TaskConstants,
-    # Ticket Constants
-    TicketStatus,
-    TicketType,
-    TicketPriority,
-    TicketConstants,
-    # Project Constants
-    ProjectStatus,
-    ProjectType,
-    ProjectConstants,
-    # Contract Constants
-    ContractStatus,
-    ContractType,
-    ContractBillingType,
-    ContractConstants,
-    # Resource Constants
-    ResourceStatus,
-    ResourceType,
-    ResourceConstants,
-    # Account Constants
+
+from py_autotask.constants import (  # API Configuration; Common Enums; Task Constants; Ticket Constants; Project Constants; Contract Constants; Resource Constants; Account Constants; Expense Report Constants; Time Entry Constants; Opportunity Constants; Quote Constants; Invoice Constants; Utility Functions; Legacy constants
+    TASK_STATUS_COMPLETE,
+    TASK_STATUS_IN_PROGRESS,
+    TASK_STATUS_NEW,
     AccountStatus,
     AccountType,
-    # Expense Report Constants
-    ExpenseReportStatus,
+    APILimits,
+    ContractBillingType,
+    ContractConstants,
+    ContractStatus,
+    ContractType,
     ExpenseReportConstants,
-    # Time Entry Constants
-    TimeEntryType,
-    TimeEntryStatus,
-    # Opportunity Constants
-    OpportunityStatus,
-    OpportunityStage,
-    # Quote Constants
-    QuoteStatus,
-    # Invoice Constants
+    ExpenseReportStatus,
+    FieldLengths,
     InvoiceStatus,
-    # Utility Functions
-    get_status_name,
+    OpportunityStage,
+    OpportunityStatus,
+    Priority,
+    PriorityMap,
+    ProjectConstants,
+    ProjectStatus,
+    ProjectType,
+    QuoteStatus,
+    ResourceConstants,
+    ResourceStatus,
+    ResourceType,
+    TaskConstants,
+    TaskDependencyType,
+    TaskPriority,
+    TaskStatus,
+    TicketConstants,
+    TicketPriority,
+    TicketStatus,
+    TicketType,
+    TimeEntryStatus,
+    TimeEntryType,
     get_priority_description,
+    get_status_name,
     validate_status_filter,
-    # Legacy constants
-    TASK_STATUS_NEW,
-    TASK_STATUS_IN_PROGRESS,
-    TASK_STATUS_COMPLETE,
 )
 
 

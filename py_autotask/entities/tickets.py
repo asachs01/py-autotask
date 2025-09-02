@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional
 
 from ..constants import (
     TicketConstants,
+    TicketPriority,
     TicketStatus,
     TicketType,
-    TicketPriority,
     validate_status_filter,
 )
 from ..types import QueryFilter, TicketData
