@@ -126,13 +126,13 @@ class TestTicketsEntity:
         # Should contain the TicketStatus enum values for "open" tickets
         expected_open_statuses = [
             TicketStatus.NEW,
-            TicketStatus.ASSIGNED, 
+            TicketStatus.ASSIGNED,
             TicketStatus.IN_PROGRESS,
             TicketStatus.WAITING_CUSTOMER,
             TicketStatus.WAITING_MATERIALS,
             TicketStatus.WAITING_VENDOR,
             TicketStatus.ON_HOLD,
-            TicketStatus.ESCALATED
+            TicketStatus.ESCALATED,
         ]
         assert filters[1].value == expected_open_statuses
 

@@ -150,7 +150,9 @@ class TicketsEntity(BaseEntity):
 
         filters = [
             QueryFilter(field="DueDateTime", op="lt", value=datetime.now().isoformat()),
-            QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE),  # Not completed
+            QueryFilter(
+                field="Status", op="ne", value=TicketStatus.COMPLETE
+            ),  # Not completed
         ]
 
         if account_id:
@@ -340,7 +342,9 @@ class TicketsEntity(BaseEntity):
         filters = [QueryFilter(field="Priority", op="eq", value=priority)]
 
         if not include_completed:
-            filters.append(QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE))
+            filters.append(
+                QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE)
+            )
 
         return self.query(filters=filters, max_records=limit)
 

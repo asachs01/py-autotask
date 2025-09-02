@@ -44,12 +44,12 @@ headers = {
 response = requests.get(zone_url, headers=headers)
 if response.status_code == 200:
     zone_data = response.json()
-    api_url = zone_data['url'].rstrip('/')
-    
+    api_url = zone_data["url"].rstrip("/")
+
     # Test with the exact payload the SDK would send
     query_url = f"{api_url}/v1.0/Companies/query"
     print(f"\nTesting with SDK payload at: {query_url}")
-    
+
     response = requests.post(query_url, headers=headers, json=payload)
     print(f"Response: {response.status_code}")
     if response.status_code != 200:
