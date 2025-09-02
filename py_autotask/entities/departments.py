@@ -11,6 +11,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_null_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class DepartmentsEntity(BaseEntity):
@@ -72,11 +79,11 @@ class DepartmentsEntity(BaseEntity):
             List of departments in hierarchy
         """
         if parent_department_id is None:
-            filters = ["parentDepartmentID eq null"]
+            filters = [build_null_filter("parentDepartmentID", is_null=True)]
         else:
-            filters = [f"parentDepartmentID eq {parent_department_id}"]
+            filters = [build_equality_filter("parentDepartmentID", parent_department_id)]
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_root_departments(self) -> List[Dict[str, Any]]:
         """
@@ -85,7 +92,8 @@ class DepartmentsEntity(BaseEntity):
         Returns:
             List of root departments
         """
-        return self.query(filter="parentDepartmentID eq null")
+        filters = [build_null_filter("parentDepartmentID", is_null=True)]
+        return self.query(filters=combine_filters(filters))
 
     def get_department_tree(
         self, department_id: Optional[int] = None
@@ -131,7 +139,8 @@ class DepartmentsEntity(BaseEntity):
         Returns:
             List of departments led by the resource
         """
-        return self.query(filter=f"departmentLeadResourceID eq {lead_resource_id}")
+        filters = [build_equality_filter("departmentLeadResourceID", lead_resource_id)]
+        return self.query(filters=combine_filters(filters))
 
     def search_departments(
         self, search_term: str, search_fields: List[str] = None
@@ -149,11 +158,27 @@ class DepartmentsEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for department in all_results:
+            department_id = department.get('id')
+            if department_id and department_id not in seen_ids:
+                seen_ids.add(department_id)
+                unique_results.append(department)
+
+        return unique_results
 
     def get_department_resources(
         self, department_id: int, include_inactive: bool = False

@@ -10,6 +10,15 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ChangeRequestsEntity(BaseEntity):
@@ -76,12 +85,12 @@ class ChangeRequestsEntity(BaseEntity):
         Returns:
             List of pending change requests
         """
-        filters = ["status eq 'Pending Approval'"]
+        filters = [build_equality_filter("status", "Pending Approval")]
 
         if assigned_to_resource_id:
-            filters.append(f"assignedResourceID eq {assigned_to_resource_id}")
+            filters.append(build_equality_filter("assignedResourceID", assigned_to_resource_id))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_change_requests_by_type(
         self, change_type: str, status: Optional[str] = None
@@ -101,7 +110,7 @@ class ChangeRequestsEntity(BaseEntity):
         if status:
             filters.append(f"status eq '{status}'")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def approve_change_request(
         self,
@@ -234,7 +243,7 @@ class ChangeRequestsEntity(BaseEntity):
         if change_type:
             filters.append(f"changeType eq '{change_type}'")
 
-        changes = self.query(filter=" and ".join(filters))
+        changes = self.query(filters=combine_filters(filters))
 
         # Organize changes by date
         calendar = {}
@@ -269,7 +278,7 @@ class ChangeRequestsEntity(BaseEntity):
             f"createDate le {date_to.isoformat()}",
         ]
 
-        changes = self.query(filter=" and ".join(filters))
+        changes = self.query(filters=combine_filters(filters))
 
         # Calculate metrics
         total_changes = len(changes)

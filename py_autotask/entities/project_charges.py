@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ProjectChargesEntity(BaseEntity):
@@ -91,17 +100,17 @@ class ProjectChargesEntity(BaseEntity):
         Returns:
             List of project charges
         """
-        filters = [f"projectID eq {project_id}"]
+        filters = [build_equality_filter("projectID", project_id)]
 
         if not include_billed:
-            filters.append("billedDate eq null")
+            filters.append(build_null_filter("billedDate", is_null=True))
 
         if date_from:
             filters.append(f"chargeDate ge {date_from.isoformat()}")
         if date_to:
             filters.append(f"chargeDate le {date_to.isoformat()}")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_project_budget_analysis(
         self, project_id: int, include_pending: bool = True
@@ -116,12 +125,12 @@ class ProjectChargesEntity(BaseEntity):
         Returns:
             Project budget analysis with charges
         """
-        filters = [f"projectID eq {project_id}"]
+        filters = [build_equality_filter("projectID", project_id)]
 
         if not include_pending:
             filters.append("billedDate ne null")
 
-        charges = self.query(filter=" and ".join(filters))
+        charges = self.query(filters=combine_filters(filters))
 
         total_charges = len(charges)
         total_amount = Decimal("0")
@@ -241,12 +250,12 @@ class ProjectChargesEntity(BaseEntity):
         Returns:
             List of project charges for the task
         """
-        filters = [f"taskID eq {task_id}"]
+        filters = [build_equality_filter("taskID", task_id)]
 
         if not include_billed:
-            filters.append("billedDate eq null")
+            filters.append(build_null_filter("billedDate", is_null=True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def bulk_create_project_charges(
         self, charges: List[Dict[str, Any]]
@@ -307,7 +316,7 @@ class ProjectChargesEntity(BaseEntity):
         if date_to:
             filters.append(f"chargeDate le {date_to.isoformat()}")
 
-        charges = self.query(filter=" and ".join(filters))
+        charges = self.query(filters=combine_filters(filters))
 
         # Group by project
         projects_data = {}

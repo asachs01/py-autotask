@@ -10,6 +10,15 @@ from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ServiceLevelAgreementsEntity(BaseEntity):
@@ -70,12 +79,12 @@ class ServiceLevelAgreementsEntity(BaseEntity):
         Returns:
             List of active SLAs
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if account_id:
-            filters.append(f"accountID eq {account_id}")
+            filters.append(build_equality_filter("accountID", account_id))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_slas_by_account(self, account_id: int) -> List[Dict[str, Any]]:
         """
@@ -87,7 +96,7 @@ class ServiceLevelAgreementsEntity(BaseEntity):
         Returns:
             List of SLAs for the account
         """
-        return self.query(filter=f"accountID eq {account_id}")
+        return self.query(filters=combine_filters([build_equality_filter("accountID", account_id)]))
 
     def check_sla_breach(
         self, sla_id: int, ticket_id: int, current_time: Optional[datetime] = None
@@ -183,9 +192,9 @@ class ServiceLevelAgreementsEntity(BaseEntity):
         filters = []
 
         if account_id:
-            filters.append(f"accountID eq {account_id}")
+            filters.append(build_equality_filter("accountID", account_id))
 
-        slas = self.query(filter=" and ".join(filters) if filters else None)
+        slas = self.query(filters=combine_filters(filters) if filters else None)
 
         # This would typically analyze breach data
         # For now, return breach summary structure

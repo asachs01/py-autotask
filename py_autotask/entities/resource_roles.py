@@ -11,6 +11,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ResourceRolesEntity(BaseEntity):
@@ -64,7 +71,8 @@ class ResourceRolesEntity(BaseEntity):
         Returns:
             List of active resource roles
         """
-        return self.query(filter="isActive eq true")
+        filters = [build_active_filter(True)]
+        return self.query(filters=combine_filters(filters))
 
     def get_roles_by_rate_range(
         self,
@@ -91,7 +99,7 @@ class ResourceRolesEntity(BaseEntity):
         if not filters:
             return []
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def search_roles(
         self, search_term: str, search_fields: List[str] = None
@@ -109,11 +117,27 @@ class ResourceRolesEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for role in all_results:
+            role_id = role.get('id')
+            if role_id and role_id not in seen_ids:
+                seen_ids.add(role_id)
+                unique_results.append(role)
+
+        return unique_results
 
     def update_role_rate(
         self,
@@ -314,10 +338,12 @@ class ResourceRolesEntity(BaseEntity):
         # For now, return structure that could be populated
 
         if role_ids:
-            role_filter = " or ".join([f"id eq {role_id}" for role_id in role_ids])
-            roles = self.query(filter=f"({role_filter})")
+            filters = [build_in_filter("id", role_ids)]
+            results = self.query(filters=combine_filters(filters))
+            roles = results.items if hasattr(results, 'items') else results
         else:
-            roles = self.get_active_roles()
+            results = self.get_active_roles()
+            roles = results.items if hasattr(results, 'items') else results
 
         cost_analysis = []
         total_cost = Decimal("0")

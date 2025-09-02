@@ -11,6 +11,17 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    build_gte_filter,
+    build_lte_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class BillingItemsEntity(BaseEntity):
@@ -99,15 +110,15 @@ class BillingItemsEntity(BaseEntity):
         Returns:
             List of billing items for the entity
         """
-        filters = [f"entityID eq {entity_id}"]
+        filters = [build_equality_filter("entityID", entity_id)]
 
         if entity_type:
-            filters.append(f"entityType eq '{entity_type}'")
+            filters.append(build_equality_filter("entityType", entity_type))
 
         if not include_billed:
-            filters.append("billedDate eq null")
+            filters.append(build_null_filter("billedDate", is_null=True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_billing_items_by_billing_code(
         self,
@@ -126,14 +137,14 @@ class BillingItemsEntity(BaseEntity):
         Returns:
             List of billing items using the specified billing code
         """
-        filters = [f"billingCodeID eq {billing_code_id}"]
+        filters = [build_equality_filter("billingCodeID", billing_code_id)]
 
         if date_from:
-            filters.append(f"createDate ge {date_from.isoformat()}")
+            filters.append(build_gte_filter("createDate", date_from.isoformat()))
         if date_to:
-            filters.append(f"createDate le {date_to.isoformat()}")
+            filters.append(build_lte_filter("createDate", date_to.isoformat()))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     # Business Logic Methods
 
@@ -188,14 +199,14 @@ class BillingItemsEntity(BaseEntity):
         Returns:
             Summary of unbilled billing items
         """
-        filters = ["billedDate eq null"]
+        filters = [build_null_filter("billedDate", is_null=True)]
 
         if entity_id:
-            filters.append(f"entityID eq {entity_id}")
+            filters.append(build_equality_filter("entityID", entity_id))
         if entity_type:
-            filters.append(f"entityType eq '{entity_type}'")
+            filters.append(build_equality_filter("entityType", entity_type))
 
-        items = self.query(filter=" and ".join(filters))
+        items = self.query(filters=combine_filters(filters))
 
         total_amount = Decimal("0")
         total_cost = Decimal("0")
@@ -278,17 +289,17 @@ class BillingItemsEntity(BaseEntity):
         Returns:
             List of billing items for the contract
         """
-        filters = [f"contractID eq {contract_id}"]
+        filters = [build_equality_filter("contractID", contract_id)]
 
         if not include_billed:
-            filters.append("billedDate eq null")
+            filters.append(build_null_filter("billedDate", is_null=True))
 
         if date_from:
-            filters.append(f"createDate ge {date_from.isoformat()}")
+            filters.append(build_gte_filter("createDate", date_from.isoformat()))
         if date_to:
-            filters.append(f"createDate le {date_to.isoformat()}")
+            filters.append(build_lte_filter("createDate", date_to.isoformat()))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_billing_items_by_project(
         self, project_id: int, include_billed: bool = True
@@ -303,12 +314,15 @@ class BillingItemsEntity(BaseEntity):
         Returns:
             List of billing items for the project
         """
-        filters = [f"entityID eq {project_id}", "entityType eq 'Project'"]
+        filters = [
+            build_equality_filter("entityID", project_id),
+            build_equality_filter("entityType", "Project")
+        ]
 
         if not include_billed:
-            filters.append("billedDate eq null")
+            filters.append(build_null_filter("billedDate", is_null=True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def bulk_create_billing_items(
         self, billing_items: List[Dict[str, Any]]
@@ -370,7 +384,7 @@ class BillingItemsEntity(BaseEntity):
             )
             filters.append(f"({code_filter})")
 
-        items = self.query(filter=" and ".join(filters))
+        items = self.query(filters=combine_filters(filters))
 
         # Group by billing code
         revenue_by_code = {}

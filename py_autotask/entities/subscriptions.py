@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class SubscriptionsEntity(BaseEntity):
@@ -78,12 +87,12 @@ class SubscriptionsEntity(BaseEntity):
         Returns:
             List of active subscriptions
         """
-        filters = ["status eq 'Active'"]
+        filters = [build_equality_filter("status", "Active")]
 
         if account_id:
-            filters.append(f"accountID eq {account_id}")
+            filters.append(build_equality_filter("accountID", account_id))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_subscriptions_by_account(
         self, account_id: int, include_inactive: bool = False
@@ -98,12 +107,12 @@ class SubscriptionsEntity(BaseEntity):
         Returns:
             List of subscriptions for the account
         """
-        filters = [f"accountID eq {account_id}"]
+        filters = [build_equality_filter("accountID", account_id)]
 
         if not include_inactive:
-            filters.append("status eq 'Active'")
+            filters.append(build_equality_filter("status", "Active"))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_expiring_subscriptions(self, days_ahead: int = 30) -> List[Dict[str, Any]]:
         """
@@ -120,7 +129,7 @@ class SubscriptionsEntity(BaseEntity):
         cutoff_date = date.today() + timedelta(days=days_ahead)
 
         return self.query(
-            filter=f"endDate le {cutoff_date.isoformat()} and status eq 'Active'"
+            filters=combine_filters([build_equality_filter("endDate le {cutoff_date.isoformat()} and status", "Active")])
         )
 
     def renew_subscription(
@@ -237,13 +246,13 @@ class SubscriptionsEntity(BaseEntity):
         filters = []
 
         if account_id:
-            filters.append(f"accountID eq {account_id}")
+            filters.append(build_equality_filter("accountID", account_id))
         if date_from:
             filters.append(f"startDate ge {date_from.isoformat()}")
         if date_to:
             filters.append(f"startDate le {date_to.isoformat()}")
 
-        subscriptions = self.query(filter=" and ".join(filters) if filters else None)
+        subscriptions = self.query(filters=combine_filters(filters) if filters else None)
 
         # Analyze subscriptions
         total_revenue = Decimal("0")

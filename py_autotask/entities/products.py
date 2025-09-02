@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ProductsEntity(BaseEntity):
@@ -75,12 +84,12 @@ class ProductsEntity(BaseEntity):
         Returns:
             List of active products
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if category:
             filters.append(f"productCategory eq '{category}'")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_products_by_category(
         self, category: str, active_only: bool = True
@@ -98,9 +107,9 @@ class ProductsEntity(BaseEntity):
         filters = [f"productCategory eq '{category}'"]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def search_products(
         self, search_term: str, search_fields: List[str] = None
@@ -118,11 +127,27 @@ class ProductsEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description", "manufacturerName", "vendorName"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for product in all_results:
+            product_id = product.get('id')
+            if product_id and product_id not in seen_ids:
+                seen_ids.add(product_id)
+                unique_results.append(product)
+
+        return unique_results
 
     def update_product_pricing(
         self,
@@ -200,14 +225,14 @@ class ProductsEntity(BaseEntity):
         Returns:
             List of products within price range
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if min_price is not None:
             filters.append(f"unitPrice ge {float(min_price)}")
         if max_price is not None:
             filters.append(f"unitPrice le {float(max_price)}")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_product_sales_summary(
         self,
@@ -297,9 +322,9 @@ class ProductsEntity(BaseEntity):
         """
         filters = []
         if not include_inactive:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        products = self.query(filter=" and ".join(filters) if filters else None)
+        products = self.query(filters=combine_filters(filters) if filters else None)
 
         # Analyze product catalog
         total_value = Decimal("0")

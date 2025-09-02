@@ -11,6 +11,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class AccountsEntity(BaseEntity):
@@ -90,12 +97,12 @@ class AccountsEntity(BaseEntity):
         Returns:
             List of accounts of the specified type
         """
-        filters = [f"accountType eq '{account_type}'"]
+        filters = [build_equality_filter("accountType", account_type)]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_customer_accounts(
         self, include_inactive: bool = False
@@ -109,12 +116,12 @@ class AccountsEntity(BaseEntity):
         Returns:
             List of customer accounts
         """
-        filters = ["accountType eq 'Customer'"]
+        filters = [build_equality_filter("accountType", "Customer")]
 
         if not include_inactive:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_prospect_accounts(
         self, include_inactive: bool = False
@@ -128,12 +135,12 @@ class AccountsEntity(BaseEntity):
         Returns:
             List of prospect accounts
         """
-        filters = ["accountType eq 'Prospect'"]
+        filters = [build_equality_filter("accountType", "Prospect")]
 
         if not include_inactive:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def search_accounts(
         self, search_term: str, search_fields: List[str] = None
@@ -151,11 +158,27 @@ class AccountsEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["accountName"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for account in all_results:
+            account_id = account.get('id')
+            if account_id and account_id not in seen_ids:
+                seen_ids.add(account_id)
+                unique_results.append(account)
+
+        return unique_results
 
     def get_account_hierarchy(
         self, parent_account_id: Optional[int] = None
@@ -170,11 +193,12 @@ class AccountsEntity(BaseEntity):
             List of accounts in hierarchy
         """
         if parent_account_id is None:
-            filters = ["parentAccountID eq null"]
+            from .query_helpers import build_null_filter
+            filters = [build_null_filter("parentAccountID", is_null=True)]
         else:
-            filters = [f"parentAccountID eq {parent_account_id}"]
+            filters = [build_equality_filter("parentAccountID", parent_account_id)]
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def update_account_status(self, account_id: int, is_active: bool) -> Dict[str, Any]:
         """
@@ -202,12 +226,12 @@ class AccountsEntity(BaseEntity):
         Returns:
             List of accounts in the territory
         """
-        filters = [f"territoryID eq {territory_id}"]
+        filters = [build_equality_filter("territoryID", territory_id)]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_accounts_by_owner(
         self, owner_resource_id: int, active_only: bool = True
@@ -222,12 +246,12 @@ class AccountsEntity(BaseEntity):
         Returns:
             List of accounts owned by the resource
         """
-        filters = [f"ownerResourceID eq {owner_resource_id}"]
+        filters = [build_equality_filter("ownerResourceID", owner_resource_id)]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_account_summary(self, account_id: int) -> Dict[str, Any]:
         """
@@ -333,18 +357,18 @@ class AccountsEntity(BaseEntity):
         filters = []
 
         if city:
-            filters.append(f"city eq '{city}'")
+            filters.append(build_equality_filter("city", city))
         if state:
-            filters.append(f"state eq '{state}'")
+            filters.append(build_equality_filter("state", state))
         if country:
-            filters.append(f"country eq '{country}'")
+            filters.append(build_equality_filter("country", country))
         if postal_code:
-            filters.append(f"postalCode eq '{postal_code}'")
+            filters.append(build_equality_filter("postalCode", postal_code))
 
         if not filters:
             return []
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_account_activity_summary(
         self,

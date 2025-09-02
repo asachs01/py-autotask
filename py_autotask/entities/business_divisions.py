@@ -11,6 +11,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class BusinessDivisionsEntity(BaseEntity):
@@ -64,7 +71,8 @@ class BusinessDivisionsEntity(BaseEntity):
         Returns:
             List of active divisions
         """
-        return self.query(filter="isActive eq true")
+        filters = [build_active_filter(True)]
+        return self.query(filters=combine_filters(filters))
 
     def get_divisions_by_manager(
         self, manager_resource_id: int
@@ -78,7 +86,8 @@ class BusinessDivisionsEntity(BaseEntity):
         Returns:
             List of divisions managed by the resource
         """
-        return self.query(filter=f"divisionManagerResourceID eq {manager_resource_id}")
+        filters = [build_equality_filter("divisionManagerResourceID", manager_resource_id)]
+        return self.query(filters=combine_filters(filters))
 
     def search_divisions(
         self, search_term: str, search_fields: List[str] = None
@@ -96,11 +105,27 @@ class BusinessDivisionsEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for division in all_results:
+            division_id = division.get('id')
+            if division_id and division_id not in seen_ids:
+                seen_ids.add(division_id)
+                unique_results.append(division)
+
+        return unique_results
 
     def get_division_summary(self, division_id: int) -> Dict[str, Any]:
         """

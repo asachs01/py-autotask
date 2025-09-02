@@ -10,6 +10,12 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_active_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class OperationsEntity(BaseEntity):
@@ -68,12 +74,12 @@ class OperationsEntity(BaseEntity):
         Returns:
             List of active operations
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if operation_type:
-            filters.append(f"operationType eq '{operation_type}'")
+            filters.append(build_equality_filter("operationType", operation_type))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_operations_by_owner(self, owner_resource_id: int) -> List[Dict[str, Any]]:
         """
@@ -85,7 +91,8 @@ class OperationsEntity(BaseEntity):
         Returns:
             List of operations owned by the resource
         """
-        return self.query(filter=f"ownerResourceID eq {owner_resource_id}")
+        filters = [build_equality_filter("ownerResourceID", owner_resource_id)]
+        return self.query(filters=combine_filters(filters))
 
     def get_operation_performance(
         self, operation_id: int, date_from: date, date_to: date

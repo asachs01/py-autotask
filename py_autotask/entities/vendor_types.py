@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class VendorTypesEntity(BaseEntity):
@@ -73,12 +82,12 @@ class VendorTypesEntity(BaseEntity):
         Returns:
             List of active vendor types
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if category:
             filters.append(f"category eq '{category}'")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_vendor_types_by_category(
         self, category: str, active_only: bool = True
@@ -96,9 +105,9 @@ class VendorTypesEntity(BaseEntity):
         filters = [f"category eq '{category}'"]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_vendor_type_statistics(self, vendor_type_id: int) -> Dict[str, Any]:
         """

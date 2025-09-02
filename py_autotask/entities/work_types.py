@@ -11,6 +11,14 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class WorkTypesEntity(BaseEntity):
@@ -72,12 +80,12 @@ class WorkTypesEntity(BaseEntity):
         Returns:
             List of active work types
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if billable_only:
-            filters.append("isBillable eq true")
+            filters.append(build_equality_filter("isBillable", True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_billable_work_types(self) -> List[Dict[str, Any]]:
         """
@@ -86,7 +94,11 @@ class WorkTypesEntity(BaseEntity):
         Returns:
             List of billable work types
         """
-        return self.query(filter="isBillable eq true and isActive eq true")
+        filters = [
+            build_equality_filter("isBillable", True),
+            build_active_filter(True)
+        ]
+        return self.query(filters=combine_filters(filters))
 
     def get_non_billable_work_types(self) -> List[Dict[str, Any]]:
         """
@@ -95,7 +107,11 @@ class WorkTypesEntity(BaseEntity):
         Returns:
             List of non-billable work types
         """
-        return self.query(filter="isBillable eq false and isActive eq true")
+        filters = [
+            build_equality_filter("isBillable", False),
+            build_active_filter(True)
+        ]
+        return self.query(filters=combine_filters(filters))
 
     def search_work_types(
         self, search_term: str, search_fields: List[str] = None
@@ -113,11 +129,27 @@ class WorkTypesEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for work_type in all_results:
+            work_type_id = work_type.get('id')
+            if work_type_id and work_type_id not in seen_ids:
+                seen_ids.add(work_type_id)
+                unique_results.append(work_type)
+
+        return unique_results
 
     def activate_work_type(self, work_type_id: int) -> Dict[str, Any]:
         """
@@ -206,12 +238,12 @@ class WorkTypesEntity(BaseEntity):
             Work type analytics
         """
         if work_type_ids:
-            work_type_filter = " or ".join(
-                [f"id eq {wt_id}" for wt_id in work_type_ids]
-            )
-            work_types = self.query(filter=f"({work_type_filter})")
+            filters = [build_in_filter("id", work_type_ids)]
+            results = self.query(filters=combine_filters(filters))
+            work_types = results.items if hasattr(results, 'items') else results
         else:
-            work_types = self.get_active_work_types()
+            results = self.get_active_work_types()
+            work_types = results.items if hasattr(results, 'items') else results
 
         analytics = []
         total_hours = Decimal("0")

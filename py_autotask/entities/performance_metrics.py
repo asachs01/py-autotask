@@ -16,6 +16,15 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from ..exceptions import AutotaskValidationError
 from ..types import CreateResponse, EntityDict
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 if TYPE_CHECKING:
     from ..client import AutotaskClient

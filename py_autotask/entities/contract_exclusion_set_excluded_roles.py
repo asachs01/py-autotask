@@ -11,6 +11,15 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ContractExclusionSetExcludedRolesEntity(BaseEntity):

@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class BillingCodesEntity(BaseEntity):
@@ -90,12 +99,12 @@ class BillingCodesEntity(BaseEntity):
         Returns:
             List of active billing codes
         """
-        filters = ["isActive eq true"]
+        filters = [build_active_filter(True)]
 
         if code_type:
             filters.append(f"codeType eq '{code_type}'")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_billing_codes_by_type(
         self, code_type: str, include_inactive: bool = False
@@ -113,9 +122,9 @@ class BillingCodesEntity(BaseEntity):
         filters = [f"codeType eq '{code_type}'"]
 
         if not include_inactive:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     # Business Logic Methods
 
@@ -162,11 +171,11 @@ class BillingCodesEntity(BaseEntity):
             List of billing codes in hierarchy
         """
         if parent_id is None:
-            filters = ["parentID eq null"]
+            filters = [build_null_filter("parentID", is_null=True)]
         else:
-            filters = [f"parentID eq {parent_id}"]
+            filters = [build_equality_filter("parentID", parent_id)]
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def calculate_rate_markup(
         self, billing_code_id: int, markup_percentage: Union[float, Decimal]
@@ -317,9 +326,9 @@ class BillingCodesEntity(BaseEntity):
         filters = []
 
         if not include_inactive:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        billing_codes = self.query(filter=" and ".join(filters) if filters else None)
+        billing_codes = self.query(filters=combine_filters(filters) if filters else None)
 
         # Enhance with calculated fields
         for code in billing_codes:
@@ -351,11 +360,27 @@ class BillingCodesEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for billing_code in all_results:
+            billing_code_id = billing_code.get('id')
+            if billing_code_id and billing_code_id not in seen_ids:
+                seen_ids.add(billing_code_id)
+                unique_results.append(billing_code)
+
+        return unique_results
 
     def get_billing_code_rate_history(
         self, billing_code_id: int
@@ -438,4 +463,4 @@ class BillingCodesEntity(BaseEntity):
         if max_price is not None:
             filters.append(f"unitPrice le {float(max_price)}")
 
-        return self.query(filter=" and ".join(filters) if filters else None)
+        return self.query(filters=combine_filters(filters) if filters else None)

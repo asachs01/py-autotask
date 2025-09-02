@@ -11,6 +11,13 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class TeamsEntity(BaseEntity):
@@ -72,12 +79,12 @@ class TeamsEntity(BaseEntity):
         Returns:
             List of teams in the department
         """
-        filters = [f"departmentID eq {department_id}"]
+        filters = [build_equality_filter("departmentID", department_id)]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_teams_by_lead(self, lead_resource_id: int) -> List[Dict[str, Any]]:
         """
@@ -89,7 +96,8 @@ class TeamsEntity(BaseEntity):
         Returns:
             List of teams led by the resource
         """
-        return self.query(filter=f"teamLeadResourceID eq {lead_resource_id}")
+        filters = [build_equality_filter("teamLeadResourceID", lead_resource_id)]
+        return self.query(filters=combine_filters(filters))
 
     def search_teams(
         self, search_term: str, search_fields: List[str] = None
@@ -107,11 +115,27 @@ class TeamsEntity(BaseEntity):
         if search_fields is None:
             search_fields = ["name", "description"]
 
-        filters = []
+        # Note: For OR logic with multiple fields, we need to make separate queries
+        # and combine results, as Autotask API treats list filters as AND logic
+        all_results = []
         for field in search_fields:
-            filters.append(f"contains({field}, '{search_term}')")
+            search_filters = build_search_filters(search_term, [field])
+            results = self.query(filters=search_filters)
+            if hasattr(results, 'items'):
+                all_results.extend(results.items)
+            else:
+                all_results.extend(results)
 
-        return self.query(filter=" or ".join(filters))
+        # Remove duplicates based on ID
+        seen_ids = set()
+        unique_results = []
+        for team in all_results:
+            team_id = team.get('id')
+            if team_id and team_id not in seen_ids:
+                seen_ids.add(team_id)
+                unique_results.append(team)
+
+        return unique_results
 
     def get_team_members(
         self, team_id: int, active_only: bool = True

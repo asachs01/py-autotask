@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ResourceSkillsEntity(BaseEntity):
@@ -77,12 +86,12 @@ class ResourceSkillsEntity(BaseEntity):
         Returns:
             List of skills for the resource
         """
-        filters = [f"resourceID eq {resource_id}"]
+        filters = [build_equality_filter("resourceID", resource_id)]
 
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_skill_resources(
         self,
@@ -101,14 +110,14 @@ class ResourceSkillsEntity(BaseEntity):
         Returns:
             List of resources with the skill
         """
-        filters = [f"skillID eq {skill_id}"]
+        filters = [build_equality_filter("skillID", skill_id)]
 
         if min_skill_level is not None:
             filters.append(f"skillLevel ge {min_skill_level}")
         if active_only:
-            filters.append("isActive eq true")
+            filters.append(build_active_filter(True))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def update_skill_level(
         self,
@@ -151,12 +160,12 @@ class ResourceSkillsEntity(BaseEntity):
         Returns:
             List of resource skills at the specified level
         """
-        filters = [f"skillLevel eq {skill_level}"]
+        filters = [build_equality_filter("skillLevel", skill_level)]
 
         if skill_id:
-            filters.append(f"skillID eq {skill_id}")
+            filters.append(build_equality_filter("skillID", skill_id))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_skill_matrix(
         self, resource_ids: List[int], skill_ids: Optional[List[int]] = None
@@ -179,7 +188,7 @@ class ResourceSkillsEntity(BaseEntity):
             skill_filter = " or ".join([f"skillID eq {sid}" for sid in skill_ids])
             filters.append(f"({skill_filter})")
 
-        skills = self.query(filter=" and ".join(filters))
+        skills = self.query(filters=combine_filters(filters))
 
         # Build matrix
         matrix = {}
@@ -316,9 +325,9 @@ class ResourceSkillsEntity(BaseEntity):
         filters = ["certificationDate ne null"]
 
         if resource_id:
-            filters.append(f"resourceID eq {resource_id}")
+            filters.append(build_equality_filter("resourceID", resource_id))
 
-        certified_skills = self.query(filter=" and ".join(filters))
+        certified_skills = self.query(filters=combine_filters(filters))
 
         # Analyze certification status
         expiring_soon = []

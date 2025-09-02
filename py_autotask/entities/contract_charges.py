@@ -11,6 +11,15 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_equality_filter,
+    build_search_filters,
+    build_active_filter,
+    build_null_filter,
+    build_in_filter,
+    combine_filters,
+)
+from ..types import QueryFilter
 
 
 class ContractChargesEntity(BaseEntity):
@@ -97,17 +106,17 @@ class ContractChargesEntity(BaseEntity):
         Returns:
             List of contract charges
         """
-        filters = [f"contractID eq {contract_id}"]
+        filters = [build_equality_filter("contractID", contract_id)]
 
         if not include_billed:
-            filters.append("billedDate eq null")
+            filters.append(build_null_filter("billedDate", is_null=True))
 
         if date_from:
             filters.append(f"chargeDate ge {date_from.isoformat()}")
         if date_to:
             filters.append(f"chargeDate le {date_to.isoformat()}")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def get_unbilled_contract_charges(
         self, contract_id: Optional[int] = None
@@ -121,12 +130,12 @@ class ContractChargesEntity(BaseEntity):
         Returns:
             List of unbilled contract charges
         """
-        filters = ["billedDate eq null"]
+        filters = [build_null_filter("billedDate", is_null=True)]
 
         if contract_id:
-            filters.append(f"contractID eq {contract_id}")
+            filters.append(build_equality_filter("contractID", contract_id))
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     # Business Logic Methods
 
@@ -283,14 +292,14 @@ class ContractChargesEntity(BaseEntity):
         Returns:
             Summary of contract charges
         """
-        filters = [f"contractID eq {contract_id}"]
+        filters = [build_equality_filter("contractID", contract_id)]
 
         if date_from:
             filters.append(f"chargeDate ge {date_from.isoformat()}")
         if date_to:
             filters.append(f"chargeDate le {date_to.isoformat()}")
 
-        charges = self.query(filter=" and ".join(filters))
+        charges = self.query(filters=combine_filters(filters))
 
         total_charges = len(charges)
         total_amount = Decimal("0")
@@ -392,16 +401,16 @@ class ContractChargesEntity(BaseEntity):
         Returns:
             List of recurring charges
         """
-        filters = ["isRecurring eq true"]
+        filters = [build_equality_filter("isRecurring", True)]
 
         if contract_id:
-            filters.append(f"contractID eq {contract_id}")
+            filters.append(build_equality_filter("contractID", contract_id))
 
         if active_only:
             today = date.today().isoformat()
             filters.append(f"(endDate eq null or endDate ge {today})")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def bulk_create_charges(self, charges: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -449,14 +458,14 @@ class ContractChargesEntity(BaseEntity):
         Returns:
             List of contract charges using the billing code
         """
-        filters = [f"billingCodeID eq {billing_code_id}"]
+        filters = [build_equality_filter("billingCodeID", billing_code_id)]
 
         if date_from:
             filters.append(f"chargeDate ge {date_from.isoformat()}")
         if date_to:
             filters.append(f"chargeDate le {date_to.isoformat()}")
 
-        return self.query(filter=" and ".join(filters))
+        return self.query(filters=combine_filters(filters))
 
     def update_charge_amounts(
         self,
@@ -514,7 +523,7 @@ class ContractChargesEntity(BaseEntity):
             )
             filters.append(f"({contract_filter})")
 
-        charges = self.query(filter=" and ".join(filters))
+        charges = self.query(filters=combine_filters(filters))
 
         # Group by contract
         revenue_by_contract = {}
