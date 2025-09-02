@@ -6,7 +6,7 @@ replacing magic numbers throughout the SDK with readable, well-documented consta
 
 The constants are organized into categories:
 - API Configuration Constants
-- Common Status and Priority Constants  
+- Common Status and Priority Constants
 - Entity-specific Constants (Tasks, Tickets, Projects, etc.)
 
 All constants are aligned with the Autotask API documentation and provide
@@ -21,9 +21,10 @@ from typing import Dict, List
 # API Configuration Constants
 # =============================================================================
 
+
 class APILimits:
     """API limits and configuration constants."""
-    
+
     MAX_QUERY_RESULTS = 500
     MAX_BATCH_SIZE = 200
     MAX_CONCURRENT_REQUESTS = 10
@@ -34,7 +35,7 @@ class APILimits:
 
 class FieldLengths:
     """Maximum field lengths for entity fields."""
-    
+
     TITLE_MAX = 255
     DESCRIPTION_MAX = 8000
     NAME_MAX = 100
@@ -51,9 +52,10 @@ class FieldLengths:
 # Common Priority Levels
 # =============================================================================
 
+
 class Priority(IntEnum):
     """Common priority levels used across multiple entities."""
-    
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -62,12 +64,12 @@ class Priority(IntEnum):
 
 class PriorityMap:
     """Mapping priority names to descriptions."""
-    
+
     DESCRIPTIONS = {
         Priority.CRITICAL: "Critical - Immediate attention required",
         Priority.HIGH: "High - Urgent resolution needed",
         Priority.MEDIUM: "Medium - Normal priority",
-        Priority.LOW: "Low - Can be handled when time permits"
+        Priority.LOW: "Low - Can be handled when time permits",
     }
 
 
@@ -75,9 +77,10 @@ class PriorityMap:
 # Task Constants
 # =============================================================================
 
+
 class TaskStatus(IntEnum):
     """Task status codes used in the Autotask API."""
-    
+
     NEW = 1
     IN_PROGRESS = 2
     WAITING = 3
@@ -87,7 +90,7 @@ class TaskStatus(IntEnum):
 
 class TaskPriority(IntEnum):
     """Task priority levels."""
-    
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -96,7 +99,7 @@ class TaskPriority(IntEnum):
 
 class TaskDependencyType:
     """Task dependency relationship types."""
-    
+
     FINISH_TO_START = "finish_to_start"
     START_TO_START = "start_to_start"
     FINISH_TO_FINISH = "finish_to_finish"
@@ -105,12 +108,12 @@ class TaskDependencyType:
 
 class TaskConstants:
     """Consolidated task-related constants."""
-    
+
     # Status mappings for common queries
     OPEN_STATUSES = [TaskStatus.NEW, TaskStatus.IN_PROGRESS, TaskStatus.WAITING]
     CLOSED_STATUSES = [TaskStatus.COMPLETE, TaskStatus.CANCELLED]
     ACTIVE_STATUSES = [TaskStatus.IN_PROGRESS]
-    
+
     # Status filters for API queries
     STATUS_FILTERS = {
         "open": OPEN_STATUSES,
@@ -120,9 +123,9 @@ class TaskConstants:
         "in_progress": [TaskStatus.IN_PROGRESS],
         "waiting": [TaskStatus.WAITING],
         "new": [TaskStatus.NEW],
-        "cancelled": [TaskStatus.CANCELLED]
+        "cancelled": [TaskStatus.CANCELLED],
     }
-    
+
     # Validation limits
     MIN_ESTIMATED_HOURS = 0.01
     MAX_ESTIMATED_HOURS = 9999.99
@@ -133,12 +136,13 @@ class TaskConstants:
 
 
 # =============================================================================
-# Ticket Constants  
+# Ticket Constants
 # =============================================================================
+
 
 class TicketStatus(IntEnum):
     """Ticket status codes used in the Autotask API."""
-    
+
     NEW = 1
     ASSIGNED = 2
     IN_PROGRESS = 3
@@ -153,7 +157,7 @@ class TicketStatus(IntEnum):
 
 class TicketType(IntEnum):
     """Ticket type categories."""
-    
+
     INCIDENT = 1
     PROBLEM = 2
     CHANGE_REQUEST = 3
@@ -163,7 +167,7 @@ class TicketType(IntEnum):
 
 class TicketPriority(IntEnum):
     """Ticket priority levels."""
-    
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -172,20 +176,27 @@ class TicketPriority(IntEnum):
 
 class TicketConstants:
     """Consolidated ticket-related constants."""
-    
+
     # Status groupings
     OPEN_STATUSES = [
-        TicketStatus.NEW, TicketStatus.ASSIGNED, TicketStatus.IN_PROGRESS,
-        TicketStatus.WAITING_CUSTOMER, TicketStatus.WAITING_MATERIALS,
-        TicketStatus.WAITING_VENDOR, TicketStatus.ON_HOLD, TicketStatus.ESCALATED
+        TicketStatus.NEW,
+        TicketStatus.ASSIGNED,
+        TicketStatus.IN_PROGRESS,
+        TicketStatus.WAITING_CUSTOMER,
+        TicketStatus.WAITING_MATERIALS,
+        TicketStatus.WAITING_VENDOR,
+        TicketStatus.ON_HOLD,
+        TicketStatus.ESCALATED,
     ]
     CLOSED_STATUSES = [TicketStatus.COMPLETE, TicketStatus.CANCELLED]
     WAITING_STATUSES = [
-        TicketStatus.WAITING_CUSTOMER, TicketStatus.WAITING_MATERIALS,
-        TicketStatus.WAITING_VENDOR, TicketStatus.ON_HOLD
+        TicketStatus.WAITING_CUSTOMER,
+        TicketStatus.WAITING_MATERIALS,
+        TicketStatus.WAITING_VENDOR,
+        TicketStatus.ON_HOLD,
     ]
     ACTIVE_STATUSES = [TicketStatus.ASSIGNED, TicketStatus.IN_PROGRESS]
-    
+
     # Status filters for common queries
     STATUS_FILTERS = {
         "open": OPEN_STATUSES,
@@ -195,23 +206,23 @@ class TicketConstants:
         "new": [TicketStatus.NEW],
         "in_progress": [TicketStatus.IN_PROGRESS],
         "complete": [TicketStatus.COMPLETE],
-        "cancelled": [TicketStatus.CANCELLED]
+        "cancelled": [TicketStatus.CANCELLED],
     }
-    
+
     # SLA response time mappings (hours)
     SLA_RESPONSE_TIMES = {
         TicketPriority.CRITICAL: 1,
         TicketPriority.HIGH: 4,
         TicketPriority.MEDIUM: 8,
-        TicketPriority.LOW: 24
+        TicketPriority.LOW: 24,
     }
-    
+
     # SLA resolution time mappings (hours)
     SLA_RESOLUTION_TIMES = {
         TicketPriority.CRITICAL: 4,
         TicketPriority.HIGH: 24,
         TicketPriority.MEDIUM: 72,
-        TicketPriority.LOW: 168
+        TicketPriority.LOW: 168,
     }
 
 
@@ -219,9 +230,10 @@ class TicketConstants:
 # Project Constants
 # =============================================================================
 
+
 class ProjectStatus(IntEnum):
     """Project status codes."""
-    
+
     NEW = 1
     IN_PROGRESS = 2
     ON_HOLD = 3
@@ -231,7 +243,7 @@ class ProjectStatus(IntEnum):
 
 class ProjectType(IntEnum):
     """Project type categories."""
-    
+
     FIXED_PRICE = 1
     TIME_AND_MATERIALS = 2
     RETAINER = 3
@@ -241,12 +253,12 @@ class ProjectType(IntEnum):
 
 class ProjectConstants:
     """Consolidated project-related constants."""
-    
+
     # Status groupings
     ACTIVE_STATUSES = [ProjectStatus.IN_PROGRESS]
     OPEN_STATUSES = [ProjectStatus.NEW, ProjectStatus.IN_PROGRESS]
     CLOSED_STATUSES = [ProjectStatus.COMPLETE, ProjectStatus.CANCELLED]
-    
+
     # Status filters
     STATUS_FILTERS = {
         "active": ACTIVE_STATUSES,
@@ -256,16 +268,16 @@ class ProjectConstants:
         "in_progress": [ProjectStatus.IN_PROGRESS],
         "on_hold": [ProjectStatus.ON_HOLD],
         "complete": [ProjectStatus.COMPLETE],
-        "cancelled": [ProjectStatus.CANCELLED]
+        "cancelled": [ProjectStatus.CANCELLED],
     }
-    
+
     # Type descriptions
     TYPE_DESCRIPTIONS = {
         ProjectType.FIXED_PRICE: "Fixed Price Project",
         ProjectType.TIME_AND_MATERIALS: "Time and Materials Project",
-        ProjectType.RETAINER: "Retainer-based Project", 
+        ProjectType.RETAINER: "Retainer-based Project",
         ProjectType.RECURRING_SERVICE: "Recurring Service Project",
-        ProjectType.MILESTONE: "Milestone-based Project"
+        ProjectType.MILESTONE: "Milestone-based Project",
     }
 
 
@@ -273,9 +285,10 @@ class ProjectConstants:
 # Contract Constants
 # =============================================================================
 
+
 class ContractStatus(IntEnum):
     """Contract status codes."""
-    
+
     DRAFT = 1
     ACTIVE = 2
     ON_HOLD = 3
@@ -286,7 +299,7 @@ class ContractStatus(IntEnum):
 
 class ContractType(IntEnum):
     """Contract type categories."""
-    
+
     RECURRING_SERVICE = 1
     BLOCK_HOURS = 2
     TIME_AND_MATERIALS = 3
@@ -296,7 +309,7 @@ class ContractType(IntEnum):
 
 class ContractBillingType(IntEnum):
     """Contract billing frequency types."""
-    
+
     MONTHLY = 1
     QUARTERLY = 2
     SEMI_ANNUALLY = 3
@@ -306,14 +319,17 @@ class ContractBillingType(IntEnum):
 
 class ContractConstants:
     """Consolidated contract-related constants."""
-    
+
     # Status groupings
     ACTIVE_STATUSES = [ContractStatus.ACTIVE]
     INACTIVE_STATUSES = [
-        ContractStatus.DRAFT, ContractStatus.ON_HOLD, 
-        ContractStatus.EXPIRED, ContractStatus.CANCELLED, ContractStatus.COMPLETE
+        ContractStatus.DRAFT,
+        ContractStatus.ON_HOLD,
+        ContractStatus.EXPIRED,
+        ContractStatus.CANCELLED,
+        ContractStatus.COMPLETE,
     ]
-    
+
     # Status filters
     STATUS_FILTERS = {
         "active": ACTIVE_STATUSES,
@@ -322,7 +338,7 @@ class ContractConstants:
         "on_hold": [ContractStatus.ON_HOLD],
         "expired": [ContractStatus.EXPIRED],
         "cancelled": [ContractStatus.CANCELLED],
-        "complete": [ContractStatus.COMPLETE]
+        "complete": [ContractStatus.COMPLETE],
     }
 
 
@@ -330,9 +346,10 @@ class ContractConstants:
 # Resource Constants
 # =============================================================================
 
+
 class ResourceStatus(IntEnum):
     """Resource/employee status codes."""
-    
+
     ACTIVE = 1
     INACTIVE = 2
     TERMINATED = 3
@@ -341,7 +358,7 @@ class ResourceStatus(IntEnum):
 
 class ResourceType(IntEnum):
     """Resource type categories."""
-    
+
     EMPLOYEE = 1
     CONTRACTOR = 2
     CONSULTANT = 3
@@ -350,13 +367,17 @@ class ResourceType(IntEnum):
 
 class ResourceConstants:
     """Consolidated resource-related constants."""
-    
+
     # Status filters
     STATUS_FILTERS = {
         "active": [ResourceStatus.ACTIVE],
         "inactive": [ResourceStatus.INACTIVE, ResourceStatus.TERMINATED],
         "available": [ResourceStatus.ACTIVE],
-        "unavailable": [ResourceStatus.INACTIVE, ResourceStatus.TERMINATED, ResourceStatus.ON_LEAVE]
+        "unavailable": [
+            ResourceStatus.INACTIVE,
+            ResourceStatus.TERMINATED,
+            ResourceStatus.ON_LEAVE,
+        ],
     }
 
 
@@ -364,9 +385,10 @@ class ResourceConstants:
 # Account/Company Constants
 # =============================================================================
 
+
 class AccountStatus(IntEnum):
     """Account status codes."""
-    
+
     ACTIVE = 1
     INACTIVE = 2
     PROSPECT = 3
@@ -375,7 +397,7 @@ class AccountStatus(IntEnum):
 
 class AccountType(IntEnum):
     """Account type categories."""
-    
+
     CUSTOMER = 1
     PROSPECT = 2
     PARTNER = 3
@@ -384,12 +406,13 @@ class AccountType(IntEnum):
 
 
 # =============================================================================
-# Expense Report Constants  
+# Expense Report Constants
 # =============================================================================
+
 
 class ExpenseReportStatus(IntEnum):
     """Expense report status codes."""
-    
+
     DRAFT = 1
     SUBMITTED = 2
     APPROVED = 3
@@ -399,14 +422,14 @@ class ExpenseReportStatus(IntEnum):
 
 class ExpenseReportConstants:
     """Consolidated expense report constants."""
-    
+
     # Status filters
     STATUS_FILTERS = {
         "draft": [ExpenseReportStatus.DRAFT],
         "pending": [ExpenseReportStatus.SUBMITTED],
-        "approved": [ExpenseReportStatus.APPROVED], 
+        "approved": [ExpenseReportStatus.APPROVED],
         "rejected": [ExpenseReportStatus.REJECTED],
-        "paid": [ExpenseReportStatus.PAID]
+        "paid": [ExpenseReportStatus.PAID],
     }
 
 
@@ -414,9 +437,10 @@ class ExpenseReportConstants:
 # Time Entry Constants
 # =============================================================================
 
+
 class TimeEntryType(IntEnum):
     """Time entry type categories."""
-    
+
     REGULAR = 1
     OVERTIME = 2
     DOUBLE_TIME = 3
@@ -428,7 +452,7 @@ class TimeEntryType(IntEnum):
 
 class TimeEntryStatus(IntEnum):
     """Time entry status codes."""
-    
+
     DRAFT = 1
     SUBMITTED = 2
     APPROVED = 3
@@ -440,9 +464,10 @@ class TimeEntryStatus(IntEnum):
 # Opportunity Constants
 # =============================================================================
 
+
 class OpportunityStatus(IntEnum):
     """Opportunity status codes."""
-    
+
     OPEN = 1
     WON = 2
     LOST = 3
@@ -451,7 +476,7 @@ class OpportunityStatus(IntEnum):
 
 class OpportunityStage(IntEnum):
     """Opportunity sales stage."""
-    
+
     LEAD = 1
     QUALIFIED = 2
     PROPOSAL = 3
@@ -463,9 +488,10 @@ class OpportunityStage(IntEnum):
 # Quote Constants
 # =============================================================================
 
+
 class QuoteStatus(IntEnum):
     """Quote status codes."""
-    
+
     DRAFT = 1
     PENDING = 2
     ACCEPTED = 3
@@ -477,9 +503,10 @@ class QuoteStatus(IntEnum):
 # Invoice Constants
 # =============================================================================
 
+
 class InvoiceStatus(IntEnum):
     """Invoice status codes."""
-    
+
     DRAFT = 1
     SENT = 2
     PAID = 3
@@ -491,14 +518,15 @@ class InvoiceStatus(IntEnum):
 # Utility Functions
 # =============================================================================
 
+
 def get_status_name(status_class, status_value: int) -> str:
     """
     Get the name of a status from its numeric value.
-    
+
     Args:
         status_class: The status enum class (e.g., TaskStatus, TicketStatus)
         status_value: The numeric status value
-        
+
     Returns:
         String name of the status, or "UNKNOWN" if not found
     """
@@ -511,38 +539,44 @@ def get_status_name(status_class, status_value: int) -> str:
 def get_priority_description(priority_value: int) -> str:
     """
     Get a description for a priority level.
-    
+
     Args:
         priority_value: The numeric priority value
-        
+
     Returns:
         String description of the priority level
     """
-    return PriorityMap.DESCRIPTIONS.get(priority_value, f"Unknown Priority ({priority_value})")
+    return PriorityMap.DESCRIPTIONS.get(
+        priority_value, f"Unknown Priority ({priority_value})"
+    )
 
 
 def validate_status_filter(entity_constants, filter_name: str) -> List[int]:
     """
     Validate and return status IDs for a given filter name.
-    
+
     Args:
         entity_constants: The constants class for the entity (e.g., TaskConstants)
         filter_name: Name of the status filter
-        
+
     Returns:
         List of status IDs for the filter
-        
+
     Raises:
         ValueError: If filter_name is not valid for the entity
     """
-    if not hasattr(entity_constants, 'STATUS_FILTERS'):
-        raise ValueError(f"Entity constants class {entity_constants.__name__} does not support status filters")
-    
+    if not hasattr(entity_constants, "STATUS_FILTERS"):
+        raise ValueError(
+            f"Entity constants class {entity_constants.__name__} does not support status filters"
+        )
+
     status_filters = entity_constants.STATUS_FILTERS
     if filter_name.lower() not in status_filters:
         valid_filters = list(status_filters.keys())
-        raise ValueError(f"Invalid status filter '{filter_name}'. Valid options: {valid_filters}")
-    
+        raise ValueError(
+            f"Invalid status filter '{filter_name}'. Valid options: {valid_filters}"
+        )
+
     return status_filters[filter_name.lower()]
 
 
@@ -555,7 +589,7 @@ def validate_status_filter(entity_constants, filter_name: str) -> List[int]:
 
 # Task status (legacy)
 TASK_STATUS_NEW = TaskStatus.NEW
-TASK_STATUS_IN_PROGRESS = TaskStatus.IN_PROGRESS  
+TASK_STATUS_IN_PROGRESS = TaskStatus.IN_PROGRESS
 TASK_STATUS_WAITING = TaskStatus.WAITING
 TASK_STATUS_CANCELLED = TaskStatus.CANCELLED
 TASK_STATUS_COMPLETE = TaskStatus.COMPLETE
@@ -577,7 +611,7 @@ PROJECT_STATUS_NEW = ProjectStatus.NEW
 PROJECT_STATUS_IN_PROGRESS = ProjectStatus.IN_PROGRESS
 PROJECT_STATUS_COMPLETE = ProjectStatus.COMPLETE
 
-# Contract status (legacy)  
+# Contract status (legacy)
 CONTRACT_STATUS_ACTIVE = ContractStatus.ACTIVE
 CONTRACT_STATUS_EXPIRED = ContractStatus.EXPIRED
 
@@ -588,65 +622,52 @@ CONTRACT_STATUS_EXPIRED = ContractStatus.EXPIRED
 
 __all__ = [
     # API Configuration
-    'APILimits',
-    'FieldLengths',
-    
+    "APILimits",
+    "FieldLengths",
     # Common Enums
-    'Priority',
-    'PriorityMap',
-    
+    "Priority",
+    "PriorityMap",
     # Task Constants
-    'TaskStatus',
-    'TaskPriority', 
-    'TaskDependencyType',
-    'TaskConstants',
-    
+    "TaskStatus",
+    "TaskPriority",
+    "TaskDependencyType",
+    "TaskConstants",
     # Ticket Constants
-    'TicketStatus',
-    'TicketType',
-    'TicketPriority',
-    'TicketConstants',
-    
+    "TicketStatus",
+    "TicketType",
+    "TicketPriority",
+    "TicketConstants",
     # Project Constants
-    'ProjectStatus',
-    'ProjectType', 
-    'ProjectConstants',
-    
+    "ProjectStatus",
+    "ProjectType",
+    "ProjectConstants",
     # Contract Constants
-    'ContractStatus',
-    'ContractType',
-    'ContractBillingType',
-    'ContractConstants',
-    
+    "ContractStatus",
+    "ContractType",
+    "ContractBillingType",
+    "ContractConstants",
     # Resource Constants
-    'ResourceStatus',
-    'ResourceType',
-    'ResourceConstants',
-    
+    "ResourceStatus",
+    "ResourceType",
+    "ResourceConstants",
     # Account Constants
-    'AccountStatus',
-    'AccountType',
-    
+    "AccountStatus",
+    "AccountType",
     # Expense Report Constants
-    'ExpenseReportStatus',
-    'ExpenseReportConstants',
-    
+    "ExpenseReportStatus",
+    "ExpenseReportConstants",
     # Time Entry Constants
-    'TimeEntryType',
-    'TimeEntryStatus',
-    
+    "TimeEntryType",
+    "TimeEntryStatus",
     # Opportunity Constants
-    'OpportunityStatus',
-    'OpportunityStage',
-    
+    "OpportunityStatus",
+    "OpportunityStage",
     # Quote Constants
-    'QuoteStatus',
-    
+    "QuoteStatus",
     # Invoice Constants
-    'InvoiceStatus',
-    
+    "InvoiceStatus",
     # Utility Functions
-    'get_status_name',
-    'get_priority_description',
-    'validate_status_filter',
+    "get_status_name",
+    "get_priority_description",
+    "validate_status_filter",
 ]

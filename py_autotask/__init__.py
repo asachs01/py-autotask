@@ -98,39 +98,51 @@ def __getattr__(name):
     # Constants and enums
     elif name == "TaskStatus":
         from .constants import TaskStatus
+
         return TaskStatus
     elif name == "TaskPriority":
         from .constants import TaskPriority
+
         return TaskPriority
     elif name == "TaskConstants":
         from .constants import TaskConstants
+
         return TaskConstants
     elif name == "TicketStatus":
         from .constants import TicketStatus
+
         return TicketStatus
     elif name == "TicketPriority":
         from .constants import TicketPriority
+
         return TicketPriority
     elif name == "TicketConstants":
         from .constants import TicketConstants
+
         return TicketConstants
     elif name == "ProjectStatus":
         from .constants import ProjectStatus
+
         return ProjectStatus
     elif name == "ProjectType":
         from .constants import ProjectType
+
         return ProjectType
     elif name == "ProjectConstants":
         from .constants import ProjectConstants
+
         return ProjectConstants
     elif name == "ContractStatus":
         from .constants import ContractStatus
+
         return ContractStatus
     elif name == "ContractType":
         from .constants import ContractType
+
         return ContractType
     elif name == "ContractConstants":
         from .constants import ContractConstants
+
         return ContractConstants
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -155,11 +167,11 @@ __all__ = [
     "EntityMetadata",
     # Constants and enums
     "TaskStatus",
-    "TaskPriority", 
+    "TaskPriority",
     "TaskConstants",
     "TicketStatus",
     "TicketPriority",
-    "TicketConstants", 
+    "TicketConstants",
     "ProjectStatus",
     "ProjectType",
     "ProjectConstants",

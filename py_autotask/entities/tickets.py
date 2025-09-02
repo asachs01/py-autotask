@@ -129,7 +129,9 @@ class TicketsEntity(BaseEntity):
 
         if not include_completed:
             # Exclude completed status
-            filters.append(QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE))
+            filters.append(
+                QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE)
+            )
 
         return self.query(filters=filters, max_records=limit)
 

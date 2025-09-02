@@ -74,7 +74,9 @@ class TasksEntity(BaseEntity):
         # Validate estimated hours is positive
         estimated_hours = task_data.get("estimatedHours", 0)
         if float(estimated_hours) < TaskConstants.MIN_ESTIMATED_HOURS:
-            raise ValueError(f"Estimated hours must be at least {TaskConstants.MIN_ESTIMATED_HOURS}")
+            raise ValueError(
+                f"Estimated hours must be at least {TaskConstants.MIN_ESTIMATED_HOURS}"
+            )
 
         return self._create(task_data)
 
@@ -212,7 +214,7 @@ class TasksEntity(BaseEntity):
             )
 
         if status_filter:
-            # Handle special case for overdue tasks 
+            # Handle special case for overdue tasks
             if status_filter.lower() == "overdue":
                 status_ids = TaskConstants.OPEN_STATUSES
             else:
@@ -220,15 +222,13 @@ class TasksEntity(BaseEntity):
                     status_ids = validate_status_filter(TaskConstants, status_filter)
                 except ValueError as e:
                     raise ValueError(f"Invalid status filter for tasks: {e}")
-                    
+
             if len(status_ids) == 1:
                 filters.append(
                     QueryFilter(field="status", op="eq", value=status_ids[0])
                 )
             else:
-                filters.append(
-                    QueryFilter(field="status", op="in", value=status_ids)
-                )
+                filters.append(QueryFilter(field="status", op="in", value=status_ids))
 
         tasks = self.query(filters=filters, max_records=limit)
 
@@ -343,8 +343,14 @@ class TasksEntity(BaseEntity):
         Returns:
             Updated task data
         """
-        if not TaskConstants.MIN_PERCENT_COMPLETE <= percent_complete <= TaskConstants.MAX_PERCENT_COMPLETE:
-            raise ValueError(f"Percent complete must be between {TaskConstants.MIN_PERCENT_COMPLETE} and {TaskConstants.MAX_PERCENT_COMPLETE}")
+        if (
+            not TaskConstants.MIN_PERCENT_COMPLETE
+            <= percent_complete
+            <= TaskConstants.MAX_PERCENT_COMPLETE
+        ):
+            raise ValueError(
+                f"Percent complete must be between {TaskConstants.MIN_PERCENT_COMPLETE} and {TaskConstants.MAX_PERCENT_COMPLETE}"
+            )
 
         update_data = {
             "percentComplete": percent_complete,
@@ -403,7 +409,12 @@ class TasksEntity(BaseEntity):
         Returns:
             Updated task data
         """
-        valid_priorities = [TaskPriority.CRITICAL, TaskPriority.HIGH, TaskPriority.MEDIUM, TaskPriority.LOW]
+        valid_priorities = [
+            TaskPriority.CRITICAL,
+            TaskPriority.HIGH,
+            TaskPriority.MEDIUM,
+            TaskPriority.LOW,
+        ]
         if priority_level not in valid_priorities:
             raise ValueError(
                 f"Priority level must be one of {valid_priorities} (1=Critical, 2=High, 3=Medium, 4=Low)"
@@ -542,7 +553,7 @@ class TasksEntity(BaseEntity):
 
         status_map = {
             TaskStatus.NEW: "new",
-            TaskStatus.IN_PROGRESS: "in_progress", 
+            TaskStatus.IN_PROGRESS: "in_progress",
             TaskStatus.WAITING: "waiting",
             TaskStatus.COMPLETE: "complete",
             TaskStatus.CANCELLED: "cancelled",
@@ -755,9 +766,13 @@ class TasksEntity(BaseEntity):
         title = task_data.get("title", "")
         if title:
             if len(title) < TaskConstants.MIN_TITLE_LENGTH:
-                errors.append(f"Task title must be at least {TaskConstants.MIN_TITLE_LENGTH} characters")
+                errors.append(
+                    f"Task title must be at least {TaskConstants.MIN_TITLE_LENGTH} characters"
+                )
             elif len(title) > TaskConstants.MAX_TITLE_LENGTH:
-                errors.append(f"Task title must not exceed {TaskConstants.MAX_TITLE_LENGTH} characters")
+                errors.append(
+                    f"Task title must not exceed {TaskConstants.MAX_TITLE_LENGTH} characters"
+                )
 
         # Validate estimated hours
         estimated_hours = task_data.get("estimatedHours")
@@ -765,7 +780,9 @@ class TasksEntity(BaseEntity):
             try:
                 est_val = float(estimated_hours)
                 if est_val < TaskConstants.MIN_ESTIMATED_HOURS:
-                    errors.append(f"Estimated hours must be at least {TaskConstants.MIN_ESTIMATED_HOURS}")
+                    errors.append(
+                        f"Estimated hours must be at least {TaskConstants.MIN_ESTIMATED_HOURS}"
+                    )
                 elif est_val > TaskConstants.MAX_ESTIMATED_HOURS:
                     warnings.append(
                         f"Estimated hours seems unusually high (over {TaskConstants.MAX_ESTIMATED_HOURS} hours)"
@@ -802,8 +819,14 @@ class TasksEntity(BaseEntity):
         if percent_complete is not None:
             try:
                 percent_val = int(percent_complete)
-                if not TaskConstants.MIN_PERCENT_COMPLETE <= percent_val <= TaskConstants.MAX_PERCENT_COMPLETE:
-                    errors.append(f"Percent complete must be between {TaskConstants.MIN_PERCENT_COMPLETE} and {TaskConstants.MAX_PERCENT_COMPLETE}")
+                if (
+                    not TaskConstants.MIN_PERCENT_COMPLETE
+                    <= percent_val
+                    <= TaskConstants.MAX_PERCENT_COMPLETE
+                ):
+                    errors.append(
+                        f"Percent complete must be between {TaskConstants.MIN_PERCENT_COMPLETE} and {TaskConstants.MAX_PERCENT_COMPLETE}"
+                    )
             except (ValueError, TypeError):
                 errors.append("Percent complete must be a valid integer")
 
