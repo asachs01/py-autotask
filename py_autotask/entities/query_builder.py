@@ -449,4 +449,5 @@ def query_builder(self) -> "QueryBuilder":
 
 
 # Add method to BaseEntity class
+from .base import BaseEntity
 BaseEntity.query_builder = query_builder
