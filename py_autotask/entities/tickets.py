@@ -6,9 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from ..constants import (
     TicketConstants,
-    TicketPriority,
     TicketStatus,
-    TicketType,
     validate_status_filter,
 )
 from ..types import QueryFilter, TicketData
@@ -152,7 +150,7 @@ class TicketsEntity(BaseEntity):
 
         filters = [
             QueryFilter(field="DueDateTime", op="lt", value=datetime.now().isoformat()),
-            QueryFilter(field="Status", op="ne", value=5),  # Not completed
+            QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE),  # Not completed
         ]
 
         if account_id:
@@ -307,15 +305,8 @@ class TicketsEntity(BaseEntity):
         filters = [QueryFilter(field="QueueID", op="eq", value=queue_id)]
 
         if status_filter:
-            status_map = {
-                "open": [1, 8, 9, 10, 11],
-                "closed": [5],
-                "new": [1],
-                "in_progress": [8, 9, 10, 11],
-            }
-
-            if status_filter.lower() in status_map:
-                status_ids = status_map[status_filter.lower()]
+            try:
+                status_ids = validate_status_filter(TicketConstants, status_filter)
                 if len(status_ids) == 1:
                     filters.append(
                         QueryFilter(field="Status", op="eq", value=status_ids[0])
@@ -324,6 +315,8 @@ class TicketsEntity(BaseEntity):
                     filters.append(
                         QueryFilter(field="Status", op="in", value=status_ids)
                     )
+            except ValueError as e:
+                raise ValueError(f"Invalid status filter for tickets: {e}")
 
         return self.query(filters=filters, max_records=limit)
 
@@ -347,7 +340,7 @@ class TicketsEntity(BaseEntity):
         filters = [QueryFilter(field="Priority", op="eq", value=priority)]
 
         if not include_completed:
-            filters.append(QueryFilter(field="Status", op="ne", value=5))
+            filters.append(QueryFilter(field="Status", op="ne", value=TicketStatus.COMPLETE))
 
         return self.query(filters=filters, max_records=limit)
 
@@ -397,7 +390,7 @@ class TicketsEntity(BaseEntity):
         Returns:
             Updated ticket data
         """
-        update_data = {"Status": 5}  # Closed/Complete status
+        update_data = {"Status": TicketStatus.COMPLETE}  # Closed/Complete status
 
         if resolution:
             update_data["Resolution"] = resolution
@@ -425,7 +418,7 @@ class TicketsEntity(BaseEntity):
         Returns:
             Updated ticket data
         """
-        update_data = {"Status": 1}  # New status
+        update_data = {"Status": TicketStatus.NEW}  # New status
 
         if reopen_reason:
             self.add_ticket_note(

@@ -9,6 +9,7 @@ from unittest.mock import Mock
 import pytest
 
 from py_autotask.entities.tickets import TicketsEntity
+from py_autotask.constants import TicketStatus
 
 
 class TestTicketsEntity:
@@ -122,7 +123,18 @@ class TestTicketsEntity:
         assert filters[0].value == 67890
         assert filters[1].field == "Status"
         assert filters[1].op == "in"
-        assert filters[1].value == [1, 8, 9, 10, 11]
+        # Should contain the TicketStatus enum values for "open" tickets
+        expected_open_statuses = [
+            TicketStatus.NEW,
+            TicketStatus.ASSIGNED, 
+            TicketStatus.IN_PROGRESS,
+            TicketStatus.WAITING_CUSTOMER,
+            TicketStatus.WAITING_MATERIALS,
+            TicketStatus.WAITING_VENDOR,
+            TicketStatus.ON_HOLD,
+            TicketStatus.ESCALATED
+        ]
+        assert filters[1].value == expected_open_statuses
 
     def test_get_tickets_by_resource(self, tickets_entity, mock_client):
         """Test getting tickets by resource."""
@@ -141,7 +153,7 @@ class TestTicketsEntity:
         assert filters[0].value == 111
         assert filters[1].field == "Status"
         assert filters[1].op == "ne"
-        assert filters[1].value == 5  # Not completed
+        assert filters[1].value == TicketStatus.COMPLETE  # Not completed
 
     def test_get_overdue_tickets(self, tickets_entity, mock_client):
         """Test getting overdue tickets."""
@@ -161,7 +173,7 @@ class TestTicketsEntity:
         status_filter = next((f for f in filters if f.field == "Status"), None)
         assert status_filter is not None
         assert status_filter.op == "ne"
-        assert status_filter.value == 5
+        assert status_filter.value == TicketStatus.COMPLETE
         # Check for due date filter
         due_filter = next((f for f in filters if f.field == "DueDateTime"), None)
         assert due_filter is not None
