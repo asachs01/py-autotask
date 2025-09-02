@@ -5,11 +5,7 @@ ExpenseReports entity for Autotask API operations.
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from ..constants import (
-    ExpenseReportConstants,
-    ExpenseReportStatus,
-    validate_status_filter,
-)
+from ..constants import ExpenseReportStatus
 from ..types import EntityDict, QueryFilter
 from .base import BaseEntity
 
