@@ -206,7 +206,7 @@ class ProjectsEntity(BaseEntity):
             List of active projects
         """
         # Exclude common inactive statuses: Complete(5), Cancelled(7), On Hold(3)
-        filters = [QueryFilter(field="Status", op="not_in", value=[3, 5, 7])]
+        filters = [QueryFilter(field="Status", op="notIn", value=[3, 5, 7])]
 
         if account_id:
             filters.append(QueryFilter(field="AccountID", op="eq", value=account_id))
