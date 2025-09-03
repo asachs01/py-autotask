@@ -4,6 +4,7 @@ Projects entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
+from ..constants import ProjectStatus, ProjectType
 from ..types import ProjectData, QueryFilter
 from .base import BaseEntity
 
@@ -23,8 +24,8 @@ class ProjectsEntity(BaseEntity):
         self,
         project_name: str,
         account_id: int,
-        project_type: int = 1,  # 1 = Fixed Price
-        status: int = 1,  # 1 = New
+        project_type: int = ProjectType.FIXED_PRICE,
+        status: int = ProjectStatus.NEW,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         description: Optional[str] = None,
@@ -36,8 +37,8 @@ class ProjectsEntity(BaseEntity):
         Args:
             project_name: Name of the project
             account_id: ID of the associated account/company
-            project_type: Type of project (1=Fixed Price, 2=Time & Materials, etc.)
-            status: Project status (1=New, 2=In Progress, etc.)
+            project_type: Type of project (use ProjectType enum)
+            status: Project status (use ProjectStatus enum)
             start_date: Project start date (ISO format)
             end_date: Project end date (ISO format)
             description: Project description

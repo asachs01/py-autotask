@@ -15,18 +15,19 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Import the enhanced py-autotask components
-from py_autotask import AsyncAutotaskClient
-from py_autotask.caching import CacheConfig
-from py_autotask.bulk_manager import IntelligentBulkManager
-from py_autotask.pandas_integration import PandasIntegration
-from py_autotask.types import RequestConfig
+from rich import print as rprint
 
 # Rich console for beautiful output
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich import print as rprint
+from rich.table import Table
+
+# Import the enhanced py-autotask components
+from py_autotask import AsyncAutotaskClient
+from py_autotask.bulk_manager import IntelligentBulkManager
+from py_autotask.caching import CacheConfig
+from py_autotask.pandas_integration import PandasIntegration
+from py_autotask.types import RequestConfig
 
 console = Console()
 

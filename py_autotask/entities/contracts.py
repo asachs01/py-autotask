@@ -4,6 +4,7 @@ Contracts entity for Autotask API operations.
 
 from typing import List, Optional
 
+from ..constants import ContractType
 from ..types import ContractData, QueryFilter
 from .base import BaseEntity
 
@@ -23,7 +24,7 @@ class ContractsEntity(BaseEntity):
         self,
         contract_name: str,
         account_id: int,
-        contract_type: int = 1,  # 1 = Recurring Service
+        contract_type: int = ContractType.RECURRING_SERVICE,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         contract_value: Optional[float] = None,
@@ -35,7 +36,7 @@ class ContractsEntity(BaseEntity):
         Args:
             contract_name: Name of the contract
             account_id: ID of the associated account/company
-            contract_type: Type of contract (1=Recurring Service, etc.)
+            contract_type: Type of contract (use ContractType enum)
             start_date: Contract start date (ISO format)
             end_date: Contract end date (ISO format)
             contract_value: Total value of the contract
