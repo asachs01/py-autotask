@@ -81,7 +81,9 @@ class DepartmentsEntity(BaseEntity):
         if parent_department_id is None:
             filters = [build_null_filter("parentDepartmentID", is_null=True)]
         else:
-            filters = [build_equality_filter("parentDepartmentID", parent_department_id)]
+            filters = [
+                build_equality_filter("parentDepartmentID", parent_department_id)
+            ]
 
         return self.query(filters=combine_filters(filters))
 
@@ -164,7 +166,7 @@ class DepartmentsEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -173,7 +175,7 @@ class DepartmentsEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for department in all_results:
-            department_id = department.get('id')
+            department_id = department.get("id")
             if department_id and department_id not in seen_ids:
                 seen_ids.add(department_id)
                 unique_results.append(department)

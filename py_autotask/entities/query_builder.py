@@ -419,6 +419,8 @@ class QueryBuilder:
 def add_query_builder_to_base_entity():
     """Add query builder method to BaseEntity class."""
     from .base import BaseEntity
+
+
 from .query_helpers import (
     build_equality_filter,
     build_search_filters,
@@ -450,4 +452,5 @@ def query_builder(self) -> "QueryBuilder":
 
 # Add method to BaseEntity class
 from .base import BaseEntity
+
 BaseEntity.query_builder = query_builder

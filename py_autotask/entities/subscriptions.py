@@ -129,7 +129,13 @@ class SubscriptionsEntity(BaseEntity):
         cutoff_date = date.today() + timedelta(days=days_ahead)
 
         return self.query(
-            filters=combine_filters([build_equality_filter("endDate le {cutoff_date.isoformat()} and status", "Active")])
+            filters=combine_filters(
+                [
+                    build_equality_filter(
+                        "endDate le {cutoff_date.isoformat()} and status", "Active"
+                    )
+                ]
+            )
         )
 
     def renew_subscription(
@@ -252,7 +258,9 @@ class SubscriptionsEntity(BaseEntity):
         if date_to:
             filters.append(f"startDate le {date_to.isoformat()}")
 
-        subscriptions = self.query(filters=combine_filters(filters) if filters else None)
+        subscriptions = self.query(
+            filters=combine_filters(filters) if filters else None
+        )
 
         # Analyze subscriptions
         total_revenue = Decimal("0")

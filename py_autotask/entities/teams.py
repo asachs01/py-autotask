@@ -121,7 +121,7 @@ class TeamsEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -130,7 +130,7 @@ class TeamsEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for team in all_results:
-            team_id = team.get('id')
+            team_id = team.get("id")
             if team_id and team_id not in seen_ids:
                 seen_ids.add(team_id)
                 unique_results.append(team)

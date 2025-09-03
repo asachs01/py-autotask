@@ -88,7 +88,9 @@ class ChangeRequestsEntity(BaseEntity):
         filters = [build_equality_filter("status", "Pending Approval")]
 
         if assigned_to_resource_id:
-            filters.append(build_equality_filter("assignedResourceID", assigned_to_resource_id))
+            filters.append(
+                build_equality_filter("assignedResourceID", assigned_to_resource_id)
+            )
 
         return self.query(filters=combine_filters(filters))
 

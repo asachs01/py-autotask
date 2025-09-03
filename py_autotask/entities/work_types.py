@@ -94,10 +94,7 @@ class WorkTypesEntity(BaseEntity):
         Returns:
             List of billable work types
         """
-        filters = [
-            build_equality_filter("isBillable", True),
-            build_active_filter(True)
-        ]
+        filters = [build_equality_filter("isBillable", True), build_active_filter(True)]
         return self.query(filters=combine_filters(filters))
 
     def get_non_billable_work_types(self) -> List[Dict[str, Any]]:
@@ -109,7 +106,7 @@ class WorkTypesEntity(BaseEntity):
         """
         filters = [
             build_equality_filter("isBillable", False),
-            build_active_filter(True)
+            build_active_filter(True),
         ]
         return self.query(filters=combine_filters(filters))
 
@@ -135,7 +132,7 @@ class WorkTypesEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -144,7 +141,7 @@ class WorkTypesEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for work_type in all_results:
-            work_type_id = work_type.get('id')
+            work_type_id = work_type.get("id")
             if work_type_id and work_type_id not in seen_ids:
                 seen_ids.add(work_type_id)
                 unique_results.append(work_type)
@@ -240,10 +237,10 @@ class WorkTypesEntity(BaseEntity):
         if work_type_ids:
             filters = [build_in_filter("id", work_type_ids)]
             results = self.query(filters=combine_filters(filters))
-            work_types = results.items if hasattr(results, 'items') else results
+            work_types = results.items if hasattr(results, "items") else results
         else:
             results = self.get_active_work_types()
-            work_types = results.items if hasattr(results, 'items') else results
+            work_types = results.items if hasattr(results, "items") else results
 
         analytics = []
         total_hours = Decimal("0")

@@ -171,7 +171,9 @@ def build_in_filter(field: str, values: List[Any], udf: bool = False) -> QueryFi
     return build_filter(field, FilterOperation.IN, string_values, udf)
 
 
-def build_null_filter(field: str, is_null: bool = True, udf: bool = False) -> QueryFilter:
+def build_null_filter(
+    field: str, is_null: bool = True, udf: bool = False
+) -> QueryFilter:
     """
     Build a null/not null filter.
 
@@ -280,7 +282,9 @@ def convert_string_filter_to_query_filter(filter_string: str) -> List[QueryFilte
 
 
 def build_parent_child_filter(
-    parent_field: str, parent_id: int, additional_filters: Optional[List[QueryFilter]] = None
+    parent_field: str,
+    parent_id: int,
+    additional_filters: Optional[List[QueryFilter]] = None,
 ) -> List[QueryFilter]:
     """
     Build filters for parent-child entity relationships.

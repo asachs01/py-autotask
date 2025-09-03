@@ -133,7 +133,7 @@ class ProductsEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -142,7 +142,7 @@ class ProductsEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for product in all_results:
-            product_id = product.get('id')
+            product_id = product.get("id")
             if product_id and product_id not in seen_ids:
                 seen_ids.add(product_id)
                 unique_results.append(product)

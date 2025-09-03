@@ -316,7 +316,7 @@ class BillingItemsEntity(BaseEntity):
         """
         filters = [
             build_equality_filter("entityID", project_id),
-            build_equality_filter("entityType", "Project")
+            build_equality_filter("entityType", "Project"),
         ]
 
         if not include_billed:

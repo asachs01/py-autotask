@@ -96,7 +96,9 @@ class ServiceLevelAgreementsEntity(BaseEntity):
         Returns:
             List of SLAs for the account
         """
-        return self.query(filters=combine_filters([build_equality_filter("accountID", account_id)]))
+        return self.query(
+            filters=combine_filters([build_equality_filter("accountID", account_id)])
+        )
 
     def check_sla_breach(
         self, sla_id: int, ticket_id: int, current_time: Optional[datetime] = None

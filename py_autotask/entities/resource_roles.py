@@ -123,7 +123,7 @@ class ResourceRolesEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -132,7 +132,7 @@ class ResourceRolesEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for role in all_results:
-            role_id = role.get('id')
+            role_id = role.get("id")
             if role_id and role_id not in seen_ids:
                 seen_ids.add(role_id)
                 unique_results.append(role)
@@ -340,10 +340,10 @@ class ResourceRolesEntity(BaseEntity):
         if role_ids:
             filters = [build_in_filter("id", role_ids)]
             results = self.query(filters=combine_filters(filters))
-            roles = results.items if hasattr(results, 'items') else results
+            roles = results.items if hasattr(results, "items") else results
         else:
             results = self.get_active_roles()
-            roles = results.items if hasattr(results, 'items') else results
+            roles = results.items if hasattr(results, "items") else results
 
         cost_analysis = []
         total_cost = Decimal("0")

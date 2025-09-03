@@ -328,7 +328,9 @@ class BillingCodesEntity(BaseEntity):
         if not include_inactive:
             filters.append(build_active_filter(True))
 
-        billing_codes = self.query(filters=combine_filters(filters) if filters else None)
+        billing_codes = self.query(
+            filters=combine_filters(filters) if filters else None
+        )
 
         # Enhance with calculated fields
         for code in billing_codes:
@@ -366,7 +368,7 @@ class BillingCodesEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -375,7 +377,7 @@ class BillingCodesEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for billing_code in all_results:
-            billing_code_id = billing_code.get('id')
+            billing_code_id = billing_code.get("id")
             if billing_code_id and billing_code_id not in seen_ids:
                 seen_ids.add(billing_code_id)
                 unique_results.append(billing_code)

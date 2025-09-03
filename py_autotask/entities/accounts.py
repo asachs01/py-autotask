@@ -164,7 +164,7 @@ class AccountsEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -173,7 +173,7 @@ class AccountsEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for account in all_results:
-            account_id = account.get('id')
+            account_id = account.get("id")
             if account_id and account_id not in seen_ids:
                 seen_ids.add(account_id)
                 unique_results.append(account)
@@ -194,6 +194,7 @@ class AccountsEntity(BaseEntity):
         """
         if parent_account_id is None:
             from .query_helpers import build_null_filter
+
             filters = [build_null_filter("parentAccountID", is_null=True)]
         else:
             filters = [build_equality_filter("parentAccountID", parent_account_id)]

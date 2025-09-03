@@ -86,7 +86,9 @@ class BusinessDivisionsEntity(BaseEntity):
         Returns:
             List of divisions managed by the resource
         """
-        filters = [build_equality_filter("divisionManagerResourceID", manager_resource_id)]
+        filters = [
+            build_equality_filter("divisionManagerResourceID", manager_resource_id)
+        ]
         return self.query(filters=combine_filters(filters))
 
     def search_divisions(
@@ -111,7 +113,7 @@ class BusinessDivisionsEntity(BaseEntity):
         for field in search_fields:
             search_filters = build_search_filters(search_term, [field])
             results = self.query(filters=search_filters)
-            if hasattr(results, 'items'):
+            if hasattr(results, "items"):
                 all_results.extend(results.items)
             else:
                 all_results.extend(results)
@@ -120,7 +122,7 @@ class BusinessDivisionsEntity(BaseEntity):
         seen_ids = set()
         unique_results = []
         for division in all_results:
-            division_id = division.get('id')
+            division_id = division.get("id")
             if division_id and division_id not in seen_ids:
                 seen_ids.add(division_id)
                 unique_results.append(division)
