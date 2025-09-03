@@ -10,20 +10,10 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import EntityDict, EntityList, QueryRequest
+from ..types import EntityDict, EntityList, QueryRequest, QueryFilter
 
 if TYPE_CHECKING:
     from .base import BaseEntity
-
-from ..types import QueryFilter
-from .query_helpers import (
-    build_active_filter,
-    build_equality_filter,
-    build_in_filter,
-    build_null_filter,
-    build_search_filters,
-    combine_filters,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -420,17 +410,6 @@ class QueryBuilder:
 def add_query_builder_to_base_entity():
     """Add query builder method to BaseEntity class."""
     from .base import BaseEntity
-
-
-from ..types import QueryFilter
-from .query_helpers import (
-    build_active_filter,
-    build_equality_filter,
-    build_in_filter,
-    build_null_filter,
-    build_search_filters,
-    combine_filters,
-)
 
 
 def query_builder(self) -> "QueryBuilder":

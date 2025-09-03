@@ -10,14 +10,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from ..types import QueryFilter
 from .base import BaseEntity
-from .query_helpers import (
-    build_active_filter,
-    build_equality_filter,
-    build_search_filters,
-    combine_filters,
-)
 
 
 class AccountsEntity(BaseEntity):
@@ -193,8 +186,7 @@ class AccountsEntity(BaseEntity):
             List of accounts in hierarchy
         """
         if parent_account_id is None:
-            from .query_helpers import build_null_filter
-
+            
             filters = [build_null_filter("parentAccountID", is_null=True)]
         else:
             filters = [build_equality_filter("parentAccountID", parent_account_id)]

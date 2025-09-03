@@ -9,7 +9,6 @@ conditions, actions, and triggers that respond to data changes and events.
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from ..types import QueryFilter
 from .base import BaseEntity
 
 

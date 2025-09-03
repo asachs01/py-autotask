@@ -9,13 +9,7 @@ operational procedures for service delivery and management.
 from datetime import date
 from typing import Any, Dict, List, Optional
 
-from ..types import QueryFilter
 from .base import BaseEntity
-from .query_helpers import (
-    build_active_filter,
-    build_equality_filter,
-    combine_filters,
-)
 
 
 class OperationsEntity(BaseEntity):
