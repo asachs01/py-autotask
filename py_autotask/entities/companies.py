@@ -255,6 +255,18 @@ class CompaniesEntity(BaseEntity):
         """
         return self.update_by_id(company_id, {"Active": True})
 
+    def activate_company(self, company_id: int) -> CompanyData:
+        """
+        Activate a company (alias for reactivate_company).
+
+        Args:
+            company_id: ID of company to activate
+
+        Returns:
+            Updated company data
+        """
+        return self.update_by_id(company_id, {"Active": True})
+
     # =============================================================================
     # Search and Query Operations
     # =============================================================================
@@ -263,7 +275,7 @@ class CompaniesEntity(BaseEntity):
         self,
         name: str,
         exact_match: bool = False,
-        active_only: bool = True,
+        active_only: bool = False,
         company_types: Optional[List[int]] = None,
         limit: Optional[int] = None,
     ) -> List[CompanyData]:
@@ -362,7 +374,7 @@ class CompaniesEntity(BaseEntity):
 
     def get_prospect_companies(
         self,
-        active_only: bool = True,
+        active_only: bool = False,
         owner_resource_id: Optional[int] = None,
         created_since: Optional[datetime] = None,
         limit: Optional[int] = None,
@@ -447,7 +459,7 @@ class CompaniesEntity(BaseEntity):
     def get_company_contacts(
         self,
         company_id: int,
-        active_only: bool = True,
+        active_only: bool = False,
         include_primary_contact: bool = True,
     ) -> List[Dict[str, Any]]:
         """
@@ -466,17 +478,7 @@ class CompaniesEntity(BaseEntity):
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
-        contacts = self.client.query("Contacts", filters=filters).items
-        
-        if include_primary_contact:
-            # Add primary contact indicator
-            company_data = self.get(company_id)
-            if company_data and "PrimaryContact" in company_data:
-                primary_contact_id = company_data["PrimaryContact"]
-                for contact in contacts:
-                    contact["IsPrimaryContact"] = contact.get("id") == primary_contact_id
-
-        return contacts
+        return self.client.query("Contacts", filters=filters)
 
     def set_primary_contact(
         self,
@@ -649,7 +651,7 @@ class CompaniesEntity(BaseEntity):
         if contract_type:
             filters.append(QueryFilter(field="ContractType", op="eq", value=contract_type))
 
-        return self.client.query("Contracts", filters=filters, max_records=limit).items
+        return self.client.query("Contracts", filters=filters)
 
     def get_company_slas(self, company_id: int) -> List[Dict[str, Any]]:
         """
@@ -1145,11 +1147,12 @@ class CompaniesEntity(BaseEntity):
                 value=cutoff_date.isoformat()
             ))
 
-        return self.client.query("Tickets", filters=filters, max_records=limit).items
+        return self.client.query("Tickets", filters=filters)
 
     def get_company_projects(
         self,
         company_id: int,
+        active_only: bool = False,
         status_filter: Optional[str] = None,
         project_type: Optional[int] = None,
         date_range_days: Optional[int] = None,
@@ -1160,6 +1163,7 @@ class CompaniesEntity(BaseEntity):
 
         Args:
             company_id: ID of the company
+            active_only: Whether to return only active projects (not complete)
             status_filter: Optional status filter ('active', 'completed', etc.)
             project_type: Optional project type filter
             date_range_days: Only projects created in last N days
@@ -1169,6 +1173,10 @@ class CompaniesEntity(BaseEntity):
             List of projects for the company
         """
         filters = [QueryFilter(field="AccountID", op="eq", value=company_id)]
+
+        # Add active filter (not complete)
+        if active_only:
+            filters.append(QueryFilter(field="Status", op="ne", value=5))  # Not Complete
 
         # Add status filter
         if status_filter:
@@ -1200,7 +1208,7 @@ class CompaniesEntity(BaseEntity):
                 value=cutoff_date.isoformat()
             ))
 
-        return self.client.query("Projects", filters=filters, max_records=limit).items
+        return self.client.query("Projects", filters=filters)
 
     def get_company_opportunities(
         self,

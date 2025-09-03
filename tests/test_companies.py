@@ -161,9 +161,9 @@ class TestCompaniesEntity:
         assert call_args[0][0] == "Companies"
         query_request = call_args[0][1]
         filters = query_request.filter
-        # Should call get_companies_by_type with type 3 (Prospect)
+        # Should call get_companies_by_type with type 2 (Prospect)
         assert filters[0].field == "CompanyType"
-        assert filters[0].value == 3
+        assert filters[0].value == 2
 
     def test_get_company_contacts(self, companies_entity, mock_client):
         """Test getting company contacts."""
