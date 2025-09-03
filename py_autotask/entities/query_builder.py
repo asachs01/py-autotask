@@ -14,15 +14,16 @@ from ..types import EntityDict, EntityList, QueryRequest
 
 if TYPE_CHECKING:
     from .base import BaseEntity
+
+from ..types import QueryFilter
 from .query_helpers import (
-    build_equality_filter,
-    build_search_filters,
     build_active_filter,
-    build_null_filter,
+    build_equality_filter,
     build_in_filter,
+    build_null_filter,
+    build_search_filters,
     combine_filters,
 )
-from ..types import QueryFilter
 
 logger = logging.getLogger(__name__)
 
@@ -420,16 +421,15 @@ def add_query_builder_to_base_entity():
     """Add query builder method to BaseEntity class."""
     from .base import BaseEntity
 
-
+from ..types import QueryFilter
 from .query_helpers import (
-    build_equality_filter,
-    build_search_filters,
     build_active_filter,
-    build_null_filter,
+    build_equality_filter,
     build_in_filter,
+    build_null_filter,
+    build_search_filters,
     combine_filters,
 )
-from ..types import QueryFilter
 
 
 def query_builder(self) -> "QueryBuilder":

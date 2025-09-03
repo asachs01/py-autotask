@@ -4,17 +4,16 @@ Project Notes entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import EntityDict, EntityList
+from ..types import EntityDict, EntityList, QueryFilter
 from .base import BaseEntity
 from .query_helpers import (
-    build_equality_filter,
-    build_search_filters,
     build_active_filter,
-    build_null_filter,
+    build_equality_filter,
     build_in_filter,
+    build_null_filter,
+    build_search_filters,
     combine_filters,
 )
-from ..types import QueryFilter
 
 
 class ProjectNotesEntity(BaseEntity):

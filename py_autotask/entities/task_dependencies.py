@@ -10,17 +10,16 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, EntityDict, UpdateResponse
+from ..types import CreateResponse, EntityDict, QueryFilter, UpdateResponse
 from .base import BaseEntity
 from .query_helpers import (
-    build_equality_filter,
-    build_search_filters,
     build_active_filter,
-    build_null_filter,
+    build_equality_filter,
     build_in_filter,
+    build_null_filter,
+    build_search_filters,
     combine_filters,
 )
-from ..types import QueryFilter
 
 logger = logging.getLogger(__name__)
 

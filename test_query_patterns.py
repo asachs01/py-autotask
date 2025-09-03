@@ -13,13 +13,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from py_autotask.entities.query_helpers import (
-    build_equality_filter,
     build_active_filter,
-    build_null_filter,
+    build_equality_filter,
     build_gte_filter,
-    build_lte_filter,
-    build_search_filters,
     build_in_filter,
+    build_lte_filter,
+    build_null_filter,
+    build_search_filters,
     combine_filters,
     convert_string_filter_to_query_filter,
 )

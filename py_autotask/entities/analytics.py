@@ -16,16 +16,16 @@ from statistics import mean, median, stdev
 from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
+from ..types import QueryFilter
 from .base import BaseEntity
 from .query_helpers import (
-    build_equality_filter,
-    build_search_filters,
     build_active_filter,
-    build_null_filter,
+    build_equality_filter,
     build_in_filter,
+    build_null_filter,
+    build_search_filters,
     combine_filters,
 )
-from ..types import QueryFilter
 
 logger = logging.getLogger(__name__)
 

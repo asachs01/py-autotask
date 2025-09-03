@@ -8,7 +8,7 @@ work correctly without requiring a live API connection.
 
 import sys
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
 
 # Add the project root to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -19,13 +19,13 @@ def test_query_helpers_functionality():
     print("Testing query helper functionality...")
 
     from py_autotask.entities.query_helpers import (
-        build_equality_filter,
         build_active_filter,
-        build_null_filter,
+        build_equality_filter,
         build_gte_filter,
-        build_lte_filter,
-        build_search_filters,
         build_in_filter,
+        build_lte_filter,
+        build_null_filter,
+        build_search_filters,
         combine_filters,
     )
     from py_autotask.types import FilterOperation
@@ -128,9 +128,9 @@ def test_backwards_compatibility():
         from py_autotask.entities import (
             AccountsEntity,
             CompaniesEntity,
-            TicketsEntity,
             ProjectsEntity,
             ResourcesEntity,
+            TicketsEntity,
         )
 
         print("  ✓ Core entities import successfully")
