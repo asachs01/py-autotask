@@ -17,7 +17,7 @@ from .base import BaseEntity
 class CompaniesEntity(BaseEntity):
     """
     Comprehensive Companies/Accounts entity for the Autotask API.
-    
+
     This entity provides full PSA (Professional Services Automation) functionality
     for managing companies/accounts including:
     - Complete CRUD operations
@@ -80,7 +80,7 @@ class CompaniesEntity(BaseEntity):
             ValueError: If company_name exceeds field limits or is invalid
         """
         self._validate_company_name(company_name)
-        
+
         company_data = {
             "CompanyName": company_name,
             "CompanyType": company_type,
@@ -140,14 +140,14 @@ class CompaniesEntity(BaseEntity):
     def delete_company(self, company_id: int, force: bool = False) -> bool:
         """
         Delete or deactivate a company.
-        
+
         Args:
             company_id: ID of the company to delete
             force: If True, attempt hard delete; if False, deactivate
-            
+
         Returns:
             True if successful
-            
+
         Note:
             Autotask typically doesn't allow hard deletion of companies with
             associated data. This method will deactivate by default.
@@ -158,7 +158,7 @@ class CompaniesEntity(BaseEntity):
             except Exception:
                 # Fall back to deactivation if hard delete fails
                 pass
-        
+
         # Deactivate the company
         self.update_by_id(company_id, {"Active": False})
         return True
@@ -185,7 +185,7 @@ class CompaniesEntity(BaseEntity):
             Updated company data
         """
         updates = {"CompanyType": AccountType.CUSTOMER}
-        
+
         if owner_resource_id:
             updates["OwnerResourceID"] = owner_resource_id
 
@@ -213,7 +213,7 @@ class CompaniesEntity(BaseEntity):
             Updated company data
         """
         updates = {"CompanyType": AccountType.PROSPECT}
-        
+
         if qualification_notes:
             updates["Notes"] = qualification_notes
 
@@ -237,7 +237,7 @@ class CompaniesEntity(BaseEntity):
             Updated company data
         """
         updates = {"Active": False}
-        
+
         if reason:
             updates["InactiveReason"] = reason
 
@@ -293,7 +293,7 @@ class CompaniesEntity(BaseEntity):
             List of matching companies
         """
         filters = []
-        
+
         if exact_match:
             filters.append(QueryFilter(field="CompanyName", op="eq", value=name))
         else:
@@ -304,9 +304,13 @@ class CompaniesEntity(BaseEntity):
 
         if company_types:
             if len(company_types) == 1:
-                filters.append(QueryFilter(field="CompanyType", op="eq", value=company_types[0]))
+                filters.append(
+                    QueryFilter(field="CompanyType", op="eq", value=company_types[0])
+                )
             else:
-                filters.append(QueryFilter(field="CompanyType", op="in", value=company_types))
+                filters.append(
+                    QueryFilter(field="CompanyType", op="in", value=company_types)
+                )
 
         return self.query(filters=filters, max_records=limit).items
 
@@ -335,9 +339,7 @@ class CompaniesEntity(BaseEntity):
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
         return self.query(
-            filters=filters,
-            include_fields=include_fields,
-            max_records=limit
+            filters=filters, include_fields=include_fields, max_records=limit
         ).items
 
     def get_customer_companies(
@@ -359,16 +361,22 @@ class CompaniesEntity(BaseEntity):
         Returns:
             List of customer companies
         """
-        filters = [QueryFilter(field="CompanyType", op="eq", value=AccountType.CUSTOMER)]
+        filters = [
+            QueryFilter(field="CompanyType", op="eq", value=AccountType.CUSTOMER)
+        ]
 
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
         if owner_resource_id:
-            filters.append(QueryFilter(field="OwnerResourceID", op="eq", value=owner_resource_id))
+            filters.append(
+                QueryFilter(field="OwnerResourceID", op="eq", value=owner_resource_id)
+            )
 
         if territory_id:
-            filters.append(QueryFilter(field="TerritoryID", op="eq", value=territory_id))
+            filters.append(
+                QueryFilter(field="TerritoryID", op="eq", value=territory_id)
+            )
 
         return self.query(filters=filters, max_records=limit).items
 
@@ -391,20 +399,24 @@ class CompaniesEntity(BaseEntity):
         Returns:
             List of prospect companies
         """
-        filters = [QueryFilter(field="CompanyType", op="eq", value=AccountType.PROSPECT)]
+        filters = [
+            QueryFilter(field="CompanyType", op="eq", value=AccountType.PROSPECT)
+        ]
 
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
         if owner_resource_id:
-            filters.append(QueryFilter(field="OwnerResourceID", op="eq", value=owner_resource_id))
+            filters.append(
+                QueryFilter(field="OwnerResourceID", op="eq", value=owner_resource_id)
+            )
 
         if created_since:
-            filters.append(QueryFilter(
-                field="CreateDate",
-                op="gte",
-                value=created_since.isoformat()
-            ))
+            filters.append(
+                QueryFilter(
+                    field="CreateDate", op="gte", value=created_since.isoformat()
+                )
+            )
 
         return self.query(filters=filters, max_records=limit).items
 
@@ -443,9 +455,13 @@ class CompaniesEntity(BaseEntity):
             if radius_miles:
                 # This would require a more complex implementation
                 # For now, just do exact postal code match
-                filters.append(QueryFilter(field="PostalCode", op="eq", value=postal_code))
+                filters.append(
+                    QueryFilter(field="PostalCode", op="eq", value=postal_code)
+                )
             else:
-                filters.append(QueryFilter(field="PostalCode", op="eq", value=postal_code))
+                filters.append(
+                    QueryFilter(field="PostalCode", op="eq", value=postal_code)
+                )
 
         if not filters:
             raise ValueError("At least one location criteria must be provided")
@@ -474,7 +490,7 @@ class CompaniesEntity(BaseEntity):
             List of contacts for the company
         """
         filters = [QueryFilter(field="CompanyID", op="eq", value=company_id)]
-        
+
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
@@ -517,9 +533,9 @@ class CompaniesEntity(BaseEntity):
 
         contacts = self.client.query(
             "Contacts",
-            filters=[QueryFilter(field="id", op="eq", value=primary_contact_id)]
+            filters=[QueryFilter(field="id", op="eq", value=primary_contact_id)],
         ).items
-        
+
         return contacts[0] if contacts else None
 
     # =============================================================================
@@ -550,7 +566,7 @@ class CompaniesEntity(BaseEntity):
             Updated company data
         """
         updates = {}
-        
+
         billing_fields = {
             "BillingMethod": billing_method,
             "PaymentTerms": payment_terms,
@@ -586,7 +602,7 @@ class CompaniesEntity(BaseEntity):
             "CreditLimit": credit_limit,
             "CreditHold": credit_hold,
         }
-        
+
         return self.update_by_id(company_id, updates)
 
     def get_company_financial_summary(self, company_id: int) -> Dict[str, Any]:
@@ -601,15 +617,17 @@ class CompaniesEntity(BaseEntity):
         """
         # Get company billing info
         company_data = self.get(company_id)
-        
+
         # Get related financial data (invoices, payments, etc.)
         # This would typically involve multiple API calls
-        
+
         summary = {
             "company_id": company_id,
             "company_name": company_data.get("CompanyName") if company_data else None,
             "credit_limit": company_data.get("CreditLimit", 0) if company_data else 0,
-            "credit_hold": company_data.get("CreditHold", False) if company_data else False,
+            "credit_hold": (
+                company_data.get("CreditHold", False) if company_data else False
+            ),
             "payment_terms": company_data.get("PaymentTerms") if company_data else None,
             "currency": company_data.get("CurrencyID") if company_data else None,
             # These would be calculated from invoice/payment data
@@ -617,7 +635,7 @@ class CompaniesEntity(BaseEntity):
             "total_invoiced_ytd": 0.0,
             "total_paid_ytd": 0.0,
         }
-        
+
         return summary
 
     # =============================================================================
@@ -649,7 +667,9 @@ class CompaniesEntity(BaseEntity):
             filters.append(QueryFilter(field="Status", op="eq", value=1))  # Active
 
         if contract_type:
-            filters.append(QueryFilter(field="ContractType", op="eq", value=contract_type))
+            filters.append(
+                QueryFilter(field="ContractType", op="eq", value=contract_type)
+            )
 
         return self.client.query("Contracts", filters=filters)
 
@@ -688,11 +708,17 @@ class CompaniesEntity(BaseEntity):
         assignment_data = {
             "AccountID": company_id,
             "ServiceLevelAgreementID": sla_id,
-            "EffectiveDate": effective_date.isoformat() if effective_date else datetime.now().isoformat(),
+            "EffectiveDate": (
+                effective_date.isoformat()
+                if effective_date
+                else datetime.now().isoformat()
+            ),
         }
-        
+
         # This would create an SLA assignment record
-        return self.client.create_entity("ServiceLevelAgreementResults", assignment_data)
+        return self.client.create_entity(
+            "ServiceLevelAgreementResults", assignment_data
+        )
 
     # =============================================================================
     # Location and Address Management
@@ -770,7 +796,7 @@ class CompaniesEntity(BaseEntity):
         postal_code: str,
         country: str,
         is_primary: bool = False,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Add a new location for a company.
@@ -874,10 +900,10 @@ class CompaniesEntity(BaseEntity):
             results = companies.bulk_update_companies(updates)
         """
         results = []
-        
+
         for i in range(0, len(company_updates), batch_size):
-            batch = company_updates[i:i + batch_size]
-            
+            batch = company_updates[i : i + batch_size]
+
             for update in batch:
                 company_id = update.pop("id")
                 try:
@@ -887,7 +913,7 @@ class CompaniesEntity(BaseEntity):
                     # Log error but continue with other updates
                     self.logger.error(f"Failed to update company {company_id}: {e}")
                     results.append(None)
-        
+
         return results
 
     def bulk_deactivate_companies(
@@ -909,7 +935,7 @@ class CompaniesEntity(BaseEntity):
             {"id": company_id, "Active": False, "InactiveReason": reason}
             for company_id in company_ids
         ]
-        
+
         return self.bulk_update_companies(updates)
 
     def bulk_transfer_companies(
@@ -938,7 +964,7 @@ class CompaniesEntity(BaseEntity):
             if new_territory_id:
                 update["TerritoryID"] = new_territory_id
             updates.append(update)
-        
+
         return self.bulk_update_companies(updates)
 
     # =============================================================================
@@ -962,7 +988,7 @@ class CompaniesEntity(BaseEntity):
         """
         end_date = datetime.now()
         start_date = end_date - timedelta(days=date_range_days)
-        
+
         # Get various activity metrics
         summary = {
             "company_id": company_id,
@@ -976,12 +1002,12 @@ class CompaniesEntity(BaseEntity):
             "total_time_entries": 0,
             "total_billable_hours": 0.0,
         }
-        
+
         # Get ticket counts
         try:
             tickets = self.get_company_tickets(company_id, limit=1000)
             summary["total_tickets"] = len(tickets)
-            
+
             # Count by status
             for ticket in tickets:
                 if ticket.get("Status") in [1, 8, 9, 10, 11]:  # Open statuses
@@ -993,9 +1019,11 @@ class CompaniesEntity(BaseEntity):
 
         # Get project counts
         try:
-            projects = self.get_company_projects(company_id, active_only=False, limit=1000)
+            projects = self.get_company_projects(
+                company_id, active_only=False, limit=1000
+            )
             summary["total_projects"] = len(projects)
-            
+
             for project in projects:
                 if project.get("Status") != 5:  # Not complete
                     summary["active_projects"] += 1
@@ -1024,15 +1052,15 @@ class CompaniesEntity(BaseEntity):
         # This would typically require complex joins and calculations
         # For now, return basic structure
         results = []
-        
+
         # Get all active customer companies
         customers = self.get_customer_companies(limit=limit)
-        
+
         for company in customers:
             company_id = company.get("id")
             if not company_id:
                 continue
-                
+
             metrics = {
                 "company_id": company_id,
                 "company_name": company.get("CompanyName"),
@@ -1040,7 +1068,7 @@ class CompaniesEntity(BaseEntity):
                 "period_days": period_days,
                 "metric_value": 0,  # Would be calculated based on metric type
             }
-            
+
             # Add basic activity summary
             try:
                 activity = self.get_company_activity_summary(company_id, period_days)
@@ -1049,15 +1077,17 @@ class CompaniesEntity(BaseEntity):
                 elif metric == "projects":
                     metrics["metric_value"] = activity.get("total_projects", 0)
                 # Revenue would require invoice data analysis
-                
+
             except Exception as e:
-                self.logger.error(f"Failed to get metrics for company {company_id}: {e}")
-            
+                self.logger.error(
+                    f"Failed to get metrics for company {company_id}: {e}"
+                )
+
             results.append(metrics)
-        
+
         # Sort by metric value descending
         results.sort(key=lambda x: x["metric_value"], reverse=True)
-        
+
         return results[:limit]
 
     def get_company_growth_trends(
@@ -1081,14 +1111,14 @@ class CompaniesEntity(BaseEntity):
             "monthly_metrics": [],
             "growth_indicators": {
                 "ticket_volume_trend": "stable",
-                "project_growth": "stable", 
+                "project_growth": "stable",
                 "revenue_trend": "stable",
             },
         }
-        
+
         # This would require historical data analysis
         # For now, return basic structure
-        
+
         return trends
 
     # =============================================================================
@@ -1130,22 +1160,26 @@ class CompaniesEntity(BaseEntity):
             if status_filter.lower() in status_map:
                 status_ids = status_map[status_filter.lower()]
                 if len(status_ids) == 1:
-                    filters.append(QueryFilter(field="Status", op="eq", value=status_ids[0]))
+                    filters.append(
+                        QueryFilter(field="Status", op="eq", value=status_ids[0])
+                    )
                 else:
-                    filters.append(QueryFilter(field="Status", op="in", value=status_ids))
+                    filters.append(
+                        QueryFilter(field="Status", op="in", value=status_ids)
+                    )
 
         # Add priority filter
         if priority_filter:
-            filters.append(QueryFilter(field="Priority", op="eq", value=priority_filter))
+            filters.append(
+                QueryFilter(field="Priority", op="eq", value=priority_filter)
+            )
 
         # Add date range filter
         if date_range_days:
             cutoff_date = datetime.now() - timedelta(days=date_range_days)
-            filters.append(QueryFilter(
-                field="CreateDate",
-                op="gte",
-                value=cutoff_date.isoformat()
-            ))
+            filters.append(
+                QueryFilter(field="CreateDate", op="gte", value=cutoff_date.isoformat())
+            )
 
         return self.client.query("Tickets", filters=filters)
 
@@ -1176,7 +1210,9 @@ class CompaniesEntity(BaseEntity):
 
         # Add active filter (not complete)
         if active_only:
-            filters.append(QueryFilter(field="Status", op="ne", value=5))  # Not Complete
+            filters.append(
+                QueryFilter(field="Status", op="ne", value=5)
+            )  # Not Complete
 
         # Add status filter
         if status_filter:
@@ -1191,9 +1227,13 @@ class CompaniesEntity(BaseEntity):
             if status_filter.lower() in status_map:
                 status_ids = status_map[status_filter.lower()]
                 if len(status_ids) == 1:
-                    filters.append(QueryFilter(field="Status", op="eq", value=status_ids[0]))
+                    filters.append(
+                        QueryFilter(field="Status", op="eq", value=status_ids[0])
+                    )
                 else:
-                    filters.append(QueryFilter(field="Status", op="in", value=status_ids))
+                    filters.append(
+                        QueryFilter(field="Status", op="in", value=status_ids)
+                    )
 
         # Add project type filter
         if project_type:
@@ -1202,11 +1242,9 @@ class CompaniesEntity(BaseEntity):
         # Add date range filter
         if date_range_days:
             cutoff_date = datetime.now() - timedelta(days=date_range_days)
-            filters.append(QueryFilter(
-                field="CreateDate",
-                op="gte", 
-                value=cutoff_date.isoformat()
-            ))
+            filters.append(
+                QueryFilter(field="CreateDate", op="gte", value=cutoff_date.isoformat())
+            )
 
         return self.client.query("Projects", filters=filters)
 
@@ -1240,11 +1278,15 @@ class CompaniesEntity(BaseEntity):
             if stage_filter.lower() in stage_map:
                 stage_ids = stage_map[stage_filter.lower()]
                 if len(stage_ids) == 1:
-                    filters.append(QueryFilter(field="Stage", op="eq", value=stage_ids[0]))
+                    filters.append(
+                        QueryFilter(field="Stage", op="eq", value=stage_ids[0])
+                    )
                 else:
                     filters.append(QueryFilter(field="Stage", op="in", value=stage_ids))
 
-        return self.client.query("Opportunities", filters=filters, max_records=limit).items
+        return self.client.query(
+            "Opportunities", filters=filters, max_records=limit
+        ).items
 
     # =============================================================================
     # Utility and Validation Methods
@@ -1254,9 +1296,11 @@ class CompaniesEntity(BaseEntity):
         """Validate company name field."""
         if not name or not name.strip():
             raise ValueError("Company name is required")
-        
+
         if len(name) > FieldLengths.NAME_MAX:
-            raise ValueError(f"Company name must be {FieldLengths.NAME_MAX} characters or less")
+            raise ValueError(
+                f"Company name must be {FieldLengths.NAME_MAX} characters or less"
+            )
 
     def _validate_company_updates(self, updates: Dict[str, Any]) -> None:
         """Validate company update fields."""
@@ -1266,7 +1310,9 @@ class CompaniesEntity(BaseEntity):
         # Validate other common fields
         if "Phone" in updates and updates["Phone"]:
             if len(updates["Phone"]) > FieldLengths.PHONE_MAX:
-                raise ValueError(f"Phone number must be {FieldLengths.PHONE_MAX} characters or less")
+                raise ValueError(
+                    f"Phone number must be {FieldLengths.PHONE_MAX} characters or less"
+                )
 
         if "WebAddress" in updates and updates["WebAddress"]:
             if len(updates["WebAddress"]) > 255:
@@ -1284,4 +1330,6 @@ class CompaniesEntity(BaseEntity):
         }
 
         if field in field_limits and len(value) > field_limits[field]:
-            raise ValueError(f"{field} must be {field_limits[field]} characters or less")
+            raise ValueError(
+                f"{field} must be {field_limits[field]} characters or less"
+            )
