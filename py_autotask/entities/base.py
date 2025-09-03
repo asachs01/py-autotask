@@ -86,7 +86,7 @@ class BaseEntity:
         query_request = QueryRequest()
 
         if filters:
-            
+
             if isinstance(filters, dict):
                 # Check if this is a query dict with filter/maxRecords/etc keys
                 if (
@@ -169,7 +169,7 @@ class BaseEntity:
         query_request.max_records = page_size
 
         if filters:
-            
+
             if isinstance(filters, dict):
                 # Single filter dict or nested filter format
                 if "op" in filters and "field" in filters:

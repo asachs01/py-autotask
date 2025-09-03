@@ -186,7 +186,7 @@ class AccountsEntity(BaseEntity):
             List of accounts in hierarchy
         """
         if parent_account_id is None:
-            
+
             filters = [build_null_filter("parentAccountID", is_null=True)]
         else:
             filters = [build_equality_filter("parentAccountID", parent_account_id)]
