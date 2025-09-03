@@ -421,6 +421,7 @@ def add_query_builder_to_base_entity():
     """Add query builder method to BaseEntity class."""
     from .base import BaseEntity
 
+
 from ..types import QueryFilter
 from .query_helpers import (
     build_active_filter,
