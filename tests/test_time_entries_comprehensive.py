@@ -14,15 +14,16 @@ This test suite covers all aspects of the time entries functionality:
 - Analytics and reporting
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 from py_autotask.constants import (
-    TimeEntryType,
-    TimeEntryStatus,
     TimeEntryBillingType,
     TimeEntryConstants,
+    TimeEntryStatus,
+    TimeEntryType,
 )
 from py_autotask.entities.time_entries import TimeEntriesEntity
 from py_autotask.types import QueryFilter
@@ -80,7 +81,9 @@ class TestTimeEntriesEntity:
         assert result == sample_time_entry
         time_entries_entity.create.assert_called_once()
 
-    def test_create_time_entry_comprehensive(self, time_entries_entity, sample_time_entry):
+    def test_create_time_entry_comprehensive(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test comprehensive time entry creation with all fields."""
         time_entries_entity.create = Mock(return_value=sample_time_entry)
 
@@ -200,9 +203,11 @@ class TestTimeEntriesEntity:
         """Test getting time entries with status filter."""
         time_entries_entity.query = Mock(return_value=[])
 
-        with patch('py_autotask.entities.time_entries.validate_status_filter') as mock_validate:
+        with patch(
+            "py_autotask.entities.time_entries.validate_status_filter"
+        ) as mock_validate:
             mock_validate.return_value = [TimeEntryStatus.APPROVED]
-            
+
             time_entries_entity.get_time_entries_by_resource(
                 resource_id=101,
                 status_filter="approved",
@@ -263,7 +268,7 @@ class TestTimeEntriesEntity:
         """Test starting time tracking session."""
         time_entries_entity.create = Mock(return_value=sample_time_entry)
 
-        with patch('py_autotask.entities.time_entries.datetime') as mock_datetime:
+        with patch("py_autotask.entities.time_entries.datetime") as mock_datetime:
             mock_now = Mock()
             mock_now.strftime.return_value = "2023-12-01"
             mock_now.isoformat.return_value = "2023-12-01T09:00:00"
@@ -289,7 +294,7 @@ class TestTimeEntriesEntity:
         time_entries_entity.get_time_entry = Mock(return_value=entry_with_start)
         time_entries_entity.update_time_entry = Mock(return_value=sample_time_entry)
 
-        with patch('py_autotask.entities.time_entries.datetime') as mock_datetime:
+        with patch("py_autotask.entities.time_entries.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2023, 12, 1, 17, 0, 0)
             mock_datetime.fromisoformat.return_value = datetime(2023, 12, 1, 9, 0, 0)
 
@@ -308,7 +313,9 @@ class TestTimeEntriesEntity:
         with pytest.raises(ValueError, match="Time entry .* not found"):
             time_entries_entity.stop_time_tracking(time_entry_id=99999)
 
-    def test_stop_time_tracking_no_start_time(self, time_entries_entity, sample_time_entry):
+    def test_stop_time_tracking_no_start_time(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test stopping time tracking without start time."""
         time_entries_entity.get_time_entry = Mock(return_value=sample_time_entry)
 
@@ -318,8 +325,7 @@ class TestTimeEntriesEntity:
     def test_calculate_duration(self, time_entries_entity):
         """Test duration calculation between times."""
         result = time_entries_entity.calculate_duration(
-            "2023-12-01T09:00:00",
-            "2023-12-01T17:00:00"
+            "2023-12-01T09:00:00", "2023-12-01T17:00:00"
         )
 
         assert result == 8.0
@@ -431,8 +437,11 @@ class TestTimeEntriesEntity:
         assert len(result) == 2
         assert time_entries_entity.create.call_count == 2
 
-    def test_bulk_create_time_entries_with_errors(self, time_entries_entity, sample_time_entry):
+    def test_bulk_create_time_entries_with_errors(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test bulk creation with some entries failing."""
+
         def create_side_effect(data):
             if data.get("ResourceID") == 102:
                 raise Exception("Resource not found")
@@ -498,6 +507,7 @@ class TestTimeEntriesEntity:
 
     def test_bulk_delete_time_entries_with_failures(self, time_entries_entity):
         """Test bulk deletion with some failures."""
+
         def delete_side_effect(entry_id):
             return entry_id != 12346  # 12346 will fail
 
@@ -532,7 +542,9 @@ class TestTimeEntriesEntity:
         assert result["entry_count"] == 3
         assert len(result["daily_breakdown"]) == 3
 
-    def test_generate_time_sheet_report_summary(self, time_entries_entity, sample_time_entry):
+    def test_generate_time_sheet_report_summary(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test generating summary time sheet report."""
         entries = [sample_time_entry]
         time_entries_entity.get_time_entries_by_resource = Mock(return_value=entries)
@@ -548,7 +560,9 @@ class TestTimeEntriesEntity:
         assert result["format"] == "summary"
         assert "totals" in result
 
-    def test_generate_time_sheet_report_detailed(self, time_entries_entity, sample_time_entry):
+    def test_generate_time_sheet_report_detailed(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test generating detailed time sheet report."""
         entries = [sample_time_entry]
         time_entries_entity.get_time_entries_by_resource = Mock(return_value=entries)
@@ -563,7 +577,9 @@ class TestTimeEntriesEntity:
         assert result["format"] == "detailed"
         assert "entries" in result
 
-    def test_generate_time_sheet_report_weekly(self, time_entries_entity, sample_time_entry):
+    def test_generate_time_sheet_report_weekly(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test generating weekly time sheet report."""
         entries = [sample_time_entry]
         time_entries_entity.get_time_entries_by_resource = Mock(return_value=entries)
@@ -597,11 +613,15 @@ class TestTimeEntriesEntity:
         )
 
         assert result["total_hours"] == 10.0
-        assert result["regular_hours"] == 8.0  # TimeEntryConstants.OVERTIME_DAILY_THRESHOLD
+        assert (
+            result["regular_hours"] == 8.0
+        )  # TimeEntryConstants.OVERTIME_DAILY_THRESHOLD
         assert result["overtime_hours"] == 2.0
         assert result["double_time_hours"] == 0.0
 
-    def test_calculate_overtime_with_double_time(self, time_entries_entity, sample_time_entry):
+    def test_calculate_overtime_with_double_time(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test overtime calculation with double time."""
         # Mock 14 hours of work (8 regular + 4 overtime + 2 double time)
         entries = [
@@ -616,7 +636,9 @@ class TestTimeEntriesEntity:
 
         assert result["total_hours"] == 14.0
         assert result["regular_hours"] == 8.0
-        assert result["overtime_hours"] == 4.0  # (14-8) - 2 = 4 (adjusted for double time)
+        assert (
+            result["overtime_hours"] == 4.0
+        )  # (14-8) - 2 = 4 (adjusted for double time)
         assert result["double_time_hours"] == 2.0  # 14 - 12 (DOUBLE_TIME_THRESHOLD)
 
     def test_calculate_weekly_overtime(self, time_entries_entity, sample_time_entry):
@@ -633,7 +655,9 @@ class TestTimeEntriesEntity:
         )
 
         assert result["total_weekly_hours"] == 45.0
-        assert result["regular_hours"] == 40.0  # TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD
+        assert (
+            result["regular_hours"] == 40.0
+        )  # TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD
         assert result["overtime_hours"] == 5.0
 
     def test_mark_holiday_entries(self, time_entries_entity, sample_time_entry):
@@ -652,8 +676,18 @@ class TestTimeEntriesEntity:
     def test_get_holiday_hours(self, time_entries_entity, sample_time_entry):
         """Test getting holiday hours for a resource."""
         holiday_entries = [
-            {**sample_time_entry, "DateWorked": "2023-12-25", "HoursWorked": 8.0, "Type": TimeEntryType.HOLIDAY},
-            {**sample_time_entry, "DateWorked": "2023-12-26", "HoursWorked": 4.0, "Type": TimeEntryType.HOLIDAY},
+            {
+                **sample_time_entry,
+                "DateWorked": "2023-12-25",
+                "HoursWorked": 8.0,
+                "Type": TimeEntryType.HOLIDAY,
+            },
+            {
+                **sample_time_entry,
+                "DateWorked": "2023-12-26",
+                "HoursWorked": 4.0,
+                "Type": TimeEntryType.HOLIDAY,
+            },
         ]
         time_entries_entity.query = Mock(return_value=holiday_entries)
 
@@ -694,8 +728,18 @@ class TestTimeEntriesEntity:
     def test_get_billability_analysis(self, time_entries_entity, sample_time_entry):
         """Test billability analysis."""
         entries = [
-            {**sample_time_entry, "HoursWorked": 30.0, "BillableToAccount": True, "Type": TimeEntryType.REGULAR},
-            {**sample_time_entry, "HoursWorked": 10.0, "BillableToAccount": False, "Type": TimeEntryType.TRAINING},
+            {
+                **sample_time_entry,
+                "HoursWorked": 30.0,
+                "BillableToAccount": True,
+                "Type": TimeEntryType.REGULAR,
+            },
+            {
+                **sample_time_entry,
+                "HoursWorked": 10.0,
+                "BillableToAccount": False,
+                "Type": TimeEntryType.TRAINING,
+            },
         ]
         time_entries_entity.query = Mock(return_value=entries)
 
@@ -713,9 +757,30 @@ class TestTimeEntriesEntity:
     def test_get_productivity_metrics(self, time_entries_entity, sample_time_entry):
         """Test productivity metrics calculation."""
         entries = [
-            {**sample_time_entry, "DateWorked": "2023-12-01", "HoursWorked": 8.0, "BillableToAccount": True, "ProjectID": 1001, "TicketID": 5001},
-            {**sample_time_entry, "DateWorked": "2023-12-01", "HoursWorked": 2.0, "BillableToAccount": False, "ProjectID": 1002, "TicketID": 5002},
-            {**sample_time_entry, "DateWorked": "2023-12-02", "HoursWorked": 7.0, "BillableToAccount": True, "ProjectID": 1001, "TicketID": 5003},
+            {
+                **sample_time_entry,
+                "DateWorked": "2023-12-01",
+                "HoursWorked": 8.0,
+                "BillableToAccount": True,
+                "ProjectID": 1001,
+                "TicketID": 5001,
+            },
+            {
+                **sample_time_entry,
+                "DateWorked": "2023-12-01",
+                "HoursWorked": 2.0,
+                "BillableToAccount": False,
+                "ProjectID": 1002,
+                "TicketID": 5002,
+            },
+            {
+                **sample_time_entry,
+                "DateWorked": "2023-12-02",
+                "HoursWorked": 7.0,
+                "BillableToAccount": True,
+                "ProjectID": 1001,
+                "TicketID": 5003,
+            },
         ]
         time_entries_entity.get_time_entries_by_resource = Mock(return_value=entries)
 
@@ -734,9 +799,24 @@ class TestTimeEntriesEntity:
     def test_get_time_distribution(self, time_entries_entity, sample_time_entry):
         """Test time distribution analysis."""
         entries = [
-            {**sample_time_entry, "HoursWorked": 20.0, "ProjectID": 1001, "BillableToAccount": True},
-            {**sample_time_entry, "HoursWorked": 15.0, "ProjectID": 1002, "BillableToAccount": True},
-            {**sample_time_entry, "HoursWorked": 5.0, "ProjectID": 1003, "BillableToAccount": False},
+            {
+                **sample_time_entry,
+                "HoursWorked": 20.0,
+                "ProjectID": 1001,
+                "BillableToAccount": True,
+            },
+            {
+                **sample_time_entry,
+                "HoursWorked": 15.0,
+                "ProjectID": 1002,
+                "BillableToAccount": True,
+            },
+            {
+                **sample_time_entry,
+                "HoursWorked": 5.0,
+                "ProjectID": 1003,
+                "BillableToAccount": False,
+            },
         ]
         time_entries_entity.query = Mock(return_value=entries)
 
@@ -751,7 +831,9 @@ class TestTimeEntriesEntity:
         assert result["distribution"][1001]["total_hours"] == 20.0
         assert result["distribution"][1001]["percentage"] == 50.0
 
-    def test_get_time_distribution_by_type(self, time_entries_entity, sample_time_entry):
+    def test_get_time_distribution_by_type(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test time distribution by entry type."""
         entries = [
             {**sample_time_entry, "HoursWorked": 30.0, "Type": TimeEntryType.REGULAR},
@@ -775,9 +857,24 @@ class TestTimeEntriesEntity:
     def test_get_summary_for_period(self, time_entries_entity, sample_time_entry):
         """Test comprehensive period summary."""
         entries = [
-            {**sample_time_entry, "HoursWorked": 8.0, "Status": TimeEntryStatus.APPROVED, "Type": TimeEntryType.REGULAR},
-            {**sample_time_entry, "HoursWorked": 6.0, "Status": TimeEntryStatus.DRAFT, "Type": TimeEntryType.OVERTIME},
-            {**sample_time_entry, "HoursWorked": 4.0, "Status": TimeEntryStatus.SUBMITTED, "Type": TimeEntryType.REGULAR},
+            {
+                **sample_time_entry,
+                "HoursWorked": 8.0,
+                "Status": TimeEntryStatus.APPROVED,
+                "Type": TimeEntryType.REGULAR,
+            },
+            {
+                **sample_time_entry,
+                "HoursWorked": 6.0,
+                "Status": TimeEntryStatus.DRAFT,
+                "Type": TimeEntryType.OVERTIME,
+            },
+            {
+                **sample_time_entry,
+                "HoursWorked": 4.0,
+                "Status": TimeEntryStatus.SUBMITTED,
+                "Type": TimeEntryType.REGULAR,
+            },
         ]
         time_entries_entity.query = Mock(return_value=entries)
 
@@ -823,7 +920,9 @@ class TestTimeEntriesEntity:
     # Integration Tests
     # =============================================================================
 
-    def test_complete_workflow_create_submit_approve(self, time_entries_entity, sample_time_entry):
+    def test_complete_workflow_create_submit_approve(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test complete workflow: create -> submit -> approve."""
         # Mock all required methods
         time_entries_entity.create = Mock(return_value=sample_time_entry)
@@ -855,34 +954,40 @@ class TestTimeEntriesEntity:
         assert len(submitted_entries) == 1
         assert len(approved_entries) == 1
 
-    def test_time_tracking_session_workflow(self, time_entries_entity, sample_time_entry):
+    def test_time_tracking_session_workflow(
+        self, time_entries_entity, sample_time_entry
+    ):
         """Test complete time tracking session workflow."""
         # Mock datetime and methods
-        with patch('py_autotask.entities.time_entries.datetime') as mock_datetime:
+        with patch("py_autotask.entities.time_entries.datetime") as mock_datetime:
             # Start time tracking
             mock_now_start = Mock()
             mock_now_start.strftime.return_value = "2023-12-01"
             mock_now_start.isoformat.return_value = "2023-12-01T09:00:00"
             mock_datetime.now.return_value = mock_now_start
-            
-            time_entries_entity.create = Mock(return_value={**sample_time_entry, "id": 12345})
-            
+
+            time_entries_entity.create = Mock(
+                return_value={**sample_time_entry, "id": 12345}
+            )
+
             session = time_entries_entity.start_time_tracking(
                 resource_id=101,
                 ticket_id=5001,
                 description="Working on feature",
             )
 
-            # Stop time tracking  
+            # Stop time tracking
             mock_datetime.now.return_value = datetime(2023, 12, 1, 17, 0, 0)
             mock_datetime.fromisoformat.return_value = datetime(2023, 12, 1, 9, 0, 0)
-            
-            time_entries_entity.get_time_entry = Mock(return_value={
-                **sample_time_entry,
-                "StartDateTime": "2023-12-01T09:00:00",
-            })
+
+            time_entries_entity.get_time_entry = Mock(
+                return_value={
+                    **sample_time_entry,
+                    "StartDateTime": "2023-12-01T09:00:00",
+                }
+            )
             time_entries_entity.update_time_entry = Mock(return_value=sample_time_entry)
-            
+
             final_entry = time_entries_entity.stop_time_tracking(
                 time_entry_id=session["time_entry_id"],
                 description="Completed feature work",
@@ -895,11 +1000,36 @@ class TestTimeEntriesEntity:
         """Test weekly time sheet with overtime analysis."""
         # Mock week's worth of entries with some overtime
         week_entries = [
-            {"DateWorked": "2023-11-27", "HoursWorked": 8.0, "BillableToAccount": True, "Type": TimeEntryType.REGULAR},
-            {"DateWorked": "2023-11-28", "HoursWorked": 9.0, "BillableToAccount": True, "Type": TimeEntryType.REGULAR},
-            {"DateWorked": "2023-11-29", "HoursWorked": 8.5, "BillableToAccount": True, "Type": TimeEntryType.REGULAR},
-            {"DateWorked": "2023-11-30", "HoursWorked": 10.0, "BillableToAccount": True, "Type": TimeEntryType.OVERTIME},
-            {"DateWorked": "2023-12-01", "HoursWorked": 7.0, "BillableToAccount": True, "Type": TimeEntryType.REGULAR},
+            {
+                "DateWorked": "2023-11-27",
+                "HoursWorked": 8.0,
+                "BillableToAccount": True,
+                "Type": TimeEntryType.REGULAR,
+            },
+            {
+                "DateWorked": "2023-11-28",
+                "HoursWorked": 9.0,
+                "BillableToAccount": True,
+                "Type": TimeEntryType.REGULAR,
+            },
+            {
+                "DateWorked": "2023-11-29",
+                "HoursWorked": 8.5,
+                "BillableToAccount": True,
+                "Type": TimeEntryType.REGULAR,
+            },
+            {
+                "DateWorked": "2023-11-30",
+                "HoursWorked": 10.0,
+                "BillableToAccount": True,
+                "Type": TimeEntryType.OVERTIME,
+            },
+            {
+                "DateWorked": "2023-12-01",
+                "HoursWorked": 7.0,
+                "BillableToAccount": True,
+                "Type": TimeEntryType.REGULAR,
+            },
         ]
         time_entries_entity.query = Mock(return_value=week_entries)
 
@@ -910,7 +1040,9 @@ class TestTimeEntriesEntity:
         )
 
         # Calculate weekly overtime
-        time_entries_entity.get_time_entries_by_resource = Mock(return_value=week_entries)
+        time_entries_entity.get_time_entries_by_resource = Mock(
+            return_value=week_entries
+        )
         overtime_calc = time_entries_entity.calculate_weekly_overtime(
             resource_id=101,
             week_ending_date="2023-12-02",
@@ -937,8 +1069,7 @@ class TestTimeEntriesEntity:
         """Test handling of invalid date formats in calculations."""
         with pytest.raises(ValueError):
             time_entries_entity.calculate_duration(
-                "invalid-date",
-                "2023-12-01T17:00:00"
+                "invalid-date", "2023-12-01T17:00:00"
             )
 
     def test_bulk_operations_with_empty_lists(self, time_entries_entity):
@@ -979,30 +1110,31 @@ class TestTimeEntriesEntity:
 # Additional test classes for specific functionality areas could be added here
 # to maintain organization and readability
 
+
 class TestTimeEntryValidation:
     """Additional tests focused specifically on validation logic."""
-    
+
     def test_hours_precision_validation(self):
         """Test hours validation with various precision levels."""
         entity = TimeEntriesEntity(Mock())
-        
+
         # Test valid precision
-        entity._validate_hours(8.25)    # Quarter hour
-        entity._validate_hours(8.5)     # Half hour
-        entity._validate_hours(8.01)    # Minimum valid
-        entity._validate_hours(23.99)   # Just under max
-        
+        entity._validate_hours(8.25)  # Quarter hour
+        entity._validate_hours(8.5)  # Half hour
+        entity._validate_hours(8.01)  # Minimum valid
+        entity._validate_hours(23.99)  # Just under max
+
         # Test boundary conditions
         with pytest.raises(ValueError):
-            entity._validate_hours(0.001)   # Below minimum
-        
+            entity._validate_hours(0.001)  # Below minimum
+
         with pytest.raises(ValueError):
-            entity._validate_hours(24.01)   # Above maximum
+            entity._validate_hours(24.01)  # Above maximum
 
 
 class TestTimeEntryConstants:
     """Tests for time entry constants and their usage."""
-    
+
     def test_constant_values(self):
         """Test that constants have expected values."""
         assert TimeEntryConstants.MIN_HOURS == 0.01
@@ -1010,7 +1142,7 @@ class TestTimeEntryConstants:
         assert TimeEntryConstants.DEFAULT_INCREMENT == 0.25
         assert TimeEntryConstants.OVERTIME_DAILY_THRESHOLD == 8.0
         assert TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD == 40.0
-    
+
     def test_status_filter_mappings(self):
         """Test status filter mappings."""
         assert "pending" in TimeEntryConstants.STATUS_FILTERS

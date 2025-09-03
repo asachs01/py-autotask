@@ -16,16 +16,16 @@ and analytics in Autotask. It includes:
 - Analytics (utilization, billable vs non-billable, etc.)
 """
 
+import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
-import logging
 
 from ..constants import (
-    TimeEntryType, 
-    TimeEntryStatus, 
     TimeEntryBillingType,
     TimeEntryConstants,
-    validate_status_filter
+    TimeEntryStatus,
+    TimeEntryType,
+    validate_status_filter,
 )
 from ..types import QueryFilter, TimeEntryData
 from .base import BaseEntity
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class TimeEntriesEntity(BaseEntity):
     """
     Comprehensive time entries entity for Autotask PSA.
-    
+
     Provides full time tracking and billing functionality including:
     - Time entry CRUD operations
     - Time tracking with start/stop timers
@@ -137,7 +137,9 @@ class TimeEntriesEntity(BaseEntity):
         if summary_notes:
             time_entry_data["SummaryNotes"] = summary_notes
 
-        self.logger.info(f"Creating time entry for resource {resource_id}: {hours_worked} hours on {date_worked}")
+        self.logger.info(
+            f"Creating time entry for resource {resource_id}: {hours_worked} hours on {date_worked}"
+        )
         return self.create(time_entry_data)
 
     def update_time_entry(
@@ -266,7 +268,9 @@ class TimeEntriesEntity(BaseEntity):
         if status_filter:
             status_ids = validate_status_filter(TimeEntryConstants, status_filter)
             if len(status_ids) == 1:
-                filters.append(QueryFilter(field="Status", op="eq", value=status_ids[0]))
+                filters.append(
+                    QueryFilter(field="Status", op="eq", value=status_ids[0])
+                )
             else:
                 filters.append(QueryFilter(field="Status", op="in", value=status_ids))
 
@@ -413,7 +417,7 @@ class TimeEntriesEntity(BaseEntity):
             search_fields = ["Description", "InternalNotes", "SummaryNotes"]
 
         filters = []
-        
+
         # Add text search filters (OR condition across fields)
         for field in search_fields:
             filters.append(QueryFilter(field=field, op="contains", value=search_text))
@@ -454,7 +458,7 @@ class TimeEntriesEntity(BaseEntity):
             Dictionary with timer session information
         """
         start_time = datetime.now()
-        
+
         # Create a draft time entry with start time
         time_entry_data = {
             "ResourceID": resource_id,
@@ -476,7 +480,7 @@ class TimeEntriesEntity(BaseEntity):
             time_entry_data["Description"] = description
 
         time_entry = self.create(time_entry_data)
-        
+
         timer_session = {
             "time_entry_id": time_entry.get("id"),
             "resource_id": resource_id,
@@ -514,20 +518,25 @@ class TimeEntriesEntity(BaseEntity):
             raise ValueError(f"Time entry {time_entry_id} not found")
 
         end_time = datetime.now()
-        start_time_str = current_entry.get("StartDateTime") or current_entry.get("start_date_time")
-        
+        start_time_str = current_entry.get("StartDateTime") or current_entry.get(
+            "start_date_time"
+        )
+
         if not start_time_str:
             raise ValueError("Time entry does not have a start time")
 
         start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
-        
+
         # Calculate hours worked
         duration = end_time - start_time
         hours_worked = duration.total_seconds() / 3600
 
         # Round to nearest increment (default 0.25 hours = 15 minutes)
-        hours_worked = round(hours_worked / TimeEntryConstants.DEFAULT_INCREMENT) * TimeEntryConstants.DEFAULT_INCREMENT
-        
+        hours_worked = (
+            round(hours_worked / TimeEntryConstants.DEFAULT_INCREMENT)
+            * TimeEntryConstants.DEFAULT_INCREMENT
+        )
+
         # Update the time entry
         update_data = {
             "EndDateTime": end_time.isoformat(),
@@ -539,7 +548,9 @@ class TimeEntriesEntity(BaseEntity):
         if internal_notes:
             update_data["InternalNotes"] = internal_notes
 
-        self.logger.info(f"Stopped time tracking for entry {time_entry_id}: {hours_worked} hours")
+        self.logger.info(
+            f"Stopped time tracking for entry {time_entry_id}: {hours_worked} hours"
+        )
         return self.update_time_entry(time_entry_id, **update_data)
 
     def calculate_duration(self, start_time: str, end_time: str) -> float:
@@ -555,7 +566,7 @@ class TimeEntriesEntity(BaseEntity):
         """
         start_dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
         end_dt = datetime.fromisoformat(end_time.replace("Z", "+00:00"))
-        
+
         duration = end_dt - start_dt
         return duration.total_seconds() / 3600
 
@@ -572,7 +583,7 @@ class TimeEntriesEntity(BaseEntity):
         """
         if increment is None:
             increment = TimeEntryConstants.DEFAULT_INCREMENT
-        
+
         return round(hours / increment) * increment
 
     # =============================================================================
@@ -580,9 +591,9 @@ class TimeEntriesEntity(BaseEntity):
     # =============================================================================
 
     def submit_for_approval(
-        self, 
+        self,
         time_entry_ids: Union[int, List[int]],
-        submission_notes: Optional[str] = None
+        submission_notes: Optional[str] = None,
     ) -> List[TimeEntryData]:
         """
         Submit time entries for approval.
@@ -603,14 +614,16 @@ class TimeEntriesEntity(BaseEntity):
                 "Status": TimeEntryStatus.SUBMITTED,
                 "SubmittedDate": datetime.now().isoformat(),
             }
-            
+
             if submission_notes:
                 current_notes = ""
                 entry = self.get_time_entry(time_entry_id)
                 if entry and entry.get("InternalNotes"):
                     current_notes = entry["InternalNotes"] + "\n\n"
-                
-                update_data["InternalNotes"] = f"{current_notes}Submission: {submission_notes}"
+
+                update_data["InternalNotes"] = (
+                    f"{current_notes}Submission: {submission_notes}"
+                )
 
             updated_entry = self.update_time_entry(time_entry_id, **update_data)
             updated_entries.append(updated_entry)
@@ -651,8 +664,10 @@ class TimeEntriesEntity(BaseEntity):
                 entry = self.get_time_entry(time_entry_id)
                 if entry and entry.get("InternalNotes"):
                     current_notes = entry["InternalNotes"] + "\n\n"
-                
-                update_data["InternalNotes"] = f"{current_notes}Approved: {approval_notes}"
+
+                update_data["InternalNotes"] = (
+                    f"{current_notes}Approved: {approval_notes}"
+                )
 
             updated_entry = self.update_time_entry(time_entry_id, **update_data)
             updated_entries.append(updated_entry)
@@ -696,8 +711,10 @@ class TimeEntriesEntity(BaseEntity):
             entry = self.get_time_entry(time_entry_id)
             if entry and entry.get("InternalNotes"):
                 current_notes = entry["InternalNotes"] + "\n\n"
-            
-            update_data["InternalNotes"] = f"{current_notes}Rejected: {rejection_reason}"
+
+            update_data["InternalNotes"] = (
+                f"{current_notes}Rejected: {rejection_reason}"
+            )
 
             updated_entry = self.update_time_entry(time_entry_id, **update_data)
             updated_entries.append(updated_entry)
@@ -718,13 +735,15 @@ class TimeEntriesEntity(BaseEntity):
         Args:
             approver_resource_id: Optional approver filter
             start_date: Optional start date filter
-            end_date: Optional end date filter  
+            end_date: Optional end date filter
             limit: Maximum number of entries to return
 
         Returns:
             List of time entries pending approval
         """
-        filters = [QueryFilter(field="Status", op="eq", value=TimeEntryStatus.SUBMITTED)]
+        filters = [
+            QueryFilter(field="Status", op="eq", value=TimeEntryStatus.SUBMITTED)
+        ]
 
         if start_date:
             filters.append(QueryFilter(field="DateWorked", op="gte", value=start_date))
@@ -733,7 +752,7 @@ class TimeEntriesEntity(BaseEntity):
 
         # Note: In a real implementation, you'd filter by approver permissions/hierarchy
         # This is simplified for demonstration
-        
+
         return self.query(filters=filters, max_records=limit)
 
     # =============================================================================
@@ -741,8 +760,7 @@ class TimeEntriesEntity(BaseEntity):
     # =============================================================================
 
     def bulk_create_time_entries(
-        self, 
-        time_entries_data: List[Dict[str, Any]]
+        self, time_entries_data: List[Dict[str, Any]]
     ) -> List[TimeEntryData]:
         """
         Create multiple time entries in bulk.
@@ -754,7 +772,7 @@ class TimeEntriesEntity(BaseEntity):
             List of created time entries
         """
         created_entries = []
-        
+
         for entry_data in time_entries_data:
             try:
                 # Validate required fields
@@ -773,7 +791,7 @@ class TimeEntriesEntity(BaseEntity):
 
                 created_entry = self.create(entry_data)
                 created_entries.append(created_entry)
-                
+
             except Exception as e:
                 self.logger.error(f"Failed to create time entry in bulk: {e}")
                 # Continue with other entries rather than failing completely
@@ -783,8 +801,7 @@ class TimeEntriesEntity(BaseEntity):
         return created_entries
 
     def bulk_update_time_entries(
-        self,
-        updates: List[Dict[str, Any]]
+        self, updates: List[Dict[str, Any]]
     ) -> List[TimeEntryData]:
         """
         Update multiple time entries in bulk.
@@ -796,13 +813,13 @@ class TimeEntriesEntity(BaseEntity):
             List of updated time entries
         """
         updated_entries = []
-        
+
         for update_data in updates:
             try:
                 time_entry_id = update_data.pop("id")
                 updated_entry = self.update_time_entry(time_entry_id, **update_data)
                 updated_entries.append(updated_entry)
-                
+
             except Exception as e:
                 self.logger.error(f"Failed to update time entry in bulk: {e}")
                 continue
@@ -836,9 +853,9 @@ class TimeEntriesEntity(BaseEntity):
             QueryFilter(field="DateWorked", op="lte", value=end_date),
             QueryFilter(field="Status", op="eq", value=TimeEntryStatus.DRAFT),
         ]
-        
+
         draft_entries = self.query(filters=filters)
-        
+
         if not draft_entries:
             return []
 
@@ -846,9 +863,7 @@ class TimeEntriesEntity(BaseEntity):
         return self.submit_for_approval(entry_ids, submission_notes)
 
     def bulk_delete_time_entries(
-        self, 
-        time_entry_ids: List[int],
-        force: bool = False
+        self, time_entry_ids: List[int], force: bool = False
     ) -> Dict[str, Any]:
         """
         Delete multiple time entries in bulk.
@@ -865,20 +880,24 @@ class TimeEntriesEntity(BaseEntity):
             "failed": [],
             "total_requested": len(time_entry_ids),
         }
-        
+
         for time_entry_id in time_entry_ids:
             try:
                 if self.delete_time_entry(time_entry_id):
                     results["deleted"].append(time_entry_id)
                 else:
-                    results["failed"].append({"id": time_entry_id, "reason": "Delete failed"})
+                    results["failed"].append(
+                        {"id": time_entry_id, "reason": "Delete failed"}
+                    )
             except Exception as e:
                 results["failed"].append({"id": time_entry_id, "reason": str(e)})
 
         results["deleted_count"] = len(results["deleted"])
         results["failed_count"] = len(results["failed"])
-        
-        self.logger.info(f"Bulk delete completed: {results['deleted_count']} deleted, {results['failed_count']} failed")
+
+        self.logger.info(
+            f"Bulk delete completed: {results['deleted_count']} deleted, {results['failed_count']} failed"
+        )
         return results
 
     # =============================================================================
@@ -928,7 +947,9 @@ class TimeEntriesEntity(BaseEntity):
         for entry in time_entries:
             date = entry.get("DateWorked") or entry.get("date_worked")
             hours = float(entry.get("HoursWorked") or entry.get("hours_worked", 0))
-            is_billable = entry.get("BillableToAccount") or entry.get("billable_to_account", False)
+            is_billable = entry.get("BillableToAccount") or entry.get(
+                "billable_to_account", False
+            )
             entry_type = entry.get("Type") or entry.get("type", TimeEntryType.REGULAR)
 
             if date not in daily_breakdown:
@@ -1000,7 +1021,9 @@ class TimeEntriesEntity(BaseEntity):
             # Group by weeks
             weekly_data = {}
             for entry in time_entries:
-                date = datetime.strptime(entry.get("DateWorked", entry.get("date_worked")), "%Y-%m-%d")
+                date = datetime.strptime(
+                    entry.get("DateWorked", entry.get("date_worked")), "%Y-%m-%d"
+                )
                 # Calculate week ending date (next Saturday)
                 days_until_saturday = (5 - date.weekday()) % 7
                 if days_until_saturday == 0 and date.weekday() != 5:  # If not Saturday
@@ -1020,7 +1043,10 @@ class TimeEntriesEntity(BaseEntity):
             }
 
         # Calculate summary data
-        total_hours = sum(float(entry.get("HoursWorked", entry.get("hours_worked", 0))) for entry in time_entries)
+        total_hours = sum(
+            float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
+            for entry in time_entries
+        )
         billable_hours = sum(
             float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
             for entry in time_entries
@@ -1037,7 +1063,16 @@ class TimeEntriesEntity(BaseEntity):
                 "billable_hours": billable_hours,
                 "non_billable_hours": total_hours - billable_hours,
                 "entry_count": len(time_entries),
-                "average_hours_per_day": total_hours / max(1, len(set(entry.get("DateWorked", entry.get("date_worked")) for entry in time_entries))),
+                "average_hours_per_day": total_hours
+                / max(
+                    1,
+                    len(
+                        set(
+                            entry.get("DateWorked", entry.get("date_worked"))
+                            for entry in time_entries
+                        )
+                    ),
+                ),
             },
         }
 
@@ -1066,18 +1101,22 @@ class TimeEntriesEntity(BaseEntity):
             Dictionary with overtime calculation details
         """
         # Get all time entries for the date
-        daily_entries = self.get_time_entries_by_resource(
-            resource_id, date, date
-        )
+        daily_entries = self.get_time_entries_by_resource(resource_id, date, date)
 
         total_daily_hours = sum(
-            float(entry.get("HoursWorked", entry.get("hours_worked", 0))) 
+            float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
             for entry in daily_entries
         )
 
-        regular_hours = min(total_daily_hours, TimeEntryConstants.OVERTIME_DAILY_THRESHOLD)
-        overtime_hours = max(0, total_daily_hours - TimeEntryConstants.OVERTIME_DAILY_THRESHOLD)
-        double_time_hours = max(0, total_daily_hours - TimeEntryConstants.DOUBLE_TIME_THRESHOLD)
+        regular_hours = min(
+            total_daily_hours, TimeEntryConstants.OVERTIME_DAILY_THRESHOLD
+        )
+        overtime_hours = max(
+            0, total_daily_hours - TimeEntryConstants.OVERTIME_DAILY_THRESHOLD
+        )
+        double_time_hours = max(
+            0, total_daily_hours - TimeEntryConstants.DOUBLE_TIME_THRESHOLD
+        )
 
         # Adjust overtime if there's double time
         if double_time_hours > 0:
@@ -1112,18 +1151,20 @@ class TimeEntriesEntity(BaseEntity):
         week_start = week_end - timedelta(days=6)
 
         weekly_entries = self.get_time_entries_by_resource(
-            resource_id, 
-            week_start.strftime("%Y-%m-%d"),
-            week_ending_date
+            resource_id, week_start.strftime("%Y-%m-%d"), week_ending_date
         )
 
         total_weekly_hours = sum(
-            float(entry.get("HoursWorked", entry.get("hours_worked", 0))) 
+            float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
             for entry in weekly_entries
         )
 
-        regular_hours = min(total_weekly_hours, TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD)
-        overtime_hours = max(0, total_weekly_hours - TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD)
+        regular_hours = min(
+            total_weekly_hours, TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD
+        )
+        overtime_hours = max(
+            0, total_weekly_hours - TimeEntryConstants.OVERTIME_WEEKLY_THRESHOLD
+        )
 
         return {
             "resource_id": resource_id,
@@ -1153,7 +1194,7 @@ class TimeEntriesEntity(BaseEntity):
             List of updated time entries
         """
         filters = [QueryFilter(field="DateWorked", op="eq", value=date)]
-        
+
         if resource_ids:
             filters.append(QueryFilter(field="ResourceID", op="in", value=resource_ids))
 
@@ -1167,7 +1208,7 @@ class TimeEntriesEntity(BaseEntity):
                     entry_id,
                     entry_type=holiday_type,
                     is_holiday=True,
-                    internal_notes=f"Holiday entry for {date}"
+                    internal_notes=f"Holiday entry for {date}",
                 )
                 updated_entries.append(updated_entry)
 
@@ -1200,7 +1241,7 @@ class TimeEntriesEntity(BaseEntity):
 
         holiday_entries = self.query(filters=filters)
         total_holiday_hours = sum(
-            float(entry.get("HoursWorked", entry.get("hours_worked", 0))) 
+            float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
             for entry in holiday_entries
         )
 
@@ -1256,7 +1297,10 @@ class TimeEntriesEntity(BaseEntity):
         weeks_in_range = days_in_range / 7
 
         # Calculate metrics
-        total_hours = sum(float(entry.get("HoursWorked", entry.get("hours_worked", 0))) for entry in time_entries)
+        total_hours = sum(
+            float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
+            for entry in time_entries
+        )
         billable_hours = sum(
             float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
             for entry in time_entries
@@ -1306,7 +1350,7 @@ class TimeEntriesEntity(BaseEntity):
             Dictionary with billability analysis
         """
         filters = []
-        
+
         if resource_id:
             filters.append(QueryFilter(field="ResourceID", op="eq", value=resource_id))
         if project_id:
@@ -1331,7 +1375,9 @@ class TimeEntriesEntity(BaseEntity):
 
         for entry in time_entries:
             hours = float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
-            is_billable = entry.get("BillableToAccount", entry.get("billable_to_account", False))
+            is_billable = entry.get(
+                "BillableToAccount", entry.get("billable_to_account", False)
+            )
             is_billed = entry.get("Billed", entry.get("billed", False))
             entry_type = entry.get("Type", entry.get("type", TimeEntryType.REGULAR))
             resource = entry.get("ResourceID", entry.get("resource_id"))
@@ -1359,7 +1405,11 @@ class TimeEntriesEntity(BaseEntity):
             # Group by resource
             if resource:
                 if resource not in by_resource:
-                    by_resource[resource] = {"hours": 0, "billable_hours": 0, "count": 0}
+                    by_resource[resource] = {
+                        "hours": 0,
+                        "billable_hours": 0,
+                        "count": 0,
+                    }
                 by_resource[resource]["hours"] += hours
                 if is_billable:
                     by_resource[resource]["billable_hours"] += hours
@@ -1436,7 +1486,9 @@ class TimeEntriesEntity(BaseEntity):
                 }
 
             hours = float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
-            is_billable = entry.get("BillableToAccount", entry.get("billable_to_account", False))
+            is_billable = entry.get(
+                "BillableToAccount", entry.get("billable_to_account", False)
+            )
             project_id = entry.get("ProjectID", entry.get("project_id"))
             ticket_id = entry.get("TicketID", entry.get("ticket_id"))
 
@@ -1455,7 +1507,7 @@ class TimeEntriesEntity(BaseEntity):
         total_hours = sum(day["total_hours"] for day in daily_data.values())
         total_billable = sum(day["billable_hours"] for day in daily_data.values())
         total_entries = sum(day["entries"] for day in daily_data.values())
-        
+
         # Convert sets to counts for JSON serialization
         for date_data in daily_data.values():
             date_data["project_count"] = len(date_data["projects"])
@@ -1499,7 +1551,7 @@ class TimeEntriesEntity(BaseEntity):
             Dictionary with time distribution data
         """
         filters = []
-        
+
         if resource_id:
             filters.append(QueryFilter(field="ResourceID", op="eq", value=resource_id))
         if start_date:
@@ -1525,8 +1577,10 @@ class TimeEntriesEntity(BaseEntity):
 
         for entry in time_entries:
             hours = float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
-            group_value = entry.get(group_field) or entry.get(group_field.lower()) or "Unassigned"
-            
+            group_value = (
+                entry.get(group_field) or entry.get(group_field.lower()) or "Unassigned"
+            )
+
             if group_value not in distribution:
                 distribution[group_value] = {
                     "total_hours": 0,
@@ -1537,7 +1591,7 @@ class TimeEntriesEntity(BaseEntity):
 
             distribution[group_value]["total_hours"] += hours
             distribution[group_value]["entry_count"] += 1
-            
+
             if entry.get("BillableToAccount", entry.get("billable_to_account", False)):
                 distribution[group_value]["billable_hours"] += hours
 
@@ -1545,11 +1599,15 @@ class TimeEntriesEntity(BaseEntity):
 
         # Calculate percentages
         for group_data in distribution.values():
-            group_data["percentage"] = (group_data["total_hours"] / max(total_hours, 1)) * 100
+            group_data["percentage"] = (
+                group_data["total_hours"] / max(total_hours, 1)
+            ) * 100
 
         # Sort by total hours (descending)
         sorted_distribution = dict(
-            sorted(distribution.items(), key=lambda x: x[1]["total_hours"], reverse=True)
+            sorted(
+                distribution.items(), key=lambda x: x[1]["total_hours"], reverse=True
+            )
         )
 
         return {
@@ -1573,21 +1631,25 @@ class TimeEntriesEntity(BaseEntity):
         if hours < TimeEntryConstants.MIN_HOURS:
             raise ValueError(f"Hours must be at least {TimeEntryConstants.MIN_HOURS}")
         if hours > TimeEntryConstants.MAX_HOURS_PER_ENTRY:
-            raise ValueError(f"Hours cannot exceed {TimeEntryConstants.MAX_HOURS_PER_ENTRY}")
+            raise ValueError(
+                f"Hours cannot exceed {TimeEntryConstants.MAX_HOURS_PER_ENTRY}"
+            )
 
     def _validate_work_associations(
-        self, 
+        self,
         ticket_id: Optional[int] = None,
         project_id: Optional[int] = None,
         task_id: Optional[int] = None,
     ) -> None:
         """Validate that at least one work association is provided."""
         if not any([ticket_id, project_id, task_id]):
-            raise ValueError("Time entry must be associated with at least one ticket, project, or task")
+            raise ValueError(
+                "Time entry must be associated with at least one ticket, project, or task"
+            )
 
     def get_summary_for_period(
-        self, 
-        start_date: str, 
+        self,
+        start_date: str,
         end_date: str,
         resource_id: Optional[int] = None,
         account_id: Optional[int] = None,
@@ -1617,7 +1679,10 @@ class TimeEntriesEntity(BaseEntity):
         time_entries = self.query(filters=filters)
 
         # Calculate comprehensive metrics
-        total_hours = sum(float(entry.get("HoursWorked", entry.get("hours_worked", 0))) for entry in time_entries)
+        total_hours = sum(
+            float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
+            for entry in time_entries
+        )
         billable_hours = sum(
             float(entry.get("HoursWorked", entry.get("hours_worked", 0)))
             for entry in time_entries

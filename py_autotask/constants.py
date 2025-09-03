@@ -461,7 +461,7 @@ class TimeEntryStatus(IntEnum):
 
 class TimeEntryBillingType(IntEnum):
     """Time entry billing type codes."""
-    
+
     BILLABLE = 1
     NON_BILLABLE = 2
     ALREADY_BILLED = 3
@@ -470,20 +470,20 @@ class TimeEntryBillingType(IntEnum):
 
 class TimeEntryConstants:
     """Time entry operational constants."""
-    
+
     MIN_HOURS = 0.01
     MAX_HOURS_PER_ENTRY = 24.0
     MAX_HOURS_PER_DAY = 24.0
     DEFAULT_INCREMENT = 0.25  # 15-minute increments
-    
+
     # Time entry validation
     VALID_TIME_FORMATS = ["HH:MM", "H.MM", "decimal"]
-    
+
     # Overtime thresholds (hours per day/week)
     OVERTIME_DAILY_THRESHOLD = 8.0
     OVERTIME_WEEKLY_THRESHOLD = 40.0
     DOUBLE_TIME_THRESHOLD = 12.0
-    
+
     # Status filter mappings
     STATUS_FILTERS = {
         "pending": [TimeEntryStatus.DRAFT, TimeEntryStatus.SUBMITTED],
