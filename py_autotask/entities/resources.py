@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import QueryFilter, ResourceData, CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, ResourceData, UpdateResponse
 from .base import BaseEntity
 
 
