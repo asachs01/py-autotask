@@ -10,6 +10,14 @@ from datetime import date
 from typing import Any, Dict, List, Optional
 
 from .base import BaseEntity
+from .query_helpers import (
+    build_active_filter,
+    build_equality_filter,
+    build_in_filter,
+    build_null_filter,
+    build_search_filters,
+    combine_filters,
+)
 
 
 class OperationsEntity(BaseEntity):
