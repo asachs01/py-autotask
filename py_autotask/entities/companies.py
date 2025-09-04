@@ -902,7 +902,7 @@ class CompaniesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(company_updates), batch_size):
-            batch = company_updates[i : i + batch_size]
+            batch = company_updates[i:i + batch_size]
 
             for update in batch:
                 company_id = update.pop("id")
