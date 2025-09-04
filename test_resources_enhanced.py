@@ -6,13 +6,12 @@ This module tests the comprehensive resource management features including
 capacity planning, skill tracking, scheduling, billing, and role management.
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, Mock, patch
+from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pytest
 
 from py_autotask.entities.resources import ResourcesEntity
-from py_autotask.types import QueryFilter
 
 
 class TestResourcesEntityEnhanced:
