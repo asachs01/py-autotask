@@ -18,7 +18,7 @@ class ResourcesEntity(BaseEntity):
     def __init__(self, client, entity_name):
         super().__init__(client, entity_name)
 
-    def get_active_resources(self, limit: Optional[int] = None) -> List[ResourceData]:
+    def get_active_resources(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Get all active resources.
 
@@ -38,7 +38,7 @@ class ResourcesEntity(BaseEntity):
         exact_match: bool = False,
         active_only: bool = True,
         limit: Optional[int] = None,
-    ) -> List[ResourceData]:
+    ) -> List[Dict[str, Any]]:
         """
         Search for resources by name.
 
