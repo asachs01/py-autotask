@@ -7,9 +7,9 @@ and advanced reporting capabilities.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from ..constants import AccountStatus, AccountType, FieldLengths
+from ..constants import AccountType, FieldLengths
 from ..types import CompanyData, QueryFilter
 from .base import BaseEntity
 
