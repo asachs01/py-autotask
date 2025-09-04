@@ -337,13 +337,11 @@ class ResourcesEntity(BaseEntity):
                 idx = date_to_index[date_worked]
                 daily_breakdown[idx]["scheduled_hours"] += hours
                 total_scheduled_hours += hours
-                
+
                 # Add busy slot
-                busy_slots.append({
-                    "date": date_worked,
-                    "hours": hours,
-                    "type": "time_entry"
-                })
+                busy_slots.append(
+                    {"date": date_worked, "hours": hours, "type": "time_entry"}
+                )
 
         # Process task estimates (distribute across task duration)
         for task in scheduled_tasks:
@@ -389,14 +387,16 @@ class ResourcesEntity(BaseEntity):
         # Update free hours and generate available slots for each day
         for day in daily_breakdown:
             day["free_hours"] = max(0, day["available_hours"] - day["scheduled_hours"])
-            
+
             # Generate available slots for days with free hours
             if day["free_hours"] > 0 and day["is_work_day"]:
-                available_slots.append({
-                    "date": day["date"],
-                    "available_hours": day["free_hours"],
-                    "type": "available"
-                })
+                available_slots.append(
+                    {
+                        "date": day["date"],
+                        "available_hours": day["free_hours"],
+                        "type": "available",
+                    }
+                )
 
         # Calculate utilization
         utilization_percentage = (
@@ -410,7 +410,6 @@ class ResourcesEntity(BaseEntity):
             "available_slots": available_slots,
             "busy_slots": busy_slots,
             "daily_summary": daily_breakdown,  # Renamed from daily_breakdown for test compatibility
-            
             # Additional detailed information
             "resource_id": resource_id,
             "resource_name": f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip(),
@@ -608,7 +607,6 @@ class ResourcesEntity(BaseEntity):
             "total_hours_worked": round(total_hours, 2),
             "total_available_hours": round(capacity_hours, 2),
             "period_days": work_days,
-            
             # Additional detailed information
             "resource_id": resource_id,
             "resource_name": f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip(),
@@ -701,7 +699,7 @@ class ResourcesEntity(BaseEntity):
                 QueryFilter(field="status", op="in", value=[1, 2, 3]),  # Open statuses
             ],
         )
-        
+
         # Handle both list and dict responses for active tasks
         if isinstance(active_tasks_response, list):
             active_tasks = active_tasks_response
@@ -826,8 +824,12 @@ class ResourcesEntity(BaseEntity):
 
         # Calculate test-expected metrics
         assignments = active_tasks  # Use tasks as assignments for the test
-        total_estimated_hours = sum(float(task.get("estimatedHours", 0)) for task in assignments)
-        total_hours_worked = sum(float(task.get("hoursWorked", 0)) for task in assignments)
+        total_estimated_hours = sum(
+            float(task.get("estimatedHours", 0)) for task in assignments
+        )
+        total_hours_worked = sum(
+            float(task.get("hoursWorked", 0)) for task in assignments
+        )
         completion_percentage = (
             (total_hours_worked / total_estimated_hours * 100)
             if total_estimated_hours > 0
@@ -841,7 +843,6 @@ class ResourcesEntity(BaseEntity):
             "total_hours_worked": total_hours_worked,
             "completion_percentage": round(completion_percentage, 2),
             "assignments": assignments,
-            
             # Additional detailed information
             "resource_id": resource_id,
             "resource_name": resource_name,
