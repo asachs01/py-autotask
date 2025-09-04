@@ -383,7 +383,7 @@ class ResourceServiceDeskRolesEntity(BaseEntity):
          one resource to another.
 
                 Args:
-                    from
+
         : Source resource ID
                     to_resource_id: Target resource ID
                     preserve_primary_status: Whether to preserve primary role status

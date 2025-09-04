@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
-from ..types import CreateResponse, EntityDict, QueryFilter
+from ..types import CreateResponse, EntityDict
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

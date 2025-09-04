@@ -4,7 +4,7 @@ Companies (Accounts) entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import CompanyData
+from ..types import CompanyData, QueryFilter
 from .base import BaseEntity
 
 

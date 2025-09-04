@@ -10,7 +10,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import EntityDict, EntityList, QueryFilter, QueryRequest
+from ..types import EntityDict, EntityList, QueryRequest
 
 if TYPE_CHECKING:
     from .base import BaseEntity

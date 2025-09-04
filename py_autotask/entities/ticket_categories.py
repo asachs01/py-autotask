@@ -7,7 +7,7 @@ ticket categorization and classification within the Autotask service desk.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 

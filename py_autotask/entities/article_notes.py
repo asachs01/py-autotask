@@ -8,7 +8,7 @@ notes and comments associated with knowledge base articles.
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 

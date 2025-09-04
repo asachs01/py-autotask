@@ -8,7 +8,7 @@ associations between knowledge base articles and configuration item categories.
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 

@@ -15,7 +15,7 @@ from ..constants import (
     TaskStatus,
     validate_status_filter,
 )
-from ..types import CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 

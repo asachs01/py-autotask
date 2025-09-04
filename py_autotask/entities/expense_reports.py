@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
 from ..constants import ExpenseReportStatus
-from ..types import EntityDict
+from ..types import EntityDict, QueryFilter
 from .base import BaseEntity
 
 

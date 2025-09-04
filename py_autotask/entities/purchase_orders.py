@@ -9,7 +9,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 

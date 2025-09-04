@@ -4,7 +4,7 @@ Contacts entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import ContactData
+from ..types import ContactData, QueryFilter
 from .base import BaseEntity
 
 

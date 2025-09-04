@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, EntityDict, QueryFilter, UpdateResponse
+from ..types import CreateResponse, EntityDict, UpdateResponse
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)

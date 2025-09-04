@@ -5,7 +5,7 @@ ComanagedAssociations entity for Autotask API operations.
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from ..types import EntityDict
+from ..types import EntityDict, QueryFilter
 from .base import BaseEntity
 
 

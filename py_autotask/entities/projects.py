@@ -5,7 +5,7 @@ Projects entity for Autotask API operations.
 from typing import Any, Dict, List, Optional
 
 from ..constants import ProjectStatus, ProjectType
-from ..types import ProjectData
+from ..types import ProjectData, QueryFilter
 from .base import BaseEntity
 
 

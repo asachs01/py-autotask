@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from ..types import EntityDict, EntityList, QueryFilter
+from ..types import EntityDict, EntityList
 from .base import BaseEntity
 
 

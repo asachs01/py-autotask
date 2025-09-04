@@ -8,7 +8,7 @@ contract billing blocks within the Autotask system.
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from ..types import CreateResponse, UpdateResponse
+from ..types import CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 

@@ -507,7 +507,7 @@ class ConfigurationItemRelatedItemsEntity(BaseEntity):
         self, configuration_item_id: int, max_depth: int = 10
     ) -> List[List[int]]:
         """
-        Find circular dependencies starting from a configuration item.
+        Find circular dependencies starting
 
         Args:
             configuration_item_id: ID of the starting configuration item

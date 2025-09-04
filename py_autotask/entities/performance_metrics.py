@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, QueryFilter
+from ..types import CreateResponse, EntityDict
 from .base import BaseEntity
 
 if TYPE_CHECKING:

@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, QueryFilter
+from ..types import CreateResponse, EntityDict
 from .base import BaseEntity
 
 if TYPE_CHECKING:

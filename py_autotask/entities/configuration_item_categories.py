@@ -177,13 +177,13 @@ class ConfigurationItemCategoriesEntity(BaseEntity):
 
     def get_category_hierarchy_path(self, category_id: int) -> List[Dict[str, Any]]:
         """
-        Get the full hierarchy path from root to the specified category.
+        Get the full hierarchy path
 
         Args:
             category_id: ID of the category
 
         Returns:
-            List of categories from root to target category
+            List of categories
         """
         path = []
         current_id = category_id

@@ -5,7 +5,7 @@ Inventory Items entity for Autotask API operations.
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ..types import EntityDict, EntityList, QueryFilter
+from ..types import EntityDict, EntityList
 from .base import BaseEntity
 
 
