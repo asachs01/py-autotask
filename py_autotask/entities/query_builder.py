@@ -5,12 +5,12 @@ This module provides sophisticated query building capabilities including
 relationship queries, complex filtering, and query optimization.
 """
 
-from enum import Enum
 import logging
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import EntityDict, EntityList, QueryRequest, QueryFilter
+from ..types import EntityDict, EntityList, QueryFilter, QueryRequest
 
 if TYPE_CHECKING:
     from .base import BaseEntity
