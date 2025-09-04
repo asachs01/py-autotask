@@ -237,16 +237,17 @@ class ConfigurationItemCategoryUdfAssociationsEntity(BaseEntity):
         preserve_display_order: bool = True,
     ) -> List[Dict[str, Any]]:
         """
-        Copy UDF associations from one category to another.
+               Copy UDF associations from
+        one category to another.
 
-        Args:
-            source_category_id: ID of the source configuration item category
-            target_category_id: ID of the target configuration item category
-            preserve_requirements: Whether to preserve requirement settings
-            preserve_display_order: Whether to preserve display order
+               Args:
+                   source_category_id: ID of the source configuration item category
+                   target_category_id: ID of the target configuration item category
+                   preserve_requirements: Whether to preserve requirement settings
+                   preserve_display_order: Whether to preserve display order
 
-        Returns:
-            List of newly created associations
+               Returns:
+                   List of newly created associations
         """
         source_associations = self.get_category_udf_associations(source_category_id)
         new_associations = []

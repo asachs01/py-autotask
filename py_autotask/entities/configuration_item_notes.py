@@ -279,16 +279,17 @@ class ConfigurationItemNotesEntity(BaseEntity):
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Get recent configuration item notes from the last N days.
+               Get recent configuration item notes from
+        the last N days.
 
-        Args:
-            configuration_item_id: ID of the configuration item
-            days: Number of days to look back
-            published_only: Whether to return only published notes
-            limit: Maximum number of notes to return
+               Args:
+                   configuration_item_id: ID of the configuration item
+                   days: Number of days to look back
+                   published_only: Whether to return only published notes
+                   limit: Maximum number of notes to return
 
-        Returns:
-            List of recent notes
+               Returns:
+                   List of recent notes
         """
         from datetime import datetime, timedelta
 

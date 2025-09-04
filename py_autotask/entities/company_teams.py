@@ -80,8 +80,6 @@ class CompanyTeamsEntity(BaseEntity):
         if active_only:
             from datetime import datetime
 
-            datetime.now().isoformat()
-
             # Active assignments: no end date or end date in future
             filters.append(QueryFilter(field="EndDate", op="isNull", value=None))
 
@@ -109,8 +107,6 @@ class CompanyTeamsEntity(BaseEntity):
 
         if active_only:
             from datetime import datetime
-
-            datetime.now().isoformat()
 
             filters.append(QueryFilter(field="EndDate", op="isNull", value=None))
 
@@ -173,14 +169,15 @@ class CompanyTeamsEntity(BaseEntity):
 
     def remove_team_assignment(self, company_id: int, team_id: int) -> bool:
         """
-        Remove a team assignment from a company.
+               Remove a team assignment from
+        a company.
 
-        Args:
-            company_id: ID of the company
-            team_id: ID of the team to remove
+               Args:
+                   company_id: ID of the company
+                   team_id: ID of the team to remove
 
-        Returns:
-            True if successful
+               Returns:
+                   True if successful
         """
         filters = [
             QueryFilter(field="CompanyID", op="eq", value=company_id),

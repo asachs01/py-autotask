@@ -83,15 +83,16 @@ class ConfigurationItemNoteAttachmentsEntity(BaseEntity):
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Get all attachments for notes belonging to a specific configuration item.
+               Get all attachments for notes belonging to a specific configuration item.
 
-        Args:
-            configuration_item_id: ID of the configuration item
-            attachment_type: Optional filter by attachment type
-            limit: Maximum number of attachments to return
+               Args:
+                   configuration_item_id: ID of the configuration item
+                   attachment_type: Optional filter by attachment type
+                   limit: Maximum number of attachments to return
 
-        Returns:
-            List of attachments from CI notes
+               Returns:
+                   List of attachments from
+        CI notes
         """
         # First get all notes for the CI
         ci_notes_response = self.client.query(
@@ -204,15 +205,16 @@ class ConfigurationItemNoteAttachmentsEntity(BaseEntity):
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Get recent configuration item note attachments from the last N days.
+               Get recent configuration item note attachments from
+        the last N days.
 
-        Args:
-            days: Number of days to look back
-            note_id: Optional filter by specific note
-            limit: Maximum number of attachments to return
+               Args:
+                   days: Number of days to look back
+                   note_id: Optional filter by specific note
+                   limit: Maximum number of attachments to return
 
-        Returns:
-            List of recent attachments
+               Returns:
+                   List of recent attachments
         """
         from datetime import datetime, timedelta
 
@@ -346,15 +348,16 @@ class ConfigurationItemNoteAttachmentsEntity(BaseEntity):
         attachment_ids: Optional[List[int]] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Move attachments from one note to another.
+               Move attachments from
+        one note to another.
 
-        Args:
-            source_note_id: ID of the source note
-            target_note_id: ID of the target note
-            attachment_ids: Optional list of specific attachment IDs to move (all if None)
+               Args:
+                   source_note_id: ID of the source note
+                   target_note_id: ID of the target note
+                   attachment_ids: Optional list of specific attachment IDs to move (all if None)
 
-        Returns:
-            List of moved attachments
+               Returns:
+                   List of moved attachments
         """
         if attachment_ids:
             # Move specific attachments

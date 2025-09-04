@@ -227,15 +227,16 @@ class CompanyNotesEntity(BaseEntity):
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Get recent company notes from the last N days.
+               Get recent company notes from
+        the last N days.
 
-        Args:
-            company_id: ID of the company
-            days: Number of days to look back
-            limit: Maximum number of notes to return
+               Args:
+                   company_id: ID of the company
+                   days: Number of days to look back
+                   limit: Maximum number of notes to return
 
-        Returns:
-            List of recent notes
+               Returns:
+                   List of recent notes
         """
         from datetime import datetime, timedelta
 

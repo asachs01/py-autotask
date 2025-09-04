@@ -357,7 +357,7 @@ class ResourceServiceDeskRolesEntity(BaseEntity):
 
         if over_assigned_roles:
             recommendations.append(
-                "Consider redistributing resources from over-assigned roles"
+                "Consider redistributing resources from category over-assigned roles"
             )
 
         # Check for roles without primary assignments
@@ -379,15 +379,17 @@ class ResourceServiceDeskRolesEntity(BaseEntity):
         preserve_primary_status: bool = True,
     ) -> Dict[str, Any]:
         """
-        Transfer service desk role assignments from one resource to another.
+                Transfer service desk role assignments from
+         one resource to another.
 
-        Args:
-            from_resource_id: Source resource ID
-            to_resource_id: Target resource ID
-            preserve_primary_status: Whether to preserve primary role status
+                Args:
+                    from
+        : Source resource ID
+                    to_resource_id: Target resource ID
+                    preserve_primary_status: Whether to preserve primary role status
 
-        Returns:
-            Result of the transfer operation
+                Returns:
+                    Result of the transfer operation
         """
         # Get source resource assignments
         source_assignments = self.get_resource_service_desk_roles(from_resource_id)

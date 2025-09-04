@@ -176,15 +176,16 @@ class ConfigurationItemAttachmentsEntity(BaseEntity):
         limit: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Get recent configuration item attachments from the last N days.
+               Get recent configuration item attachments from
+        the last N days.
 
-        Args:
-            configuration_item_id: ID of the configuration item
-            days: Number of days to look back
-            limit: Maximum number of attachments to return
+               Args:
+                   configuration_item_id: ID of the configuration item
+                   days: Number of days to look back
+                   limit: Maximum number of attachments to return
 
-        Returns:
-            List of recent attachments
+               Returns:
+                   List of recent attachments
         """
         from datetime import datetime, timedelta
 
