@@ -494,7 +494,7 @@ class CompaniesEntity(BaseEntity):
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
-        return self.client.query("Contacts", filters=filters)
+        return self.client.query("Contacts", filters=filters).items
 
     def set_primary_contact(
         self,
@@ -671,7 +671,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="ContractType", op="eq", value=contract_type)
             )
 
-        return self.client.query("Contracts", filters=filters)
+        return self.client.query("Contracts", filters=filters).items
 
     def get_company_slas(self, company_id: int) -> List[Dict[str, Any]]:
         """
@@ -1181,7 +1181,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="CreateDate", op="gte", value=cutoff_date.isoformat())
             )
 
-        return self.client.query("Tickets", filters=filters)
+        return self.client.query("Tickets", filters=filters).items
 
     def get_company_projects(
         self,
@@ -1246,7 +1246,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="CreateDate", op="gte", value=cutoff_date.isoformat())
             )
 
-        return self.client.query("Projects", filters=filters)
+        return self.client.query("Projects", filters=filters).items
 
     def get_company_opportunities(
         self,

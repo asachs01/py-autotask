@@ -167,7 +167,9 @@ class TestCompaniesEntity:
 
     def test_get_company_contacts(self, companies_entity, mock_client):
         """Test getting company contacts."""
-        mock_client.query.return_value = []
+        mock_response = Mock()
+        mock_response.items = []
+        mock_client.query.return_value = mock_response
 
         companies_entity.get_company_contacts(12345)
 
@@ -182,7 +184,9 @@ class TestCompaniesEntity:
 
     def test_get_company_tickets(self, companies_entity, mock_client):
         """Test getting company tickets."""
-        mock_client.query.return_value = []
+        mock_response = Mock()
+        mock_response.items = []
+        mock_client.query.return_value = mock_response
 
         companies_entity.get_company_tickets(12345, status_filter="open")
 
@@ -200,7 +204,9 @@ class TestCompaniesEntity:
 
     def test_get_company_projects(self, companies_entity, mock_client):
         """Test getting company projects."""
-        mock_client.query.return_value = []
+        mock_response = Mock()
+        mock_response.items = []
+        mock_client.query.return_value = mock_response
 
         companies_entity.get_company_projects(12345, active_only=True)
 
@@ -218,7 +224,9 @@ class TestCompaniesEntity:
 
     def test_get_company_contracts(self, companies_entity, mock_client):
         """Test getting company contracts."""
-        mock_client.query.return_value = []
+        mock_response = Mock()
+        mock_response.items = []
+        mock_client.query.return_value = mock_response
 
         companies_entity.get_company_contracts(12345, active_only=True)
 
