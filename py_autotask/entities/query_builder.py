@@ -5,8 +5,8 @@ This module provides sophisticated query building capabilities including
 relationship queries, complex filtering, and query optimization.
 """
 
-import logging
 from enum import Enum
+import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
