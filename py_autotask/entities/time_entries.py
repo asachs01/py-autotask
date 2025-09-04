@@ -21,7 +21,6 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 from ..constants import (
-    TimeEntryBillingType,
     TimeEntryConstants,
     TimeEntryStatus,
     TimeEntryType,

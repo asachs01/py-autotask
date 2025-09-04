@@ -14,19 +14,17 @@ This test suite covers all aspects of the time entries functionality:
 - Analytics and reporting
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, Mock, patch
+from datetime import datetime
+from unittest.mock import Mock, patch
 
 import pytest
 
 from py_autotask.constants import (
-    TimeEntryBillingType,
     TimeEntryConstants,
     TimeEntryStatus,
     TimeEntryType,
 )
 from py_autotask.entities.time_entries import TimeEntriesEntity
-from py_autotask.types import QueryFilter
 
 
 class TestTimeEntriesEntity:
