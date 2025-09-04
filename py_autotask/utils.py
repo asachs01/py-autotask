@@ -159,7 +159,7 @@ def chunk_list(items: List[Any], chunk_size: int) -> Generator[List[Any], None, 
         Chunks of the original list
     """
     for i in range(0, len(items), chunk_size):
-        yield items[i:i + chunk_size]
+        yield items[i : i + chunk_size]
 
 
 def safe_get_nested(data: Dict[str, Any], *keys: str, default: Any = None) -> Any:

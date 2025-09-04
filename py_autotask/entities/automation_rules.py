@@ -627,7 +627,7 @@ class AutomationRulesEntity(BaseEntity):
         ]
 
         for i in range(0, len(valid_rule_ids), batch_size):
-            batch = valid_rule_ids[i:i + batch_size]
+            batch = valid_rule_ids[i : i + batch_size]
 
             for rule_id in batch:
                 try:
@@ -687,7 +687,7 @@ class AutomationRulesEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(rule_ids), batch_size):
-            batch = rule_ids[i:i + batch_size]
+            batch = rule_ids[i : i + batch_size]
 
             for rule_id in batch:
                 try:

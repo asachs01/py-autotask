@@ -190,7 +190,7 @@ class TestBatchOperationPerformance:
         # Process in batches
         batch_size = 200
         for i in range(0, len(large_dataset), batch_size):
-            batch = large_dataset[i:i + batch_size]
+            batch = large_dataset[i : i + batch_size]
             # Simulate batch processing
             results = [CreateResponse(itemId=j) for j in range(len(batch))]
 

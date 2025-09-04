@@ -491,7 +491,7 @@ class ProjectTemplatesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(template_ids), batch_size):
-            batch = template_ids[i:i + batch_size]
+            batch = template_ids[i : i + batch_size]
 
             for template_id in batch:
                 try:

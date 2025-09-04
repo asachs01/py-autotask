@@ -346,7 +346,7 @@ class SecurityPoliciesEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(policy_ids), batch_size):
-            batch = policy_ids[i:i + batch_size]
+            batch = policy_ids[i : i + batch_size]
 
             for policy_id in batch:
                 try:
@@ -399,7 +399,7 @@ class SecurityPoliciesEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(policy_ids), batch_size):
-            batch = policy_ids[i:i + batch_size]
+            batch = policy_ids[i : i + batch_size]
 
             for policy_id in batch:
                 try:

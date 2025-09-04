@@ -393,7 +393,7 @@ class TaskDependenciesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(dependencies), batch_size):
-            batch = dependencies[i:i + batch_size]
+            batch = dependencies[i : i + batch_size]
 
             for dep_data in batch:
                 try:

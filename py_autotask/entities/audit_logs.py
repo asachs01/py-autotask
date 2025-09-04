@@ -744,7 +744,7 @@ class AuditLogsEntity(BaseEntity):
         results = []
 
         for i in range(0, len(audit_events), batch_size):
-            batch = audit_events[i:i + batch_size]
+            batch = audit_events[i : i + batch_size]
             batch_results = []
 
             for event in batch:

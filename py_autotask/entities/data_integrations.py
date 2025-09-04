@@ -532,7 +532,7 @@ class DataIntegrationsEntity(BaseEntity):
         self.logger.info(f"Bulk activating {len(integration_ids)} data integrations")
 
         for i in range(0, len(integration_ids), batch_size):
-            batch = integration_ids[i:i + batch_size]
+            batch = integration_ids[i : i + batch_size]
 
             for integration_id in batch:
                 try:

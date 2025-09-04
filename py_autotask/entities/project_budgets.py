@@ -427,7 +427,7 @@ class ProjectBudgetsEntity(BaseEntity):
         results = []
 
         for i in range(0, len(budget_updates), batch_size):
-            batch = budget_updates[i:i + batch_size]
+            batch = budget_updates[i : i + batch_size]
 
             for update in batch:
                 try:

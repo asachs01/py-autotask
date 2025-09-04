@@ -342,7 +342,7 @@ class WorkflowRulesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(rule_ids), batch_size):
-            batch = rule_ids[i:i + batch_size]
+            batch = rule_ids[i : i + batch_size]
 
             for rule_id in batch:
                 try:
@@ -375,7 +375,7 @@ class WorkflowRulesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(rule_ids), batch_size):
-            batch = rule_ids[i:i + batch_size]
+            batch = rule_ids[i : i + batch_size]
 
             for rule_id in batch:
                 try:

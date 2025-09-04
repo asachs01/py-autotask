@@ -367,7 +367,7 @@ class BackupConfigurationEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(config_ids), batch_size):
-            batch = config_ids[i:i + batch_size]
+            batch = config_ids[i : i + batch_size]
 
             for j, config_id in enumerate(batch):
                 try:
@@ -432,7 +432,7 @@ class BackupConfigurationEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(config_ids), batch_size):
-            batch = config_ids[i:i + batch_size]
+            batch = config_ids[i : i + batch_size]
 
             for config_id in batch:
                 try:

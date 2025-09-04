@@ -401,7 +401,7 @@ class SystemConfigurationEntity(BaseEntity):
         results = []
 
         for i in range(0, len(config_ids), batch_size):
-            batch = config_ids[i:i + batch_size]
+            batch = config_ids[i : i + batch_size]
             batch_updates = []
 
             for config_id in batch:
@@ -446,7 +446,7 @@ class SystemConfigurationEntity(BaseEntity):
         results = []
 
         for i in range(0, len(config_ids), batch_size):
-            batch = config_ids[i:i + batch_size]
+            batch = config_ids[i : i + batch_size]
             batch_updates = []
 
             for config_id in batch:

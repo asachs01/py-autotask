@@ -372,7 +372,7 @@ class ProjectMilestonesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(milestone_updates), batch_size):
-            batch = milestone_updates[i:i + batch_size]
+            batch = milestone_updates[i : i + batch_size]
 
             for update in batch:
                 try:

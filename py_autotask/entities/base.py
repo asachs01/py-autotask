@@ -802,7 +802,7 @@ class BaseEntity:
         )
 
         for i in range(0, len(entity_ids), batch_size):
-            batch = entity_ids[i:i + batch_size]
+            batch = entity_ids[i : i + batch_size]
             batch_num = (i // batch_size) + 1
 
             self.logger.debug(
