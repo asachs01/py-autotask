@@ -466,7 +466,7 @@ class ResourceAllocationEntity(BaseEntity):
         results = []
 
         for i in range(0, len(allocations), batch_size):
-            batch = allocations[i : i + batch_size]
+            batch = allocations[i:i + batch_size]
 
             for allocation_data in batch:
                 try:

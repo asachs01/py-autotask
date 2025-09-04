@@ -559,7 +559,7 @@ class HolidaySetsEntity(BaseEntity):
         results = []
 
         for i in range(0, len(updates), batch_size):
-            batch = updates[i : i + batch_size]
+            batch = updates[i:i + batch_size]
 
             for update in batch:
                 try:

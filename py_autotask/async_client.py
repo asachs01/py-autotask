@@ -577,7 +577,7 @@ class AsyncAutotaskClient:
 
         # Process in batches to avoid overwhelming the API
         for i in range(0, len(entities_data), batch_size):
-            batch = entities_data[i : i + batch_size]
+            batch = entities_data[i:i + batch_size]
 
             # Create tasks for concurrent execution within batch
             tasks = [

@@ -398,7 +398,7 @@ class IntelligentBulkManager:
         result: BulkResult,
     ) -> List[Any]:
         """Execute batches in parallel using asyncio."""
-        batches = [data[i : i + batch_size] for i in range(0, len(data), batch_size)]
+        batches = [data[i:i + batch_size] for i in range(0, len(data), batch_size)]
         semaphore = asyncio.Semaphore(max_workers)
 
         tasks = []
@@ -453,7 +453,7 @@ class IntelligentBulkManager:
         result: BulkResult,
     ) -> List[Any]:
         """Execute batches sequentially."""
-        batches = [data[i : i + batch_size] for i in range(0, len(data), batch_size)]
+        batches = [data[i:i + batch_size] for i in range(0, len(data), batch_size)]
         results = []
 
         for i, batch in enumerate(batches):

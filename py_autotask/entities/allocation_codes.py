@@ -356,7 +356,7 @@ class AllocationCodesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(code_ids), batch_size):
-            batch = code_ids[i : i + batch_size]
+            batch = code_ids[i:i + batch_size]
 
             for code_id in batch:
                 try:
@@ -389,7 +389,7 @@ class AllocationCodesEntity(BaseEntity):
         results = []
 
         for i in range(0, len(code_ids), batch_size):
-            batch = code_ids[i : i + batch_size]
+            batch = code_ids[i:i + batch_size]
 
             for code_id in batch:
                 try:

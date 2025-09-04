@@ -395,7 +395,7 @@ class ArticlePlainTextContentEntity(BaseEntity):
         results = {"created": [], "errors": [], "total_requested": len(content_list)}
 
         for i in range(0, len(content_list), batch_size):
-            batch = content_list[i : i + batch_size]
+            batch = content_list[i:i + batch_size]
 
             for content_data in batch:
                 try:

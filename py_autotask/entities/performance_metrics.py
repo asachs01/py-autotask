@@ -526,7 +526,7 @@ class PerformanceMetricsEntity(BaseEntity):
         # Process metrics in batches
         results = []
         for i in range(0, len(metrics_data), batch_size):
-            batch = metrics_data[i : i + batch_size]
+            batch = metrics_data[i:i + batch_size]
 
             # Prepare batch for creation
             batch_entities = []
@@ -586,7 +586,7 @@ class PerformanceMetricsEntity(BaseEntity):
         results = []
 
         for i in range(0, len(metric_ids), batch_size):
-            batch = metric_ids[i : i + batch_size]
+            batch = metric_ids[i:i + batch_size]
             batch_updates = []
 
             for metric_id in batch:

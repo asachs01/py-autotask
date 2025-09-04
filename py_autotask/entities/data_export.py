@@ -492,7 +492,7 @@ class DataExportEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(parsed_data), batch_size):
-            batch = parsed_data[i : i + batch_size]
+            batch = parsed_data[i:i + batch_size]
             batch_number = (i // batch_size) + 1
 
             try:

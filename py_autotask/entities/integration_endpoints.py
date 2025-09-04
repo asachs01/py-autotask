@@ -461,7 +461,7 @@ class IntegrationEndpointsEntity(BaseEntity):
 
         # Process endpoints in batches
         for i in range(0, len(endpoints), batch_size):
-            batch = endpoints[i : i + batch_size]
+            batch = endpoints[i:i + batch_size]
 
             for endpoint in batch:
                 endpoint_id = endpoint.get("id")
@@ -737,7 +737,7 @@ class IntegrationEndpointsEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(endpoint_ids), batch_size):
-            batch = endpoint_ids[i : i + batch_size]
+            batch = endpoint_ids[i:i + batch_size]
 
             for endpoint_id in batch:
                 try:
@@ -822,7 +822,7 @@ class IntegrationEndpointsEntity(BaseEntity):
 
         # Process in batches
         for i in range(0, len(endpoint_ids), batch_size):
-            batch = endpoint_ids[i : i + batch_size]
+            batch = endpoint_ids[i:i + batch_size]
 
             for endpoint_id in batch:
                 try:

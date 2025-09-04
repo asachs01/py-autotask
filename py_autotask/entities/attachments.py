@@ -290,7 +290,7 @@ class AttachmentsEntity(BaseEntity):
         self.logger.info(f"Starting batch upload of {len(file_paths)} files")
 
         for i in range(0, len(file_paths), batch_size):
-            batch = file_paths[i : i + batch_size]
+            batch = file_paths[i:i + batch_size]
             batch_num = (i // batch_size) + 1
 
             self.logger.info(

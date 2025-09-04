@@ -701,7 +701,7 @@ class APIUsageMetricsEntity(BaseEntity):
         # Process in batches
         results = []
         for i in range(0, len(validated_metrics), batch_size):
-            batch = validated_metrics[i : i + batch_size]
+            batch = validated_metrics[i:i + batch_size]
 
             try:
                 batch_results = self.batch_create(batch, batch_size)

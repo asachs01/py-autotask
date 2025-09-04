@@ -603,7 +603,7 @@ class BusinessRulesEntity(BaseEntity):
         self.logger.info(f"Bulk activating {len(rule_ids)} business rules")
 
         for i in range(0, len(rule_ids), batch_size):
-            batch = rule_ids[i : i + batch_size]
+            batch = rule_ids[i:i + batch_size]
 
             for rule_id in batch:
                 try:
@@ -641,7 +641,7 @@ class BusinessRulesEntity(BaseEntity):
         self.logger.info(f"Bulk deactivating {len(rule_ids)} business rules")
 
         for i in range(0, len(rule_ids), batch_size):
-            batch = rule_ids[i : i + batch_size]
+            batch = rule_ids[i:i + batch_size]
 
             for rule_id in batch:
                 try:

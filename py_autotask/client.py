@@ -564,7 +564,7 @@ class AutotaskClient:
         total_batches = (len(entities_data) + batch_size - 1) // batch_size
 
         for i in range(0, len(entities_data), batch_size):
-            batch = entities_data[i : i + batch_size]
+            batch = entities_data[i:i + batch_size]
             batch_num = (i // batch_size) + 1
 
             logger.info(
@@ -627,7 +627,7 @@ class AutotaskClient:
         total_batches = (len(entities_data) + batch_size - 1) // batch_size
 
         for i in range(0, len(entities_data), batch_size):
-            batch = entities_data[i : i + batch_size]
+            batch = entities_data[i:i + batch_size]
             batch_num = (i // batch_size) + 1
 
             logger.info(
@@ -683,7 +683,7 @@ class AutotaskClient:
         total_batches = (len(entity_ids) + batch_size - 1) // batch_size
 
         for i in range(0, len(entity_ids), batch_size):
-            batch = entity_ids[i : i + batch_size]
+            batch = entity_ids[i:i + batch_size]
             batch_num = (i // batch_size) + 1
 
             logger.info(
