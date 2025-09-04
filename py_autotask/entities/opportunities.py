@@ -536,7 +536,7 @@ class OpportunitiesEntity(BaseEntity):
             quarter_end = today + timedelta(days=90 * (q + 1))
             forecast_periods.append(
                 {
-                    "name": f"Q{q+1}",
+                    "name": f"Q{q + 1}",
                     "start": quarter_start.date().isoformat(),
                     "end": quarter_end.date().isoformat(),
                     "opportunities": 0,
