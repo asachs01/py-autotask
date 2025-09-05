@@ -10,7 +10,7 @@ Enhanced Resources entity providing comprehensive PSA functionality including:
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
 from ..types import CreateResponse, QueryFilter, ResourceData, UpdateResponse
