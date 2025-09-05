@@ -1975,3 +1975,2088 @@ class ResourcesEntity(BaseEntity):
                     )
 
             return list(project_allocations.values())
+
+    # =====================================================================================
+    # ADVANCED CAPACITY PLANNING AND FORECASTING
+    # =====================================================================================
+
+    def forecast_resource_capacity(
+        self,
+        resource_id: int,
+        forecast_weeks: int = 12,
+        include_historical_trends: bool = True,
+        include_seasonal_adjustments: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Forecast future capacity and availability for a resource.
+
+        Args:
+            resource_id: ID of the resource
+            forecast_weeks: Number of weeks to forecast
+            include_historical_trends: Whether to include historical utilization trends
+            include_seasonal_adjustments: Whether to apply seasonal adjustments
+
+        Returns:
+            Comprehensive capacity forecast
+        """
+        resource = self.get(resource_id)
+        if not resource:
+            raise ValueError(f"Resource {resource_id} not found")
+
+        # Get historical data for trend analysis
+        end_date = datetime.now()
+        start_date = end_date - timedelta(weeks=26)  # 6 months of history
+
+        historical_utilization = []
+        if include_historical_trends:
+            # Get utilization data for past 26 weeks
+            for week_offset in range(26):
+                week_start = start_date + timedelta(weeks=week_offset)
+                week_end = week_start + timedelta(days=7)
+
+                week_utilization = self.get_resource_utilization(
+                    resource_id, (week_start.isoformat(), week_end.isoformat())
+                )
+
+                historical_utilization.append(
+                    {
+                        "week": week_offset,
+                        "start_date": week_start.isoformat(),
+                        "utilization_percentage": week_utilization["summary"][
+                            "utilization_percentage"
+                        ],
+                        "billable_hours": week_utilization["summary"]["billable_hours"],
+                        "capacity_hours": week_utilization["summary"]["capacity_hours"],
+                    }
+                )
+
+        # Calculate baseline capacity (40 hours/week standard)
+        standard_weekly_capacity = 40.0
+
+        # Generate forecast
+        forecast_data = []
+        for week in range(forecast_weeks):
+            forecast_start = end_date + timedelta(weeks=week)
+            forecast_end = forecast_start + timedelta(days=7)
+
+            # Base forecast on standard capacity
+            forecast_capacity = standard_weekly_capacity
+            forecast_availability = standard_weekly_capacity
+
+            # Apply trend adjustments if requested
+            if include_historical_trends and historical_utilization:
+                # Calculate average utilization trend
+                avg_utilization = sum(
+                    h["utilization_percentage"] for h in historical_utilization
+                ) / len(historical_utilization)
+                trend_adjustment = avg_utilization / 100
+                forecast_availability = forecast_capacity * (1 - trend_adjustment)
+
+            # Apply seasonal adjustments (simplified)
+            if include_seasonal_adjustments:
+                month = forecast_start.month
+                # Adjust for typical vacation months
+                if month in [7, 8, 12]:  # July, August, December
+                    forecast_availability *= 0.85  # 15% reduction for vacations
+                elif month in [11, 1]:  # November, January
+                    forecast_availability *= 0.95  # 5% reduction for holidays
+
+            # Check for scheduled time off
+            week_time_off = self.get_resource_time_off(
+                resource_id,
+                (forecast_start.isoformat(), forecast_end.isoformat()),
+                "approved",
+            )
+
+            time_off_hours = sum(entry.get("Hours", 0) for entry in week_time_off)
+            forecast_availability -= time_off_hours
+
+            forecast_data.append(
+                {
+                    "week": week + 1,
+                    "start_date": forecast_start.isoformat(),
+                    "end_date": forecast_end.isoformat(),
+                    "forecast_capacity_hours": forecast_capacity,
+                    "forecast_available_hours": max(0, forecast_availability),
+                    "scheduled_time_off_hours": time_off_hours,
+                    "utilization_forecast_percentage": (
+                        (
+                            (forecast_capacity - forecast_availability)
+                            / forecast_capacity
+                            * 100
+                        )
+                        if forecast_capacity > 0
+                        else 0
+                    ),
+                    "confidence_level": 0.8 if include_historical_trends else 0.6,
+                }
+            )
+
+        return {
+            "resource_id": resource_id,
+            "resource_name": f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip(),
+            "forecast_period": f"{forecast_weeks} weeks",
+            "forecast_data": forecast_data,
+            "historical_utilization": (
+                historical_utilization if include_historical_trends else []
+            ),
+            "summary": {
+                "total_forecast_capacity_hours": sum(
+                    f["forecast_capacity_hours"] for f in forecast_data
+                ),
+                "total_forecast_available_hours": sum(
+                    f["forecast_available_hours"] for f in forecast_data
+                ),
+                "average_weekly_availability": (
+                    sum(f["forecast_available_hours"] for f in forecast_data)
+                    / len(forecast_data)
+                    if forecast_data
+                    else 0
+                ),
+                "peak_availability_week": (
+                    max(forecast_data, key=lambda x: x["forecast_available_hours"])
+                    if forecast_data
+                    else None
+                ),
+                "lowest_availability_week": (
+                    min(forecast_data, key=lambda x: x["forecast_available_hours"])
+                    if forecast_data
+                    else None
+                ),
+            },
+        }
+
+    def optimize_workload_distribution(
+        self,
+        resource_ids: List[int],
+        project_requirements: List[Dict[str, Any]],
+        optimization_criteria: str = "balanced",  # "balanced", "efficiency", "cost"
+        constraints: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Optimize workload distribution across multiple resources.
+
+        Args:
+            resource_ids: List of resource IDs to consider
+            project_requirements: List of project requirements with skills and hours needed
+            optimization_criteria: Optimization approach
+            constraints: Additional constraints (max hours per resource, skill requirements, etc.)
+
+        Returns:
+            Optimized workload allocation recommendations
+        """
+        if constraints is None:
+            constraints = {}
+
+        # Get resource information and capabilities
+        resources_info = {}
+        for resource_id in resource_ids:
+            resource = self.get(resource_id)
+            if not resource:
+                continue
+
+            skills = self.get_resource_skills(resource_id, verified_only=True)
+            availability = self.get_resource_availability(resource_id)
+
+            resources_info[resource_id] = {
+                "resource": resource,
+                "skills": skills,
+                "availability": availability,
+                "hourly_rate": resource.get("HourlyRate", 0) or 0,
+                "hourly_cost": resource.get("HourlyCost", 0) or 0,
+            }
+
+        # Initialize allocation matrix
+        allocations = []
+        unallocated_requirements = []
+
+        # Process each project requirement
+        for requirement in project_requirements:
+            project_id = requirement.get("project_id")
+            required_hours = requirement.get("hours", 0)
+            required_skills = requirement.get("skills", [])
+            priority = requirement.get("priority", 3)  # 1=high, 3=medium, 5=low
+            deadline = requirement.get("deadline")
+
+            # Find suitable resources
+            suitable_resources = []
+            for resource_id, info in resources_info.items():
+                resource_skills = [
+                    skill.get("SkillName", "") for skill in info["skills"]
+                ]
+
+                # Check skill compatibility
+                skill_match_score = 0
+                if required_skills:
+                    matching_skills = set(required_skills) & set(resource_skills)
+                    skill_match_score = len(matching_skills) / len(required_skills)
+                else:
+                    skill_match_score = 1.0  # No specific skills required
+
+                if (
+                    skill_match_score > 0
+                ):  # At least some skills match or no skills required
+                    available_hours = info["availability"]["available_hours"]
+                    hourly_rate = info["hourly_rate"]
+                    hourly_cost = info["hourly_cost"]
+
+                    # Calculate suitability score based on criteria
+                    if optimization_criteria == "efficiency":
+                        efficiency_score = skill_match_score * (
+                            available_hours / max(1, required_hours)
+                        )
+                        suitability_score = efficiency_score
+                    elif optimization_criteria == "cost":
+                        cost_factor = 1 / max(1, hourly_cost) if hourly_cost > 0 else 1
+                        suitability_score = skill_match_score * cost_factor
+                    else:  # balanced
+                        efficiency = skill_match_score * (
+                            available_hours / max(1, required_hours)
+                        )
+                        cost_factor = 1 / max(1, hourly_cost) if hourly_cost > 0 else 1
+                        suitability_score = (efficiency + cost_factor) / 2
+
+                    suitable_resources.append(
+                        {
+                            "resource_id": resource_id,
+                            "skill_match_score": skill_match_score,
+                            "available_hours": available_hours,
+                            "hourly_rate": hourly_rate,
+                            "hourly_cost": hourly_cost,
+                            "suitability_score": suitability_score,
+                        }
+                    )
+
+            # Sort by suitability score
+            suitable_resources.sort(key=lambda x: x["suitability_score"], reverse=True)
+
+            # Allocate hours to best suitable resources
+            remaining_hours = required_hours
+            allocation_for_requirement = []
+
+            for resource in suitable_resources:
+                if remaining_hours <= 0:
+                    break
+
+                resource_id = resource["resource_id"]
+                available_hours = resource["available_hours"]
+
+                # Determine allocation amount
+                max_allocation = constraints.get(
+                    "max_hours_per_resource_per_project", available_hours
+                )
+                allocation_hours = min(remaining_hours, available_hours, max_allocation)
+
+                if allocation_hours > 0:
+                    allocation_for_requirement.append(
+                        {
+                            "resource_id": resource_id,
+                            "allocated_hours": allocation_hours,
+                            "skill_match_score": resource["skill_match_score"],
+                            "hourly_rate": resource["hourly_rate"],
+                            "hourly_cost": resource["hourly_cost"],
+                            "estimated_cost": allocation_hours
+                            * resource["hourly_cost"],
+                            "estimated_revenue": allocation_hours
+                            * resource["hourly_rate"],
+                        }
+                    )
+
+                    remaining_hours -= allocation_hours
+                    # Update available hours for this resource
+                    resources_info[resource_id]["availability"][
+                        "available_hours"
+                    ] -= allocation_hours
+
+            if remaining_hours > 0:
+                unallocated_requirements.append(
+                    {
+                        "project_id": project_id,
+                        "unallocated_hours": remaining_hours,
+                        "required_skills": required_skills,
+                        "priority": priority,
+                    }
+                )
+
+            if allocation_for_requirement:
+                allocations.append(
+                    {
+                        "project_id": project_id,
+                        "required_hours": required_hours,
+                        "allocated_hours": required_hours - remaining_hours,
+                        "allocations": allocation_for_requirement,
+                        "allocation_percentage": (
+                            ((required_hours - remaining_hours) / required_hours * 100)
+                            if required_hours > 0
+                            else 0
+                        ),
+                    }
+                )
+
+        # Calculate summary metrics
+        total_allocated_hours = sum(
+            sum(alloc["allocated_hours"] for alloc in allocation["allocations"])
+            for allocation in allocations
+        )
+
+        total_estimated_cost = sum(
+            sum(alloc["estimated_cost"] for alloc in allocation["allocations"])
+            for allocation in allocations
+        )
+
+        total_estimated_revenue = sum(
+            sum(alloc["estimated_revenue"] for alloc in allocation["allocations"])
+            for allocation in allocations
+        )
+
+        return {
+            "optimization_criteria": optimization_criteria,
+            "total_resources_considered": len(resource_ids),
+            "total_requirements_processed": len(project_requirements),
+            "allocations": allocations,
+            "unallocated_requirements": unallocated_requirements,
+            "summary": {
+                "total_allocated_hours": total_allocated_hours,
+                "total_unallocated_hours": sum(
+                    req["unallocated_hours"] for req in unallocated_requirements
+                ),
+                "allocation_success_rate": (
+                    (len(allocations) / len(project_requirements) * 100)
+                    if project_requirements
+                    else 0
+                ),
+                "total_estimated_cost": total_estimated_cost,
+                "total_estimated_revenue": total_estimated_revenue,
+                "estimated_profit_margin": total_estimated_revenue
+                - total_estimated_cost,
+            },
+            "resource_utilization_impact": {
+                resource_id: {
+                    "original_available_hours": sum(
+                        alloc["allocated_hours"]
+                        for allocation in allocations
+                        for alloc in allocation["allocations"]
+                        if alloc["resource_id"] == resource_id
+                    )
+                    + info["availability"]["available_hours"],
+                    "allocated_hours": sum(
+                        alloc["allocated_hours"]
+                        for allocation in allocations
+                        for alloc in allocation["allocations"]
+                        if alloc["resource_id"] == resource_id
+                    ),
+                    "remaining_available_hours": info["availability"][
+                        "available_hours"
+                    ],
+                }
+                for resource_id, info in resources_info.items()
+            },
+        }
+
+    def generate_capacity_recommendations(
+        self,
+        department_id: Optional[int] = None,
+        location_id: Optional[int] = None,
+        forecast_weeks: int = 12,
+        utilization_threshold: float = 85.0,
+    ) -> Dict[str, Any]:
+        """
+        Generate capacity planning recommendations for a department or organization.
+
+        Args:
+            department_id: Optional department filter
+            location_id: Optional location filter
+            forecast_weeks: Number of weeks to forecast
+            utilization_threshold: Target utilization percentage
+
+        Returns:
+            Comprehensive capacity recommendations
+        """
+        # Get resources to analyze
+        resources = self.get_active_resources(
+            department_id=department_id, location_id=location_id
+        )
+
+        recommendations = {
+            "analysis_date": datetime.now().isoformat(),
+            "parameters": {
+                "department_id": department_id,
+                "location_id": location_id,
+                "forecast_weeks": forecast_weeks,
+                "target_utilization_threshold": utilization_threshold,
+            },
+            "resource_analysis": [],
+            "capacity_gaps": [],
+            "over_allocation_risks": [],
+            "hiring_recommendations": [],
+            "training_recommendations": [],
+            "summary": {
+                "total_resources_analyzed": len(resources),
+                "resources_over_threshold": 0,
+                "resources_under_threshold": 0,
+                "average_utilization_forecast": 0,
+                "total_capacity_shortfall_hours": 0,
+                "total_excess_capacity_hours": 0,
+            },
+        }
+
+        total_utilization = 0
+
+        for resource in resources:
+            resource_id = resource.get("id") or resource.get("ID")
+            if not resource_id:
+                continue
+
+            try:
+                # Get current utilization
+                current_date = datetime.now()
+                month_ago = current_date - timedelta(days=30)
+                current_utilization = self.get_resource_utilization(
+                    resource_id, (month_ago.isoformat(), current_date.isoformat())
+                )
+
+                # Get forecast
+                forecast = self.forecast_resource_capacity(
+                    resource_id, forecast_weeks=forecast_weeks
+                )
+
+                current_util_pct = current_utilization["summary"][
+                    "utilization_percentage"
+                ]
+                avg_forecast_availability = forecast["summary"][
+                    "average_weekly_availability"
+                ]
+
+                total_utilization += current_util_pct
+
+                # Analyze capacity situation
+                analysis = {
+                    "resource_id": resource_id,
+                    "resource_name": f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip(),
+                    "current_utilization_percentage": current_util_pct,
+                    "average_forecast_availability_hours": avg_forecast_availability,
+                    "status": "optimal",
+                    "recommendations": [],
+                }
+
+                # Determine status and recommendations
+                if current_util_pct > utilization_threshold:
+                    analysis["status"] = "over_utilized"
+                    recommendations["summary"]["resources_over_threshold"] += 1
+
+                    analysis["recommendations"].extend(
+                        [
+                            "Consider redistributing workload to other team members",
+                            "Evaluate priority of current assignments",
+                            "Monitor for burnout risk",
+                        ]
+                    )
+
+                    if current_util_pct > 95:
+                        recommendations["over_allocation_risks"].append(
+                            {
+                                "resource_id": resource_id,
+                                "resource_name": analysis["resource_name"],
+                                "risk_level": "high",
+                                "current_utilization": current_util_pct,
+                                "recommendations": [
+                                    "Immediate workload redistribution required"
+                                ],
+                            }
+                        )
+
+                elif current_util_pct < (utilization_threshold - 20):
+                    analysis["status"] = "under_utilized"
+                    recommendations["summary"]["resources_under_threshold"] += 1
+
+                    analysis["recommendations"].extend(
+                        [
+                            "Consider additional project assignments",
+                            "Evaluate training opportunities",
+                            "Review skill utilization",
+                        ]
+                    )
+
+                    excess_hours = avg_forecast_availability * forecast_weeks
+                    recommendations["summary"][
+                        "total_excess_capacity_hours"
+                    ] += excess_hours
+
+                # Check for skill gaps
+                skills = self.get_resource_skills(resource_id, verified_only=True)
+                if len(skills) < 3:  # Arbitrary threshold
+                    recommendations["training_recommendations"].append(
+                        {
+                            "resource_id": resource_id,
+                            "resource_name": analysis["resource_name"],
+                            "current_skills_count": len(skills),
+                            "recommendation": "Expand skill set to increase versatility",
+                            "priority": "medium" if current_util_pct < 50 else "low",
+                        }
+                    )
+
+                recommendations["resource_analysis"].append(analysis)
+
+            except Exception as e:
+                print(f"Error analyzing resource {resource_id}: {e}")
+                continue
+
+        # Calculate summary metrics
+        if recommendations["resource_analysis"]:
+            recommendations["summary"]["average_utilization_forecast"] = (
+                total_utilization / len(recommendations["resource_analysis"])
+            )
+
+        # Generate hiring recommendations based on overall capacity
+        if (
+            recommendations["summary"]["resources_over_threshold"]
+            / max(1, recommendations["summary"]["total_resources_analyzed"])
+            > 0.3
+        ):
+
+            recommendations["hiring_recommendations"].append(
+                {
+                    "type": "additional_capacity",
+                    "reason": f"{recommendations['summary']['resources_over_threshold']} resources over utilization threshold",
+                    "suggested_hires": max(
+                        1, recommendations["summary"]["resources_over_threshold"] // 3
+                    ),
+                    "priority": (
+                        "high"
+                        if recommendations["summary"]["resources_over_threshold"] > 5
+                        else "medium"
+                    ),
+                    "timeline": (
+                        "immediate"
+                        if recommendations["over_allocation_risks"]
+                        else "within_quarter"
+                    ),
+                }
+            )
+
+        return recommendations
+
+    # =====================================================================================
+    # ADVANCED SKILL TRACKING AND COMPETENCY MANAGEMENT
+    # =====================================================================================
+
+    def create_skill_matrix(
+        self,
+        resource_ids: Optional[List[int]] = None,
+        skill_categories: Optional[List[str]] = None,
+        include_certifications: bool = True,
+        include_proficiency_gaps: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Create a comprehensive skill matrix for resources.
+
+        Args:
+            resource_ids: Optional list of resource IDs to include
+            skill_categories: Optional list of skill categories to focus on
+            include_certifications: Whether to include certification information
+            include_proficiency_gaps: Whether to analyze skill gaps
+
+        Returns:
+            Comprehensive skill matrix data
+        """
+        if resource_ids is None:
+            resources = self.get_active_resources()
+            resource_ids = [
+                r.get("id") or r.get("ID")
+                for r in resources
+                if r.get("id") or r.get("ID")
+            ]
+
+        skill_matrix = {
+            "created_date": datetime.now().isoformat(),
+            "resources_analyzed": len(resource_ids),
+            "skill_categories": skill_categories or [],
+            "matrix_data": {},
+            "skill_summary": {},
+            "competency_gaps": [],
+            "skill_distribution": {},
+            "recommendations": [],
+        }
+
+        all_skills = set()
+        resource_skills_data = {}
+
+        # Collect skill data for all resources
+        for resource_id in resource_ids:
+            try:
+                resource = self.get(resource_id)
+                if not resource:
+                    continue
+
+                resource_name = f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip()
+                skills = self.get_resource_skills(resource_id, verified_only=False)
+                certifications = []
+
+                if include_certifications:
+                    certifications = self.get_resource_certifications(
+                        resource_id, active_only=True
+                    )
+
+                # Process skills
+                skill_data = {}
+                for skill in skills:
+                    skill_name = skill.get("SkillName", "")
+                    skill_level = skill.get("SkillLevel", 1)
+                    verified = skill.get("Verified", False)
+
+                    if skill_categories and skill_name not in skill_categories:
+                        continue
+
+                    all_skills.add(skill_name)
+                    skill_data[skill_name] = {
+                        "level": skill_level,
+                        "level_name": self._get_skill_level_name(skill_level),
+                        "verified": verified,
+                        "date_acquired": skill.get("DateAcquired"),
+                        "notes": skill.get("Notes", ""),
+                    }
+
+                resource_skills_data[resource_id] = {
+                    "resource_name": resource_name,
+                    "department_id": resource.get("DepartmentID"),
+                    "location_id": resource.get("LocationID"),
+                    "title": resource.get("Title", ""),
+                    "skills": skill_data,
+                    "certifications": certifications,
+                    "total_skills": len(skill_data),
+                    "verified_skills": sum(
+                        1 for s in skill_data.values() if s["verified"]
+                    ),
+                }
+
+            except Exception as e:
+                print(f"Error processing resource {resource_id}: {e}")
+                continue
+
+        # Build matrix structure
+        skill_matrix["matrix_data"] = resource_skills_data
+        skill_matrix["all_skills"] = sorted(list(all_skills))
+
+        # Calculate skill distribution
+        for skill_name in all_skills:
+            levels = [
+                data["skills"].get(skill_name, {}).get("level", 0)
+                for data in resource_skills_data.values()
+                if skill_name in data["skills"]
+            ]
+
+            skill_matrix["skill_distribution"][skill_name] = {
+                "total_resources_with_skill": len(levels),
+                "average_level": sum(levels) / len(levels) if levels else 0,
+                "max_level": max(levels) if levels else 0,
+                "min_level": min(levels) if levels else 0,
+                "level_distribution": {
+                    "beginner": len([l for l in levels if l == 1]),
+                    "intermediate": len([l for l in levels if l == 2]),
+                    "advanced": len([l for l in levels if l == 3]),
+                    "expert": len([l for l in levels if l == 4]),
+                    "master": len([l for l in levels if l == 5]),
+                },
+            }
+
+        # Identify competency gaps if requested
+        if include_proficiency_gaps:
+            skill_matrix["competency_gaps"] = self._identify_skill_gaps(
+                resource_skills_data, all_skills
+            )
+
+        # Generate recommendations
+        skill_matrix["recommendations"] = self._generate_skill_matrix_recommendations(
+            resource_skills_data, skill_matrix["skill_distribution"]
+        )
+
+        return skill_matrix
+
+    def _get_skill_level_name(self, level: int) -> str:
+        """Convert skill level number to name."""
+        level_names = {
+            1: "Beginner",
+            2: "Intermediate",
+            3: "Advanced",
+            4: "Expert",
+            5: "Master",
+        }
+        return level_names.get(level, "Unknown")
+
+    def _identify_skill_gaps(
+        self, resource_skills_data: Dict[str, Any], all_skills: set
+    ) -> List[Dict[str, Any]]:
+        """Identify skill gaps across resources."""
+        gaps = []
+
+        # Find skills that are missing or underrepresented
+        for skill_name in all_skills:
+            resources_with_skill = [
+                (resource_id, data)
+                for resource_id, data in resource_skills_data.items()
+                if skill_name in data["skills"]
+            ]
+
+            total_resources = len(resource_skills_data)
+            coverage_percentage = (len(resources_with_skill) / total_resources) * 100
+
+            if coverage_percentage < 30:  # Less than 30% coverage
+                gaps.append(
+                    {
+                        "skill_name": skill_name,
+                        "coverage_percentage": coverage_percentage,
+                        "resources_with_skill": len(resources_with_skill),
+                        "total_resources": total_resources,
+                        "gap_type": "coverage",
+                        "severity": "high" if coverage_percentage < 10 else "medium",
+                        "recommendation": f"Consider training more team members in {skill_name}",
+                    }
+                )
+
+            # Check for skill level gaps (everyone is beginner level)
+            if resources_with_skill:
+                avg_level = sum(
+                    data["skills"][skill_name]["level"]
+                    for _, data in resources_with_skill
+                ) / len(resources_with_skill)
+
+                if avg_level < 2.5 and len(resources_with_skill) > 2:
+                    gaps.append(
+                        {
+                            "skill_name": skill_name,
+                            "average_level": avg_level,
+                            "resources_with_skill": len(resources_with_skill),
+                            "gap_type": "proficiency",
+                            "severity": "medium",
+                            "recommendation": f"Consider advanced training in {skill_name}",
+                        }
+                    )
+
+        return gaps
+
+    def _generate_skill_matrix_recommendations(
+        self, resource_skills_data: Dict[str, Any], skill_distribution: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Generate recommendations based on skill matrix analysis."""
+        recommendations = []
+
+        # Find resources with very few skills
+        for resource_id, data in resource_skills_data.items():
+            if data["total_skills"] < 3:
+                recommendations.append(
+                    {
+                        "type": "skill_development",
+                        "resource_id": resource_id,
+                        "resource_name": data["resource_name"],
+                        "current_skills": data["total_skills"],
+                        "recommendation": "Consider expanding skill set to increase versatility",
+                        "priority": "high" if data["total_skills"] < 2 else "medium",
+                    }
+                )
+
+        # Find critical skills with low coverage
+        for skill_name, distribution in skill_distribution.items():
+            coverage_rate = distribution["total_resources_with_skill"] / len(
+                resource_skills_data
+            )
+
+            if coverage_rate < 0.2 and distribution["average_level"] > 3:
+                recommendations.append(
+                    {
+                        "type": "knowledge_transfer",
+                        "skill_name": skill_name,
+                        "coverage_rate": coverage_rate,
+                        "recommendation": f"Create knowledge sharing sessions for {skill_name}",
+                        "priority": "high",
+                    }
+                )
+
+        return recommendations
+
+    def analyze_skill_gaps(
+        self,
+        target_skills: List[str],
+        target_levels: Optional[Dict[str, int]] = None,
+        department_id: Optional[int] = None,
+        location_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Analyze skill gaps against target skill requirements.
+
+        Args:
+            target_skills: List of skills required
+            target_levels: Optional mapping of skills to required levels
+            department_id: Optional department filter
+            location_id: Optional location filter
+
+        Returns:
+            Comprehensive skill gap analysis
+        """
+        if target_levels is None:
+            target_levels = {
+                skill: 3 for skill in target_skills
+            }  # Default to Advanced level
+
+        resources = self.get_active_resources(
+            department_id=department_id, location_id=location_id
+        )
+
+        gap_analysis = {
+            "analysis_date": datetime.now().isoformat(),
+            "target_skills": target_skills,
+            "target_levels": target_levels,
+            "resources_analyzed": len(resources),
+            "skill_gaps": [],
+            "training_priorities": [],
+            "resource_recommendations": [],
+            "summary": {
+                "total_skill_gaps": 0,
+                "resources_meeting_all_requirements": 0,
+                "most_critical_skill": None,
+                "average_skill_coverage": 0,
+            },
+        }
+
+        resources_meeting_requirements = 0
+        total_gaps = 0
+        skill_gap_counts = {skill: 0 for skill in target_skills}
+
+        for resource in resources:
+            resource_id = resource.get("id") or resource.get("ID")
+            if not resource_id:
+                continue
+
+            try:
+                resource_name = f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip()
+                skills = self.get_resource_skills(resource_id, verified_only=True)
+                resource_skills = {
+                    skill.get("SkillName", ""): skill.get("SkillLevel", 1)
+                    for skill in skills
+                }
+
+                resource_gaps = []
+                meets_all_requirements = True
+
+                for skill in target_skills:
+                    required_level = target_levels.get(skill, 3)
+                    current_level = resource_skills.get(skill, 0)
+
+                    if current_level < required_level:
+                        gap_severity = required_level - current_level
+                        resource_gaps.append(
+                            {
+                                "skill": skill,
+                                "required_level": required_level,
+                                "current_level": current_level,
+                                "gap_severity": gap_severity,
+                                "training_needed": self._get_skill_level_name(
+                                    required_level
+                                ),
+                            }
+                        )
+
+                        skill_gap_counts[skill] += 1
+                        total_gaps += 1
+                        meets_all_requirements = False
+
+                if meets_all_requirements:
+                    resources_meeting_requirements += 1
+
+                if resource_gaps:
+                    gap_analysis["skill_gaps"].append(
+                        {
+                            "resource_id": resource_id,
+                            "resource_name": resource_name,
+                            "department_id": resource.get("DepartmentID"),
+                            "gaps": resource_gaps,
+                            "total_gaps": len(resource_gaps),
+                            "priority": (
+                                "high"
+                                if len(resource_gaps) > len(target_skills) / 2
+                                else "medium"
+                            ),
+                        }
+                    )
+
+            except Exception as e:
+                print(f"Error analyzing resource {resource_id}: {e}")
+                continue
+
+        # Generate training priorities
+        for skill, gap_count in skill_gap_counts.items():
+            if gap_count > 0:
+                priority_score = gap_count / len(resources) * 100
+                gap_analysis["training_priorities"].append(
+                    {
+                        "skill": skill,
+                        "resources_needing_training": gap_count,
+                        "percentage_needing_training": priority_score,
+                        "required_level": target_levels.get(skill, 3),
+                        "priority": (
+                            "high"
+                            if priority_score > 50
+                            else "medium" if priority_score > 25 else "low"
+                        ),
+                    }
+                )
+
+        # Sort training priorities by percentage needing training
+        gap_analysis["training_priorities"].sort(
+            key=lambda x: x["percentage_needing_training"], reverse=True
+        )
+
+        # Update summary
+        gap_analysis["summary"]["total_skill_gaps"] = total_gaps
+        gap_analysis["summary"][
+            "resources_meeting_all_requirements"
+        ] = resources_meeting_requirements
+        gap_analysis["summary"]["average_skill_coverage"] = (
+            (resources_meeting_requirements / len(resources) * 100) if resources else 0
+        )
+
+        if gap_analysis["training_priorities"]:
+            gap_analysis["summary"]["most_critical_skill"] = gap_analysis[
+                "training_priorities"
+            ][0]["skill"]
+
+        return gap_analysis
+
+    def generate_training_plan(
+        self,
+        resource_id: int,
+        target_skills: Optional[List[str]] = None,
+        skill_priorities: Optional[Dict[str, str]] = None,  # skill -> priority level
+        timeline_weeks: int = 12,
+    ) -> Dict[str, Any]:
+        """
+        Generate a personalized training plan for a resource.
+
+        Args:
+            resource_id: ID of the resource
+            target_skills: Optional list of target skills to develop
+            skill_priorities: Optional mapping of skills to priority levels
+            timeline_weeks: Training timeline in weeks
+
+        Returns:
+            Comprehensive training plan
+        """
+        resource = self.get(resource_id)
+        if not resource:
+            raise ValueError(f"Resource {resource_id} not found")
+
+        resource_name = (
+            f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip()
+        )
+        current_skills = self.get_resource_skills(resource_id, verified_only=False)
+        certifications = self.get_resource_certifications(resource_id, active_only=True)
+
+        # Create skill profile
+        skill_profile = {}
+        for skill in current_skills:
+            skill_name = skill.get("SkillName", "")
+            skill_profile[skill_name] = {
+                "current_level": skill.get("SkillLevel", 1),
+                "verified": skill.get("Verified", False),
+                "date_acquired": skill.get("DateAcquired"),
+            }
+
+        training_plan = {
+            "resource_id": resource_id,
+            "resource_name": resource_name,
+            "plan_created_date": datetime.now().isoformat(),
+            "timeline_weeks": timeline_weeks,
+            "current_skill_profile": skill_profile,
+            "current_certifications": certifications,
+            "training_objectives": [],
+            "learning_path": [],
+            "milestones": [],
+            "estimated_costs": {
+                "training_materials": 0,
+                "certification_exams": 0,
+                "external_training": 0,
+                "total_estimated_cost": 0,
+            },
+            "success_metrics": [],
+        }
+
+        # Determine skills to develop
+        skills_to_develop = target_skills or []
+
+        # If no target skills specified, suggest improvements based on current skills
+        if not skills_to_develop:
+            # Suggest advancing existing beginner/intermediate skills
+            for skill_name, profile in skill_profile.items():
+                if profile["current_level"] < 4:  # Not expert level yet
+                    skills_to_develop.append(skill_name)
+
+        # Create training objectives and learning path
+        weeks_used = 0
+        for skill in skills_to_develop:
+            if weeks_used >= timeline_weeks:
+                break
+
+            current_level = skill_profile.get(skill, {}).get("current_level", 0)
+            priority = (
+                skill_priorities.get(skill, "medium") if skill_priorities else "medium"
+            )
+
+            # Determine target level based on current level and priority
+            if priority == "high":
+                target_level = min(5, current_level + 2)
+                weeks_needed = 4
+            elif priority == "low":
+                target_level = min(4, current_level + 1)
+                weeks_needed = 2
+            else:  # medium
+                target_level = min(4, current_level + 1)
+                weeks_needed = 3
+
+            if target_level > current_level:
+                training_objective = {
+                    "skill": skill,
+                    "current_level": current_level,
+                    "target_level": target_level,
+                    "priority": priority,
+                    "estimated_weeks": weeks_needed,
+                    "learning_activities": self._generate_learning_activities(
+                        skill, current_level, target_level
+                    ),
+                }
+
+                training_plan["training_objectives"].append(training_objective)
+
+                # Add to learning path
+                start_week = weeks_used + 1
+                end_week = min(weeks_used + weeks_needed, timeline_weeks)
+
+                training_plan["learning_path"].append(
+                    {
+                        "week_range": f"{start_week}-{end_week}",
+                        "skill": skill,
+                        "activities": training_objective["learning_activities"],
+                        "target_milestone": f"Achieve {self._get_skill_level_name(target_level)} level",
+                    }
+                )
+
+                weeks_used += weeks_needed
+
+        # Create milestones
+        for i, objective in enumerate(training_plan["training_objectives"]):
+            milestone_week = min((i + 1) * 4, timeline_weeks)
+            training_plan["milestones"].append(
+                {
+                    "week": milestone_week,
+                    "skill": objective["skill"],
+                    "milestone": f"Complete {objective['skill']} training to {self._get_skill_level_name(objective['target_level'])} level",
+                    "success_criteria": [
+                        "Pass skill assessment",
+                        "Complete practical exercises",
+                        "Receive peer/supervisor verification",
+                    ],
+                }
+            )
+
+        # Generate success metrics
+        training_plan["success_metrics"] = [
+            {
+                "metric": "Skill Level Advancement",
+                "target": f"Advance {len(training_plan['training_objectives'])} skills",
+                "measurement": "Pre/post training assessments",
+            },
+            {
+                "metric": "Training Completion Rate",
+                "target": "100% completion of assigned modules",
+                "measurement": "Learning management system tracking",
+            },
+            {
+                "metric": "Knowledge Application",
+                "target": "Apply new skills in real projects within 30 days",
+                "measurement": "Project performance evaluation",
+            },
+        ]
+
+        return training_plan
+
+    def _generate_learning_activities(
+        self, skill: str, current_level: int, target_level: int
+    ) -> List[str]:
+        """Generate appropriate learning activities for skill development."""
+        activities = []
+
+        level_gap = target_level - current_level
+
+        # Base activities for all skills
+        if current_level == 0:  # New skill
+            activities.extend(
+                [
+                    f"Complete introductory course in {skill}",
+                    f"Study fundamental concepts of {skill}",
+                    "Find a mentor or subject matter expert",
+                ]
+            )
+
+        if level_gap >= 1:
+            activities.extend(
+                [
+                    f"Complete intermediate training in {skill}",
+                    f"Practice {skill} through guided exercises",
+                    "Join community or professional group",
+                ]
+            )
+
+        if level_gap >= 2:
+            activities.extend(
+                [
+                    f"Complete advanced coursework in {skill}",
+                    f"Lead a project using {skill}",
+                    "Attend industry conference or workshop",
+                ]
+            )
+
+        if target_level >= 4:  # Expert level
+            activities.extend(
+                [
+                    f"Obtain professional certification in {skill}",
+                    f"Mentor others in {skill}",
+                    f"Contribute to {skill} best practices documentation",
+                ]
+            )
+
+        return activities[:6]  # Limit to 6 activities to keep manageable
+
+    def track_competency_assessments(
+        self,
+        resource_id: int,
+        skill_assessments: List[Dict[str, Any]],
+        assessment_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Track and record competency assessment results.
+
+        Args:
+            resource_id: ID of the resource
+            skill_assessments: List of skill assessment results
+            assessment_date: Date of assessment (defaults to now)
+
+        Returns:
+            Assessment tracking record
+        """
+        if assessment_date is None:
+            assessment_date = datetime.now().isoformat()
+
+        resource = self.get(resource_id)
+        if not resource:
+            raise ValueError(f"Resource {resource_id} not found")
+
+        resource_name = (
+            f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip()
+        )
+
+        assessment_record = {
+            "resource_id": resource_id,
+            "resource_name": resource_name,
+            "assessment_date": assessment_date,
+            "assessments": [],
+            "overall_performance": {},
+            "improvement_areas": [],
+            "strengths": [],
+            "next_assessment_date": None,
+        }
+
+        total_score = 0
+        total_assessments = 0
+        scores_by_category = {}
+
+        for assessment in skill_assessments:
+            skill_name = assessment.get("skill")
+            score = assessment.get("score", 0)  # Assuming 0-100 scale
+            max_score = assessment.get("max_score", 100)
+            assessor = assessment.get("assessor")
+            notes = assessment.get("notes", "")
+            category = assessment.get("category", "Technical")
+
+            normalized_score = (score / max_score) * 100 if max_score > 0 else 0
+
+            assessment_data = {
+                "skill": skill_name,
+                "score": score,
+                "max_score": max_score,
+                "normalized_score": normalized_score,
+                "assessor": assessor,
+                "notes": notes,
+                "category": category,
+                "performance_level": self._determine_performance_level(
+                    normalized_score
+                ),
+            }
+
+            assessment_record["assessments"].append(assessment_data)
+
+            total_score += normalized_score
+            total_assessments += 1
+
+            # Track by category
+            if category not in scores_by_category:
+                scores_by_category[category] = []
+            scores_by_category[category].append(normalized_score)
+
+            # Identify improvement areas and strengths
+            if normalized_score < 70:
+                assessment_record["improvement_areas"].append(
+                    {
+                        "skill": skill_name,
+                        "score": normalized_score,
+                        "recommendation": f"Focus on improving {skill_name} skills",
+                    }
+                )
+            elif normalized_score >= 85:
+                assessment_record["strengths"].append(
+                    {
+                        "skill": skill_name,
+                        "score": normalized_score,
+                        "note": f"Strong performance in {skill_name}",
+                    }
+                )
+
+        # Calculate overall performance
+        if total_assessments > 0:
+            avg_score = total_score / total_assessments
+            assessment_record["overall_performance"] = {
+                "average_score": avg_score,
+                "performance_level": self._determine_performance_level(avg_score),
+                "total_assessments": total_assessments,
+                "category_breakdown": {
+                    category: sum(scores) / len(scores)
+                    for category, scores in scores_by_category.items()
+                },
+            }
+
+        # Suggest next assessment date (quarterly)
+        next_assessment = datetime.fromisoformat(
+            assessment_date.replace("Z", "+00:00")
+        ) + timedelta(days=90)
+        assessment_record["next_assessment_date"] = next_assessment.isoformat()
+
+        # This would typically be stored in a database
+        # For now, we'll return the assessment record
+        return assessment_record
+
+    def _determine_performance_level(self, score: float) -> str:
+        """Determine performance level based on score."""
+        if score >= 90:
+            return "Exceptional"
+        elif score >= 80:
+            return "Proficient"
+        elif score >= 70:
+            return "Developing"
+        elif score >= 60:
+            return "Needs Improvement"
+        else:
+            return "Below Expectations"
+
+    # =====================================================================================
+    # ADVANCED UTILIZATION REPORTING AND PERFORMANCE METRICS
+    # =====================================================================================
+
+    def generate_utilization_dashboard(
+        self,
+        resource_ids: Optional[List[int]] = None,
+        date_range: Optional[Tuple[str, str]] = None,
+        department_id: Optional[int] = None,
+        location_id: Optional[int] = None,
+        include_trends: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Generate a comprehensive utilization dashboard for resources.
+
+        Args:
+            resource_ids: Optional list of specific resource IDs
+            date_range: Date range for analysis (defaults to last 30 days)
+            department_id: Optional department filter
+            location_id: Optional location filter
+            include_trends: Whether to include trend analysis
+
+        Returns:
+            Comprehensive utilization dashboard data
+        """
+        if date_range is None:
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=30)
+            date_range = (start_date.isoformat(), end_date.isoformat())
+
+        # Get resources to analyze
+        if resource_ids is None:
+            resources = self.get_active_resources(
+                department_id=department_id, location_id=location_id
+            )
+            resource_ids = [
+                r.get("id") or r.get("ID")
+                for r in resources
+                if r.get("id") or r.get("ID")
+            ]
+
+        dashboard = {
+            "generated_date": datetime.now().isoformat(),
+            "analysis_period": date_range,
+            "resources_analyzed": len(resource_ids),
+            "filters": {
+                "department_id": department_id,
+                "location_id": location_id,
+            },
+            "summary_metrics": {
+                "total_capacity_hours": 0,
+                "total_billable_hours": 0,
+                "total_non_billable_hours": 0,
+                "overall_utilization_rate": 0,
+                "billable_utilization_rate": 0,
+                "total_revenue": 0,
+                "total_cost": 0,
+                "profit_margin": 0,
+                "average_hourly_rate": 0,
+            },
+            "resource_details": [],
+            "department_breakdown": {},
+            "utilization_distribution": {
+                "over_allocated": 0,
+                "high_utilization": 0,
+                "optimal_utilization": 0,
+                "under_utilized": 0,
+            },
+            "trend_analysis": [],
+            "recommendations": [],
+        }
+
+        department_totals = {}
+        total_revenue = 0
+        total_cost = 0
+        all_hourly_rates = []
+
+        for resource_id in resource_ids:
+            try:
+                resource = self.get(resource_id)
+                if not resource:
+                    continue
+
+                resource_name = f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip()
+                dept_id = resource.get("DepartmentID")
+
+                # Get utilization data
+                utilization = self.get_resource_utilization(resource_id, date_range)
+                time_entries = self.get_resource_time_entries(
+                    resource_id, date_range[0], date_range[1]
+                )
+
+                # Calculate revenue and cost
+                resource_revenue = 0
+                resource_cost = 0
+                for entry in time_entries:
+                    hours = entry.get("HoursWorked", 0)
+                    hourly_rate = (
+                        entry.get("HourlyRate", 0) or resource.get("HourlyRate", 0) or 0
+                    )
+                    hourly_cost = (
+                        entry.get("HourlyCost", 0) or resource.get("HourlyCost", 0) or 0
+                    )
+
+                    if entry.get("BillableToAccount"):
+                        resource_revenue += hours * hourly_rate
+
+                    resource_cost += hours * hourly_cost
+
+                    if hourly_rate > 0:
+                        all_hourly_rates.append(hourly_rate)
+
+                total_revenue += resource_revenue
+                total_cost += resource_cost
+
+                # Classify utilization level
+                util_pct = utilization["summary"]["utilization_percentage"]
+                if util_pct > 95:
+                    util_category = "over_allocated"
+                elif util_pct > 85:
+                    util_category = "high_utilization"
+                elif util_pct > 65:
+                    util_category = "optimal_utilization"
+                else:
+                    util_category = "under_utilized"
+
+                dashboard["utilization_distribution"][util_category] += 1
+
+                # Add to resource details
+                resource_detail = {
+                    "resource_id": resource_id,
+                    "resource_name": resource_name,
+                    "department_id": dept_id,
+                    "location_id": resource.get("LocationID"),
+                    "title": resource.get("Title", ""),
+                    "utilization_percentage": util_pct,
+                    "billable_utilization_percentage": utilization["summary"][
+                        "billable_utilization_percentage"
+                    ],
+                    "capacity_hours": utilization["summary"]["capacity_hours"],
+                    "total_hours": utilization["summary"]["total_hours"],
+                    "billable_hours": utilization["summary"]["billable_hours"],
+                    "non_billable_hours": utilization["summary"]["non_billable_hours"],
+                    "revenue_generated": resource_revenue,
+                    "cost_incurred": resource_cost,
+                    "profit_contribution": resource_revenue - resource_cost,
+                    "utilization_category": util_category,
+                    "hourly_rate": resource.get("HourlyRate", 0) or 0,
+                }
+
+                dashboard["resource_details"].append(resource_detail)
+
+                # Update summary metrics
+                dashboard["summary_metrics"]["total_capacity_hours"] += utilization[
+                    "summary"
+                ]["capacity_hours"]
+                dashboard["summary_metrics"]["total_billable_hours"] += utilization[
+                    "summary"
+                ]["billable_hours"]
+                dashboard["summary_metrics"]["total_non_billable_hours"] += utilization[
+                    "summary"
+                ]["non_billable_hours"]
+
+                # Track department totals
+                if dept_id:
+                    if dept_id not in department_totals:
+                        department_totals[dept_id] = {
+                            "resources": 0,
+                            "total_hours": 0,
+                            "billable_hours": 0,
+                            "capacity_hours": 0,
+                            "revenue": 0,
+                            "cost": 0,
+                        }
+
+                    dept_totals = department_totals[dept_id]
+                    dept_totals["resources"] += 1
+                    dept_totals["total_hours"] += utilization["summary"]["total_hours"]
+                    dept_totals["billable_hours"] += utilization["summary"][
+                        "billable_hours"
+                    ]
+                    dept_totals["capacity_hours"] += utilization["summary"][
+                        "capacity_hours"
+                    ]
+                    dept_totals["revenue"] += resource_revenue
+                    dept_totals["cost"] += resource_cost
+
+            except Exception as e:
+                print(f"Error analyzing resource {resource_id}: {e}")
+                continue
+
+        # Calculate summary metrics
+        if dashboard["summary_metrics"]["total_capacity_hours"] > 0:
+            dashboard["summary_metrics"]["overall_utilization_rate"] = (
+                (
+                    dashboard["summary_metrics"]["total_billable_hours"]
+                    + dashboard["summary_metrics"]["total_non_billable_hours"]
+                )
+                / dashboard["summary_metrics"]["total_capacity_hours"]
+                * 100
+            )
+            dashboard["summary_metrics"]["billable_utilization_rate"] = (
+                dashboard["summary_metrics"]["total_billable_hours"]
+                / dashboard["summary_metrics"]["total_capacity_hours"]
+                * 100
+            )
+
+        dashboard["summary_metrics"]["total_revenue"] = total_revenue
+        dashboard["summary_metrics"]["total_cost"] = total_cost
+        dashboard["summary_metrics"]["profit_margin"] = total_revenue - total_cost
+
+        if all_hourly_rates:
+            dashboard["summary_metrics"]["average_hourly_rate"] = sum(
+                all_hourly_rates
+            ) / len(all_hourly_rates)
+
+        # Calculate department breakdown
+        for dept_id, totals in department_totals.items():
+            dashboard["department_breakdown"][dept_id] = {
+                "resources_count": totals["resources"],
+                "utilization_percentage": (
+                    (totals["total_hours"] / totals["capacity_hours"] * 100)
+                    if totals["capacity_hours"] > 0
+                    else 0
+                ),
+                "billable_utilization_percentage": (
+                    (totals["billable_hours"] / totals["capacity_hours"] * 100)
+                    if totals["capacity_hours"] > 0
+                    else 0
+                ),
+                "revenue": totals["revenue"],
+                "cost": totals["cost"],
+                "profit_margin": totals["revenue"] - totals["cost"],
+                "average_utilization": (
+                    (totals["total_hours"] / totals["capacity_hours"] * 100)
+                    if totals["capacity_hours"] > 0
+                    else 0
+                ),
+            }
+
+        # Generate trend analysis if requested
+        if include_trends:
+            dashboard["trend_analysis"] = self._generate_utilization_trends(
+                resource_ids, date_range
+            )
+
+        # Generate recommendations
+        dashboard["recommendations"] = self._generate_utilization_recommendations(
+            dashboard
+        )
+
+        return dashboard
+
+    def _generate_utilization_trends(
+        self, resource_ids: List[int], date_range: Tuple[str, str]
+    ) -> List[Dict[str, Any]]:
+        """Generate trend analysis for utilization data."""
+        trends = []
+
+        start_date = datetime.fromisoformat(date_range[0].replace("Z", "+00:00"))
+        end_date = datetime.fromisoformat(date_range[1].replace("Z", "+00:00"))
+
+        # Split into weekly periods
+        current_date = start_date
+        weekly_data = []
+
+        while current_date < end_date:
+            week_end = min(current_date + timedelta(days=7), end_date)
+            week_range = (current_date.isoformat(), week_end.isoformat())
+
+            week_utilization = []
+            week_revenue = 0
+
+            for resource_id in resource_ids[:10]:  # Limit for performance
+                try:
+                    utilization = self.get_resource_utilization(resource_id, week_range)
+                    week_utilization.append(
+                        utilization["summary"]["utilization_percentage"]
+                    )
+
+                    # Estimate revenue for the week
+                    time_entries = self.get_resource_time_entries(
+                        resource_id, week_range[0], week_range[1]
+                    )
+                    for entry in time_entries:
+                        if entry.get("BillableToAccount"):
+                            week_revenue += entry.get("HoursWorked", 0) * entry.get(
+                                "HourlyRate", 0
+                            )
+
+                except Exception:
+                    continue
+
+            if week_utilization:
+                weekly_data.append(
+                    {
+                        "week_start": current_date.isoformat(),
+                        "average_utilization": sum(week_utilization)
+                        / len(week_utilization),
+                        "revenue": week_revenue,
+                        "resources_tracked": len(week_utilization),
+                    }
+                )
+
+            current_date = week_end
+
+        # Calculate trends
+        if len(weekly_data) >= 2:
+            utilization_trend = (
+                weekly_data[-1]["average_utilization"]
+                - weekly_data[0]["average_utilization"]
+            )
+            revenue_trend = weekly_data[-1]["revenue"] - weekly_data[0]["revenue"]
+
+            trends.append(
+                {
+                    "metric": "utilization",
+                    "trend_direction": (
+                        "increasing" if utilization_trend > 0 else "decreasing"
+                    ),
+                    "trend_magnitude": abs(utilization_trend),
+                    "weekly_data": weekly_data,
+                }
+            )
+
+            trends.append(
+                {
+                    "metric": "revenue",
+                    "trend_direction": (
+                        "increasing" if revenue_trend > 0 else "decreasing"
+                    ),
+                    "trend_magnitude": abs(revenue_trend),
+                    "weekly_data": [
+                        {"week_start": w["week_start"], "revenue": w["revenue"]}
+                        for w in weekly_data
+                    ],
+                }
+            )
+
+        return trends
+
+    def _generate_utilization_recommendations(
+        self, dashboard: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Generate recommendations based on utilization analysis."""
+        recommendations = []
+
+        # Check overall utilization rates
+        overall_util = dashboard["summary_metrics"]["overall_utilization_rate"]
+        billable_util = dashboard["summary_metrics"]["billable_utilization_rate"]
+
+        if overall_util < 65:
+            recommendations.append(
+                {
+                    "type": "capacity_optimization",
+                    "priority": "high",
+                    "message": "Overall team utilization is low. Consider reallocating resources or reducing capacity.",
+                    "target_metric": "overall_utilization_rate",
+                    "current_value": overall_util,
+                    "target_value": 80,
+                }
+            )
+
+        if billable_util < 70:
+            recommendations.append(
+                {
+                    "type": "billability_improvement",
+                    "priority": "medium",
+                    "message": "Billable utilization is below target. Focus on reducing non-billable time.",
+                    "target_metric": "billable_utilization_rate",
+                    "current_value": billable_util,
+                    "target_value": 75,
+                }
+            )
+
+        # Check for over-allocated resources
+        over_allocated = dashboard["utilization_distribution"]["over_allocated"]
+        total_resources = dashboard["resources_analyzed"]
+
+        if over_allocated / total_resources > 0.2:  # More than 20% over-allocated
+            recommendations.append(
+                {
+                    "type": "workload_balancing",
+                    "priority": "high",
+                    "message": f"{over_allocated} resources are over-allocated. Redistribute workload to prevent burnout.",
+                    "affected_resources": over_allocated,
+                }
+            )
+
+        # Check profit margins
+        profit_margin = dashboard["summary_metrics"]["profit_margin"]
+        total_revenue = dashboard["summary_metrics"]["total_revenue"]
+
+        if profit_margin > 0 and total_revenue > 0:
+            margin_percentage = (profit_margin / total_revenue) * 100
+            if margin_percentage < 20:
+                recommendations.append(
+                    {
+                        "type": "profitability_improvement",
+                        "priority": "medium",
+                        "message": f"Profit margin is {margin_percentage:.1f}%. Consider reviewing rates or reducing costs.",
+                        "current_margin_percentage": margin_percentage,
+                    }
+                )
+
+        return recommendations
+
+    def generate_performance_scorecard(
+        self,
+        resource_id: int,
+        evaluation_period_months: int = 6,
+        include_peer_comparison: bool = True,
+        include_goal_tracking: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Generate a comprehensive performance scorecard for a resource.
+
+        Args:
+            resource_id: ID of the resource
+            evaluation_period_months: Number of months to evaluate
+            include_peer_comparison: Whether to include peer comparisons
+            include_goal_tracking: Whether to include goal tracking metrics
+
+        Returns:
+            Comprehensive performance scorecard
+        """
+        resource = self.get(resource_id)
+        if not resource:
+            raise ValueError(f"Resource {resource_id} not found")
+
+        resource_name = (
+            f"{resource.get('FirstName', '')} {resource.get('LastName', '')}".strip()
+        )
+        department_id = resource.get("DepartmentID")
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=evaluation_period_months * 30)
+        date_range = (start_date.isoformat(), end_date.isoformat())
+
+        scorecard = {
+            "resource_id": resource_id,
+            "resource_name": resource_name,
+            "evaluation_period": f"{evaluation_period_months} months",
+            "evaluation_date_range": date_range,
+            "overall_score": 0,
+            "performance_metrics": {},
+            "skill_assessment": {},
+            "project_contributions": [],
+            "utilization_analysis": {},
+            "financial_impact": {},
+            "peer_comparison": {},
+            "goal_tracking": {},
+            "strengths": [],
+            "improvement_areas": [],
+            "development_recommendations": [],
+        }
+
+        # Get utilization data
+        utilization = self.get_resource_utilization(resource_id, date_range)
+        scorecard["utilization_analysis"] = {
+            "average_utilization": utilization["summary"]["utilization_percentage"],
+            "billable_utilization": utilization["summary"][
+                "billable_utilization_percentage"
+            ],
+            "total_hours_worked": utilization["summary"]["total_hours"],
+            "billable_hours": utilization["summary"]["billable_hours"],
+            "efficiency_score": utilization["efficiency_metrics"][
+                "average_hours_per_day"
+            ],
+        }
+
+        # Calculate financial impact
+        profitability = self.get_resource_profitability(resource_id, date_range)
+        scorecard["financial_impact"] = {
+            "total_revenue_generated": profitability["total_revenue"],
+            "total_cost": profitability["total_cost"],
+            "profit_contribution": profitability["gross_profit"],
+            "profit_margin_percentage": profitability["gross_margin_percentage"],
+            "average_hourly_rate": profitability["average_hourly_rate"],
+        }
+
+        # Get skills assessment
+        skills = self.get_resource_skills(resource_id, verified_only=True)
+        certifications = self.get_resource_certifications(resource_id, active_only=True)
+
+        scorecard["skill_assessment"] = {
+            "total_verified_skills": len(skills),
+            "active_certifications": len(certifications),
+            "skill_diversity_score": min(len(skills) / 10, 1) * 100,  # Scale to 100
+            "certification_currency": len(
+                [
+                    c
+                    for c in certifications
+                    if not self._is_certification_expiring_soon(c)
+                ]
+            ),
+        }
+
+        # Project contributions (simplified)
+        time_entries = self.get_resource_time_entries(
+            resource_id, date_range[0], date_range[1]
+        )
+
+        projects_worked = set()
+        for entry in time_entries:
+            project_id = entry.get("ProjectID")
+            if project_id:
+                projects_worked.add(project_id)
+
+        scorecard["project_contributions"] = [
+            {
+                "project_id": pid,
+                "hours_contributed": sum(
+                    entry.get("HoursWorked", 0)
+                    for entry in time_entries
+                    if entry.get("ProjectID") == pid
+                ),
+                "billable_hours": sum(
+                    entry.get("HoursWorked", 0)
+                    for entry in time_entries
+                    if entry.get("ProjectID") == pid and entry.get("BillableToAccount")
+                ),
+            }
+            for pid in projects_worked
+        ]
+
+        # Performance metrics scoring
+        metrics = {
+            "utilization_score": min(
+                utilization["summary"]["utilization_percentage"] / 85 * 100, 100
+            ),
+            "billability_score": min(
+                utilization["summary"]["billable_utilization_percentage"] / 75 * 100,
+                100,
+            ),
+            "profitability_score": (
+                min(profitability["gross_margin_percentage"] / 30 * 100, 100)
+                if profitability["gross_margin_percentage"] > 0
+                else 50
+            ),
+            "skill_development_score": scorecard["skill_assessment"][
+                "skill_diversity_score"
+            ],
+            "project_diversity_score": min(len(projects_worked) / 5 * 100, 100),
+        }
+
+        scorecard["performance_metrics"] = metrics
+        scorecard["overall_score"] = sum(metrics.values()) / len(metrics)
+
+        # Peer comparison if requested
+        if include_peer_comparison and department_id:
+            peer_resources = self.get_active_resources(department_id=department_id)
+            peer_ids = [
+                r.get("id") or r.get("ID")
+                for r in peer_resources
+                if (r.get("id") or r.get("ID")) != resource_id
+            ]
+
+            if peer_ids:
+                peer_comparisons = self.compare_resource_utilization(
+                    peer_ids, date_range
+                )
+                avg_peer_util = sum(
+                    p["utilization_percentage"] for p in peer_comparisons
+                ) / len(peer_comparisons)
+                avg_peer_billable = sum(
+                    p["billable_utilization_percentage"] for p in peer_comparisons
+                ) / len(peer_comparisons)
+
+                scorecard["peer_comparison"] = {
+                    "department_average_utilization": avg_peer_util,
+                    "department_average_billable_utilization": avg_peer_billable,
+                    "utilization_percentile": self._calculate_percentile(
+                        utilization["summary"]["utilization_percentage"],
+                        [p["utilization_percentage"] for p in peer_comparisons],
+                    ),
+                    "peers_analyzed": len(peer_ids),
+                }
+
+        # Identify strengths and improvement areas
+        if metrics["utilization_score"] >= 85:
+            scorecard["strengths"].append("Excellent utilization rate")
+        if metrics["billability_score"] >= 85:
+            scorecard["strengths"].append("High billable utilization")
+        if metrics["profitability_score"] >= 85:
+            scorecard["strengths"].append("Strong profit contribution")
+        if len(projects_worked) >= 3:
+            scorecard["strengths"].append("Good project diversity")
+
+        if metrics["utilization_score"] < 70:
+            scorecard["improvement_areas"].append("Increase overall utilization")
+        if metrics["billability_score"] < 70:
+            scorecard["improvement_areas"].append("Focus on billable activities")
+        if len(skills) < 5:
+            scorecard["improvement_areas"].append("Expand skill set")
+
+        # Development recommendations
+        if len(scorecard["improvement_areas"]) > 0:
+            scorecard["development_recommendations"] = [
+                "Create development plan to address improvement areas",
+                "Consider additional training or mentoring",
+                "Set specific performance goals for next evaluation period",
+            ]
+
+        return scorecard
+
+    def _is_certification_expiring_soon(
+        self, certification: Dict[str, Any], days_ahead: int = 90
+    ) -> bool:
+        """Check if a certification is expiring soon."""
+        expiry_date_str = certification.get("ExpirationDate")
+        if not expiry_date_str:
+            return False
+
+        try:
+            expiry_date = datetime.fromisoformat(expiry_date_str.replace("Z", "+00:00"))
+            return (expiry_date - datetime.now()).days <= days_ahead
+        except (ValueError, AttributeError):
+            return False
+
+    def _calculate_percentile(self, value: float, peer_values: List[float]) -> float:
+        """Calculate the percentile ranking of a value among peers."""
+        if not peer_values:
+            return 50.0
+
+        all_values = peer_values + [value]
+        all_values.sort()
+        rank = all_values.index(value) + 1
+        return (rank / len(all_values)) * 100
+
+    def analyze_resource_efficiency_trends(
+        self,
+        resource_ids: Optional[List[int]] = None,
+        analysis_months: int = 12,
+        trend_metrics: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Analyze efficiency trends for resources over time.
+
+        Args:
+            resource_ids: Optional list of resource IDs to analyze
+            analysis_months: Number of months to analyze
+            trend_metrics: Specific metrics to track trends for
+
+        Returns:
+            Comprehensive trend analysis
+        """
+        if resource_ids is None:
+            resources = self.get_active_resources()
+            resource_ids = [
+                r.get("id") or r.get("ID")
+                for r in resources
+                if r.get("id") or r.get("ID")
+            ]
+
+        if trend_metrics is None:
+            trend_metrics = [
+                "utilization_percentage",
+                "billable_utilization_percentage",
+                "revenue_per_hour",
+                "project_completion_rate",
+            ]
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=analysis_months * 30)
+
+        trend_analysis = {
+            "analysis_date": end_date.isoformat(),
+            "analysis_period_months": analysis_months,
+            "resources_analyzed": len(resource_ids),
+            "trend_metrics": trend_metrics,
+            "monthly_data": [],
+            "resource_trends": {},
+            "summary_trends": {},
+            "insights": [],
+        }
+
+        # Generate monthly data points
+        current_date = start_date
+        monthly_data = []
+
+        while current_date < end_date:
+            month_end = min(current_date.replace(day=28) + timedelta(days=4), end_date)
+            month_end = month_end.replace(day=1) - timedelta(
+                days=1
+            )  # Last day of month
+
+            if month_end <= current_date:
+                break
+
+            month_range = (current_date.isoformat(), month_end.isoformat())
+
+            month_data = {
+                "month": current_date.strftime("%Y-%m"),
+                "start_date": current_date.isoformat(),
+                "end_date": month_end.isoformat(),
+                "metrics": {metric: [] for metric in trend_metrics},
+            }
+
+            # Collect data for all resources for this month
+            for resource_id in resource_ids[:20]:  # Limit for performance
+                try:
+                    utilization = self.get_resource_utilization(
+                        resource_id, month_range
+                    )
+                    profitability = self.get_resource_profitability(
+                        resource_id, month_range
+                    )
+
+                    if (
+                        utilization["summary"]["total_hours"] > 0
+                    ):  # Only include if resource was active
+                        month_data["metrics"]["utilization_percentage"].append(
+                            utilization["summary"]["utilization_percentage"]
+                        )
+                        month_data["metrics"]["billable_utilization_percentage"].append(
+                            utilization["summary"]["billable_utilization_percentage"]
+                        )
+
+                        revenue_per_hour = (
+                            profitability["total_revenue"]
+                            / utilization["summary"]["total_hours"]
+                            if utilization["summary"]["total_hours"] > 0
+                            else 0
+                        )
+                        month_data["metrics"]["revenue_per_hour"].append(
+                            revenue_per_hour
+                        )
+
+                        # Placeholder for project completion rate
+                        month_data["metrics"]["project_completion_rate"].append(85.0)
+
+                except Exception as e:
+                    continue
+
+            # Calculate averages for the month
+            for metric in trend_metrics:
+                values = month_data["metrics"][metric]
+                month_data["metrics"][metric] = (
+                    sum(values) / len(values) if values else 0
+                )
+
+            monthly_data.append(month_data)
+            current_date = month_end + timedelta(days=1)
+            current_date = current_date.replace(day=1)  # First day of next month
+
+        trend_analysis["monthly_data"] = monthly_data
+
+        # Calculate trends for each metric
+        for metric in trend_metrics:
+            metric_values = [month["metrics"][metric] for month in monthly_data]
+
+            if len(metric_values) >= 2:
+                # Simple trend calculation
+                start_value = metric_values[0]
+                end_value = metric_values[-1]
+                trend_direction = (
+                    "improving" if end_value > start_value else "declining"
+                )
+                trend_magnitude = abs(end_value - start_value)
+
+                # Calculate average monthly change
+                monthly_changes = []
+                for i in range(1, len(metric_values)):
+                    monthly_changes.append(metric_values[i] - metric_values[i - 1])
+
+                avg_monthly_change = (
+                    sum(monthly_changes) / len(monthly_changes)
+                    if monthly_changes
+                    else 0
+                )
+
+                trend_analysis["summary_trends"][metric] = {
+                    "trend_direction": trend_direction,
+                    "trend_magnitude": trend_magnitude,
+                    "average_monthly_change": avg_monthly_change,
+                    "start_value": start_value,
+                    "end_value": end_value,
+                    "peak_value": max(metric_values),
+                    "lowest_value": min(metric_values),
+                }
+
+        # Generate insights
+        insights = []
+
+        for metric, trend in trend_analysis["summary_trends"].items():
+            if trend["trend_direction"] == "improving":
+                insights.append(
+                    {
+                        "type": "positive_trend",
+                        "metric": metric,
+                        "message": f"{metric.replace('_', ' ').title()} has improved by {trend['trend_magnitude']:.1f} over the analysis period",
+                    }
+                )
+            elif trend["trend_magnitude"] > 5:  # Significant decline
+                insights.append(
+                    {
+                        "type": "negative_trend",
+                        "metric": metric,
+                        "message": f"{metric.replace('_', ' ').title()} has declined by {trend['trend_magnitude']:.1f}, requiring attention",
+                    }
+                )
+
+        trend_analysis["insights"] = insights
+
+        return trend_analysis
