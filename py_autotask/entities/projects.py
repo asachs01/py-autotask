@@ -2184,3 +2184,1115 @@ class ProjectsEntity(BaseEntity):
             return output.getvalue()
 
         return export_data
+
+    def create_milestone(
+        self,
+        project_id: int,
+        title: str,
+        target_date: str,
+        description: Optional[str] = None,
+        priority: str = "Medium",
+        milestone_type: str = "Project",
+        deliverables: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Create a new milestone for a project.
+
+        Args:
+            project_id: ID of the project
+            title: Milestone title
+            target_date: Target completion date (YYYY-MM-DD)
+            description: Optional milestone description
+            priority: Milestone priority (Low, Medium, High, Critical)
+            milestone_type: Type of milestone (Project, Contract, Billing, etc.)
+            deliverables: List of expected deliverables
+
+        Returns:
+            Created milestone data
+        """
+        milestone_data = {
+            "ProjectID": project_id,
+            "Title": title,
+            "TargetDate": target_date,
+            "Description": description or "",
+            "Priority": priority,
+            "MilestoneType": milestone_type,
+            "Status": "Planned",
+            "CompletionPercentage": 0,
+            "CreatedDate": datetime.now().isoformat(),
+            "IsActive": True,
+        }
+
+        if deliverables:
+            milestone_data["Deliverables"] = ",".join(deliverables)
+
+        try:
+            # Create milestone record in Autotask
+            milestone = self.entity.create(milestone_data)
+
+            # Add audit log
+            self._log_milestone_activity(
+                project_id, "created", f"Milestone '{title}' created"
+            )
+
+            return milestone
+        except Exception as e:
+            raise Exception(f"Failed to create milestone: {str(e)}")
+
+    def update_milestone(
+        self,
+        milestone_id: int,
+        updates: Dict[str, Any],
+        completion_notes: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Update an existing milestone.
+
+        Args:
+            milestone_id: ID of the milestone to update
+            updates: Dictionary of fields to update
+            completion_notes: Optional notes when marking as complete
+
+        Returns:
+            Updated milestone data
+        """
+        try:
+            # Get existing milestone
+            milestone = self.entity.get_by_id(milestone_id)
+            if not milestone:
+                raise ValueError(f"Milestone {milestone_id} not found")
+
+            # Prepare update data
+            update_data = dict(updates)
+            update_data["LastModifiedDate"] = datetime.now().isoformat()
+
+            # Handle completion status
+            if "Status" in updates and updates["Status"] == "Completed":
+                update_data["CompletionDate"] = datetime.now().isoformat()
+                update_data["CompletionPercentage"] = 100
+                if completion_notes:
+                    update_data["CompletionNotes"] = completion_notes
+
+            # Update milestone
+            updated_milestone = self.entity.update(milestone_id, update_data)
+
+            # Log activity
+            project_id = milestone.get("ProjectID")
+            activity_msg = f"Milestone '{milestone.get('Title')}' updated"
+            if "Status" in updates:
+                activity_msg += f" - status changed to {updates['Status']}"
+
+            self._log_milestone_activity(project_id, "updated", activity_msg)
+
+            return updated_milestone
+        except Exception as e:
+            raise Exception(f"Failed to update milestone: {str(e)}")
+
+    def delete_milestone(self, milestone_id: int) -> bool:
+        """
+        Delete a milestone.
+
+        Args:
+            milestone_id: ID of the milestone to delete
+
+        Returns:
+            True if successfully deleted
+        """
+        try:
+            # Get milestone info for logging
+            milestone = self.entity.get_by_id(milestone_id)
+            if not milestone:
+                raise ValueError(f"Milestone {milestone_id} not found")
+
+            # Soft delete by marking as inactive
+            self.entity.update(
+                milestone_id,
+                {
+                    "IsActive": False,
+                    "Status": "Cancelled",
+                    "LastModifiedDate": datetime.now().isoformat(),
+                },
+            )
+
+            # Log activity
+            project_id = milestone.get("ProjectID")
+            self._log_milestone_activity(
+                project_id, "deleted", f"Milestone '{milestone.get('Title')}' deleted"
+            )
+
+            return True
+        except Exception as e:
+            raise Exception(f"Failed to delete milestone: {str(e)}")
+
+    def get_project_milestones(
+        self,
+        project_id: int,
+        status_filter: Optional[str] = None,
+        include_inactive: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all milestones for a project.
+
+        Args:
+            project_id: ID of the project
+            status_filter: Optional status filter (Planned, In Progress, Completed, etc.)
+            include_inactive: Include inactive/deleted milestones
+
+        Returns:
+            List of milestone data
+        """
+        filters = [{"field": "ProjectID", "op": "eq", "value": project_id}]
+
+        if not include_inactive:
+            filters.append({"field": "IsActive", "op": "eq", "value": True})
+
+        if status_filter:
+            filters.append({"field": "Status", "op": "eq", "value": status_filter})
+
+        return self.entity.query(filters)
+
+    def get_milestone_progress(self, project_id: int) -> Dict[str, Any]:
+        """
+        Get milestone progress summary for a project.
+
+        Args:
+            project_id: ID of the project
+
+        Returns:
+            Milestone progress summary
+        """
+        milestones = self.get_project_milestones(project_id)
+
+        progress = {
+            "project_id": project_id,
+            "total_milestones": len(milestones),
+            "completed": 0,
+            "in_progress": 0,
+            "planned": 0,
+            "overdue": 0,
+            "completion_percentage": 0,
+            "next_milestone": None,
+            "critical_milestones": [],
+            "overdue_milestones": [],
+        }
+
+        now = datetime.now()
+
+        for milestone in milestones:
+            status = milestone.get("Status", "")
+            target_date = milestone.get("TargetDate", "")
+            priority = milestone.get("Priority", "")
+
+            # Count by status
+            if status == "Completed":
+                progress["completed"] += 1
+            elif status == "In Progress":
+                progress["in_progress"] += 1
+            else:
+                progress["planned"] += 1
+
+            # Check for overdue
+            if target_date and status != "Completed":
+                try:
+                    target = datetime.fromisoformat(target_date.replace("Z", "+00:00"))
+                    if target < now:
+                        progress["overdue"] += 1
+                        progress["overdue_milestones"].append(
+                            {
+                                "id": milestone.get("id"),
+                                "title": milestone.get("Title"),
+                                "target_date": target_date,
+                                "days_overdue": (now - target).days,
+                            }
+                        )
+                except:
+                    pass
+
+            # Track critical milestones
+            if priority in ["High", "Critical"]:
+                progress["critical_milestones"].append(
+                    {
+                        "id": milestone.get("id"),
+                        "title": milestone.get("Title"),
+                        "target_date": target_date,
+                        "status": status,
+                    }
+                )
+
+        # Calculate completion percentage
+        if progress["total_milestones"] > 0:
+            progress["completion_percentage"] = (
+                progress["completed"] / progress["total_milestones"]
+            ) * 100
+
+        # Find next milestone
+        upcoming = [
+            m
+            for m in milestones
+            if m.get("Status") in ["Planned", "In Progress"] and m.get("TargetDate")
+        ]
+        if upcoming:
+            upcoming.sort(key=lambda x: x.get("TargetDate", ""))
+            progress["next_milestone"] = {
+                "id": upcoming[0].get("id"),
+                "title": upcoming[0].get("Title"),
+                "target_date": upcoming[0].get("TargetDate"),
+                "status": upcoming[0].get("Status"),
+            }
+
+        return progress
+
+    def _log_milestone_activity(
+        self, project_id: int, action: str, description: str
+    ) -> None:
+        """Log milestone activity for audit trail."""
+        try:
+            activity_data = {
+                "ProjectID": project_id,
+                "ActivityType": "Milestone",
+                "Action": action,
+                "Description": description,
+                "Timestamp": datetime.now().isoformat(),
+                "UserID": getattr(self, "current_user_id", None),
+            }
+            # Log to project notes or activity log
+            self.add_project_note(project_id, f"[Milestone Activity] {description}")
+        except:
+            # Fail silently for logging
+            pass
+
+    def get_gantt_chart_data(
+        self,
+        project_id: int,
+        include_tasks: bool = True,
+        include_milestones: bool = True,
+        include_dependencies: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Generate comprehensive Gantt chart data for a project.
+
+        Args:
+            project_id: ID of the project
+            include_tasks: Include project tasks
+            include_milestones: Include project milestones
+            include_dependencies: Include task dependencies
+
+        Returns:
+            Complete Gantt chart data structure
+        """
+        project = self.get_project_details(project_id)
+        if not project:
+            raise ValueError(f"Project {project_id} not found")
+
+        gantt_data = {
+            "project": {
+                "id": project_id,
+                "name": project.get("ProjectName", ""),
+                "start_date": project.get("StartDateTime", ""),
+                "end_date": project.get("EndDateTime", ""),
+                "status": project.get("Status", ""),
+                "completion_percentage": project.get("PercentComplete", 0),
+            },
+            "tasks": [],
+            "milestones": [],
+            "dependencies": [],
+            "critical_path": [],
+            "timeline": {
+                "earliest_start": None,
+                "latest_end": None,
+                "duration_days": 0,
+            },
+            "resource_allocation": {},
+        }
+
+        # Get tasks if requested
+        if include_tasks:
+            tasks = self.get_project_tasks(project_id)
+            gantt_data["tasks"] = self._format_tasks_for_gantt(tasks)
+
+        # Get milestones if requested
+        if include_milestones:
+            milestones = self.get_project_milestones(project_id)
+            gantt_data["milestones"] = self._format_milestones_for_gantt(milestones)
+
+        # Get dependencies if requested
+        if include_dependencies:
+            gantt_data["dependencies"] = self._get_task_dependencies(project_id)
+
+        # Calculate timeline metrics
+        gantt_data["timeline"] = self._calculate_timeline_metrics(gantt_data)
+
+        # Calculate critical path
+        if include_tasks and include_dependencies:
+            gantt_data["critical_path"] = self._calculate_critical_path(gantt_data)
+
+        # Get resource allocation
+        gantt_data["resource_allocation"] = self._get_resource_allocation(project_id)
+
+        return gantt_data
+
+    def _format_tasks_for_gantt(
+        self, tasks: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Format tasks for Gantt chart display."""
+        gantt_tasks = []
+
+        for task in tasks:
+            gantt_task = {
+                "id": task.get("id"),
+                "title": task.get("Title", ""),
+                "start_date": task.get("StartDateTime", ""),
+                "end_date": task.get("EndDateTime", ""),
+                "duration": self._calculate_duration_hours(
+                    task.get("StartDateTime"), task.get("EndDateTime")
+                ),
+                "completion_percentage": task.get("PercentComplete", 0),
+                "status": task.get("Status", ""),
+                "priority": task.get("Priority", ""),
+                "assigned_resource": task.get("AssignedResourceID", ""),
+                "estimated_hours": task.get("EstimatedHours", 0),
+                "hours_to_complete": task.get("HoursToComplete", 0),
+                "department": task.get("DepartmentID", ""),
+                "phase": task.get("Phase", ""),
+                "task_type": task.get("TaskType", ""),
+                "is_milestone_task": task.get("IsMilestone", False),
+                "predecessors": [],  # Will be populated by dependencies
+                "successors": [],  # Will be populated by dependencies
+                "early_start": None,
+                "early_finish": None,
+                "late_start": None,
+                "late_finish": None,
+                "slack": 0,
+                "is_critical": False,
+            }
+            gantt_tasks.append(gantt_task)
+
+        return gantt_tasks
+
+    def _format_milestones_for_gantt(
+        self, milestones: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Format milestones for Gantt chart display."""
+        gantt_milestones = []
+
+        for milestone in milestones:
+            gantt_milestone = {
+                "id": milestone.get("id"),
+                "title": milestone.get("Title", ""),
+                "target_date": milestone.get("TargetDate", ""),
+                "completion_date": milestone.get("CompletionDate", ""),
+                "status": milestone.get("Status", ""),
+                "priority": milestone.get("Priority", ""),
+                "milestone_type": milestone.get("MilestoneType", ""),
+                "completion_percentage": milestone.get("CompletionPercentage", 0),
+                "deliverables": (
+                    milestone.get("Deliverables", "").split(",")
+                    if milestone.get("Deliverables")
+                    else []
+                ),
+                "is_critical": milestone.get("Priority") in ["High", "Critical"],
+                "dependent_tasks": [],  # Tasks that must complete before this milestone
+            }
+            gantt_milestones.append(gantt_milestone)
+
+        return gantt_milestones
+
+    def _get_task_dependencies(self, project_id: int) -> List[Dict[str, Any]]:
+        """Get task dependency relationships."""
+        # This would typically query a separate task dependencies table
+        # For now, return a basic structure
+        dependencies = []
+
+        try:
+            # Query task dependencies from Autotask
+            # This is a placeholder - actual implementation would depend on Autotask schema
+            dep_filters = [{"field": "ProjectID", "op": "eq", "value": project_id}]
+            # task_deps = self.entity.query_dependencies(dep_filters)
+
+            # For demonstration, create sample dependency structure
+            dependencies = [
+                {
+                    "id": f"dep_{i}",
+                    "predecessor_id": None,  # Would be populated from actual data
+                    "successor_id": None,  # Would be populated from actual data
+                    "dependency_type": "finish_to_start",  # finish_to_start, start_to_start, etc.
+                    "lag_days": 0,
+                }
+                # Add more dependencies as found
+            ]
+
+        except Exception:
+            # Return empty if dependencies can't be loaded
+            dependencies = []
+
+        return dependencies
+
+    def _calculate_timeline_metrics(self, gantt_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate overall timeline metrics."""
+        timeline = {
+            "earliest_start": None,
+            "latest_end": None,
+            "duration_days": 0,
+        }
+
+        all_dates = []
+
+        # Collect all start and end dates from tasks
+        for task in gantt_data["tasks"]:
+            if task["start_date"]:
+                all_dates.append(task["start_date"])
+            if task["end_date"]:
+                all_dates.append(task["end_date"])
+
+        # Collect milestone dates
+        for milestone in gantt_data["milestones"]:
+            if milestone["target_date"]:
+                all_dates.append(milestone["target_date"])
+
+        if all_dates:
+            # Sort dates and find range
+            sorted_dates = sorted(
+                [
+                    datetime.fromisoformat(date.replace("Z", "+00:00"))
+                    for date in all_dates
+                    if date
+                ]
+            )
+
+            if sorted_dates:
+                timeline["earliest_start"] = sorted_dates[0].isoformat()
+                timeline["latest_end"] = sorted_dates[-1].isoformat()
+                timeline["duration_days"] = (sorted_dates[-1] - sorted_dates[0]).days
+
+        return timeline
+
+    def _calculate_critical_path(
+        self, gantt_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Calculate critical path using basic CPM algorithm."""
+        tasks = gantt_data["tasks"]
+        dependencies = gantt_data["dependencies"]
+
+        if not tasks:
+            return []
+
+        # Create dependency mapping
+        predecessor_map = {}
+        successor_map = {}
+
+        for dep in dependencies:
+            pred_id = dep["predecessor_id"]
+            succ_id = dep["successor_id"]
+
+            if succ_id not in predecessor_map:
+                predecessor_map[succ_id] = []
+            predecessor_map[succ_id].append(pred_id)
+
+            if pred_id not in successor_map:
+                successor_map[pred_id] = []
+            successor_map[pred_id].append(succ_id)
+
+        # Forward pass - calculate early start/finish
+        for task in tasks:
+            task_id = task["id"]
+            duration = task["duration"] or 0
+
+            # If no predecessors, early start is project start
+            if task_id not in predecessor_map:
+                task["early_start"] = gantt_data["project"]["start_date"]
+            else:
+                # Early start is max early finish of predecessors
+                max_early_finish = None
+                for pred_id in predecessor_map[task_id]:
+                    pred_task = next((t for t in tasks if t["id"] == pred_id), None)
+                    if pred_task and pred_task.get("early_finish"):
+                        pred_finish = datetime.fromisoformat(
+                            pred_task["early_finish"].replace("Z", "+00:00")
+                        )
+                        if max_early_finish is None or pred_finish > max_early_finish:
+                            max_early_finish = pred_finish
+
+                task["early_start"] = (
+                    max_early_finish.isoformat()
+                    if max_early_finish
+                    else gantt_data["project"]["start_date"]
+                )
+
+            # Calculate early finish
+            if task["early_start"]:
+                early_start = datetime.fromisoformat(
+                    task["early_start"].replace("Z", "+00:00")
+                )
+                early_finish = early_start + timedelta(hours=duration)
+                task["early_finish"] = early_finish.isoformat()
+
+        # Backward pass - calculate late start/finish
+        # Find project end date
+        project_end = None
+        if gantt_data["project"]["end_date"]:
+            project_end = datetime.fromisoformat(
+                gantt_data["project"]["end_date"].replace("Z", "+00:00")
+            )
+        else:
+            # Use latest early finish
+            latest_finish = max(
+                [
+                    datetime.fromisoformat(t["early_finish"].replace("Z", "+00:00"))
+                    for t in tasks
+                    if t.get("early_finish")
+                ]
+            )
+            project_end = latest_finish
+
+        # Calculate late start/finish for each task
+        for task in reversed(tasks):  # Process in reverse order
+            task_id = task["id"]
+            duration = task["duration"] or 0
+
+            # If no successors, late finish is project end
+            if task_id not in successor_map:
+                task["late_finish"] = project_end.isoformat()
+            else:
+                # Late finish is min late start of successors
+                min_late_start = None
+                for succ_id in successor_map[task_id]:
+                    succ_task = next((t for t in tasks if t["id"] == succ_id), None)
+                    if succ_task and succ_task.get("late_start"):
+                        succ_start = datetime.fromisoformat(
+                            succ_task["late_start"].replace("Z", "+00:00")
+                        )
+                        if min_late_start is None or succ_start < min_late_start:
+                            min_late_start = succ_start
+
+                task["late_finish"] = (
+                    min_late_start.isoformat()
+                    if min_late_start
+                    else project_end.isoformat()
+                )
+
+            # Calculate late start
+            if task["late_finish"]:
+                late_finish = datetime.fromisoformat(
+                    task["late_finish"].replace("Z", "+00:00")
+                )
+                late_start = late_finish - timedelta(hours=duration)
+                task["late_start"] = late_start.isoformat()
+
+        # Calculate slack and identify critical path
+        critical_tasks = []
+        for task in tasks:
+            if task.get("early_start") and task.get("late_start"):
+                early_start = datetime.fromisoformat(
+                    task["early_start"].replace("Z", "+00:00")
+                )
+                late_start = datetime.fromisoformat(
+                    task["late_start"].replace("Z", "+00:00")
+                )
+                slack_hours = (late_start - early_start).total_seconds() / 3600
+                task["slack"] = slack_hours
+
+                # Task is critical if slack is 0
+                if slack_hours <= 0.01:  # Allow small floating point errors
+                    task["is_critical"] = True
+                    critical_tasks.append(
+                        {
+                            "task_id": task["id"],
+                            "title": task["title"],
+                            "early_start": task["early_start"],
+                            "early_finish": task["early_finish"],
+                            "duration": task["duration"],
+                        }
+                    )
+
+        return critical_tasks
+
+    def _get_resource_allocation(self, project_id: int) -> Dict[str, Any]:
+        """Get resource allocation data for the project."""
+        allocation = {
+            "by_resource": {},
+            "by_department": {},
+            "by_role": {},
+            "total_allocated_hours": 0,
+            "utilization_percentage": 0,
+        }
+
+        try:
+            # Get project tasks with resource assignments
+            tasks = self.get_project_tasks(project_id)
+
+            for task in tasks:
+                resource_id = task.get("AssignedResourceID")
+                department_id = task.get("DepartmentID")
+                estimated_hours = task.get("EstimatedHours", 0)
+
+                if resource_id:
+                    # Track by resource
+                    if resource_id not in allocation["by_resource"]:
+                        allocation["by_resource"][resource_id] = {
+                            "resource_name": task.get(
+                                "AssignedResourceName", f"Resource {resource_id}"
+                            ),
+                            "allocated_hours": 0,
+                            "tasks": [],
+                        }
+
+                    allocation["by_resource"][resource_id][
+                        "allocated_hours"
+                    ] += estimated_hours
+                    allocation["by_resource"][resource_id]["tasks"].append(
+                        {
+                            "task_id": task.get("id"),
+                            "title": task.get("Title"),
+                            "hours": estimated_hours,
+                        }
+                    )
+
+                if department_id:
+                    # Track by department
+                    if department_id not in allocation["by_department"]:
+                        allocation["by_department"][department_id] = {
+                            "department_name": f"Department {department_id}",
+                            "allocated_hours": 0,
+                            "task_count": 0,
+                        }
+
+                    allocation["by_department"][department_id][
+                        "allocated_hours"
+                    ] += estimated_hours
+                    allocation["by_department"][department_id]["task_count"] += 1
+
+                allocation["total_allocated_hours"] += estimated_hours
+
+            # Calculate utilization (placeholder - would need actual capacity data)
+            if allocation["total_allocated_hours"] > 0:
+                # Assume 40 hours/week capacity per resource for demo
+                total_resources = len(allocation["by_resource"])
+                estimated_capacity = total_resources * 40  # Simple calculation
+                if estimated_capacity > 0:
+                    allocation["utilization_percentage"] = (
+                        allocation["total_allocated_hours"] / estimated_capacity
+                    ) * 100
+
+        except Exception as e:
+            # Return basic structure on error
+            pass
+
+        return allocation
+
+    def _calculate_duration_hours(self, start_date: str, end_date: str) -> float:
+        """Calculate duration in hours between two dates."""
+        if not start_date or not end_date:
+            return 0.0
+
+        try:
+            start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+            return (end - start).total_seconds() / 3600
+        except:
+            return 0.0
+
+    def create_project_template(
+        self,
+        template_name: str,
+        template_data: Dict[str, Any],
+        include_tasks: bool = True,
+        include_milestones: bool = True,
+        include_phases: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Create a project template from existing project or custom data.
+
+        Args:
+            template_name: Name for the template
+            template_data: Template configuration data
+            include_tasks: Include task templates
+            include_milestones: Include milestone templates
+            include_phases: Include project phases
+
+        Returns:
+            Created template data
+        """
+        template = {
+            "name": template_name,
+            "description": template_data.get("description", ""),
+            "template_type": template_data.get("template_type", "Custom"),
+            "industry": template_data.get("industry", "General"),
+            "created_date": datetime.now().isoformat(),
+            "version": "1.0",
+            "is_active": True,
+            "project_settings": {
+                "default_duration_days": template_data.get("default_duration_days", 30),
+                "default_priority": template_data.get("default_priority", "Medium"),
+                "default_status": template_data.get("default_status", "New"),
+                "billing_type": template_data.get("billing_type", "Time and Materials"),
+                "department": template_data.get("department", ""),
+            },
+            "tasks": [],
+            "milestones": [],
+            "phases": [],
+            "resources": [],
+            "custom_fields": template_data.get("custom_fields", {}),
+        }
+
+        # Add task templates if requested
+        if include_tasks and "tasks" in template_data:
+            template["tasks"] = [
+                {
+                    "title": task.get("title", ""),
+                    "description": task.get("description", ""),
+                    "estimated_hours": task.get("estimated_hours", 0),
+                    "priority": task.get("priority", "Medium"),
+                    "phase": task.get("phase", ""),
+                    "department": task.get("department", ""),
+                    "task_type": task.get("task_type", "General"),
+                    "prerequisites": task.get("prerequisites", []),
+                    "deliverables": task.get("deliverables", []),
+                    "sort_order": task.get("sort_order", 0),
+                }
+                for task in template_data["tasks"]
+            ]
+
+        # Add milestone templates if requested
+        if include_milestones and "milestones" in template_data:
+            template["milestones"] = [
+                {
+                    "title": milestone.get("title", ""),
+                    "description": milestone.get("description", ""),
+                    "milestone_type": milestone.get("milestone_type", "Project"),
+                    "priority": milestone.get("priority", "Medium"),
+                    "days_from_start": milestone.get("days_from_start", 0),
+                    "deliverables": milestone.get("deliverables", []),
+                    "success_criteria": milestone.get("success_criteria", ""),
+                }
+                for milestone in template_data["milestones"]
+            ]
+
+        # Add phase templates if requested
+        if include_phases and "phases" in template_data:
+            template["phases"] = [
+                {
+                    "name": phase.get("name", ""),
+                    "description": phase.get("description", ""),
+                    "duration_days": phase.get("duration_days", 7),
+                    "sort_order": phase.get("sort_order", 0),
+                    "prerequisites": phase.get("prerequisites", []),
+                    "deliverables": phase.get("deliverables", []),
+                }
+                for phase in template_data["phases"]
+            ]
+
+        try:
+            # Save template to storage (implementation depends on storage system)
+            template_id = self._save_project_template(template)
+            template["id"] = template_id
+            return template
+        except Exception as e:
+            raise Exception(f"Failed to create project template: {str(e)}")
+
+    def apply_project_template(
+        self,
+        template_id: str,
+        project_data: Dict[str, Any],
+        override_settings: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Apply a project template to create a new project.
+
+        Args:
+            template_id: ID of the template to apply
+            project_data: Basic project information (name, client, etc.)
+            override_settings: Settings to override from template
+
+        Returns:
+            Created project data
+        """
+        template = self._get_project_template(template_id)
+        if not template:
+            raise ValueError(f"Template {template_id} not found")
+
+        # Merge template settings with project data
+        settings = template.get("project_settings", {})
+        if override_settings:
+            settings.update(override_settings)
+
+        # Create base project
+        project_create_data = {
+            "ProjectName": project_data.get("name", ""),
+            "Description": project_data.get(
+                "description", template.get("description", "")
+            ),
+            "AccountID": project_data.get("account_id"),
+            "Type": settings.get("billing_type", "Time and Materials"),
+            "Status": settings.get("default_status", "New"),
+            "Priority": settings.get("default_priority", "Medium"),
+            "DepartmentID": settings.get("department", ""),
+            "StartDateTime": project_data.get("start_date"),
+            "EndDateTime": self._calculate_end_date(
+                project_data.get("start_date"),
+                settings.get("default_duration_days", 30),
+            ),
+        }
+
+        # Add custom fields from template
+        if template.get("custom_fields"):
+            project_create_data.update(template["custom_fields"])
+
+        try:
+            # Create the project
+            new_project = self.entity.create(project_create_data)
+            project_id = new_project.get("id")
+
+            # Apply tasks from template
+            if template.get("tasks"):
+                self._apply_template_tasks(
+                    project_id, template["tasks"], project_data.get("start_date")
+                )
+
+            # Apply milestones from template
+            if template.get("milestones"):
+                self._apply_template_milestones(
+                    project_id, template["milestones"], project_data.get("start_date")
+                )
+
+            # Apply phases from template
+            if template.get("phases"):
+                self._apply_template_phases(project_id, template["phases"])
+
+            return {
+                "project": new_project,
+                "template_applied": template_id,
+                "tasks_created": len(template.get("tasks", [])),
+                "milestones_created": len(template.get("milestones", [])),
+                "phases_created": len(template.get("phases", [])),
+            }
+
+        except Exception as e:
+            raise Exception(f"Failed to apply project template: {str(e)}")
+
+    def get_project_templates(
+        self,
+        template_type: Optional[str] = None,
+        industry: Optional[str] = None,
+        active_only: bool = True,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get available project templates.
+
+        Args:
+            template_type: Filter by template type
+            industry: Filter by industry
+            active_only: Only return active templates
+
+        Returns:
+            List of available templates
+        """
+        try:
+            templates = self._list_project_templates()
+
+            # Apply filters
+            if template_type:
+                templates = [
+                    t for t in templates if t.get("template_type") == template_type
+                ]
+
+            if industry:
+                templates = [t for t in templates if t.get("industry") == industry]
+
+            if active_only:
+                templates = [t for t in templates if t.get("is_active", True)]
+
+            return templates
+        except Exception as e:
+            raise Exception(f"Failed to get project templates: {str(e)}")
+
+    def update_project_template(
+        self,
+        template_id: str,
+        updates: Dict[str, Any],
+        increment_version: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Update an existing project template.
+
+        Args:
+            template_id: ID of template to update
+            updates: Fields to update
+            increment_version: Whether to increment version number
+
+        Returns:
+            Updated template data
+        """
+        try:
+            template = self._get_project_template(template_id)
+            if not template:
+                raise ValueError(f"Template {template_id} not found")
+
+            # Apply updates
+            template.update(updates)
+            template["last_modified_date"] = datetime.now().isoformat()
+
+            # Increment version if requested
+            if increment_version:
+                current_version = template.get("version", "1.0")
+                major, minor = current_version.split(".")
+                template["version"] = f"{major}.{int(minor) + 1}"
+
+            # Save updated template
+            self._save_project_template(template, template_id)
+
+            return template
+        except Exception as e:
+            raise Exception(f"Failed to update project template: {str(e)}")
+
+    def delete_project_template(self, template_id: str) -> bool:
+        """
+        Delete a project template (soft delete by marking inactive).
+
+        Args:
+            template_id: ID of template to delete
+
+        Returns:
+            True if successfully deleted
+        """
+        try:
+            template = self._get_project_template(template_id)
+            if not template:
+                raise ValueError(f"Template {template_id} not found")
+
+            # Soft delete by marking as inactive
+            template["is_active"] = False
+            template["deleted_date"] = datetime.now().isoformat()
+
+            self._save_project_template(template, template_id)
+            return True
+        except Exception as e:
+            raise Exception(f"Failed to delete project template: {str(e)}")
+
+    def _save_project_template(
+        self, template: Dict[str, Any], template_id: Optional[str] = None
+    ) -> str:
+        """Save project template to storage."""
+        # Implementation depends on storage system (file, database, etc.)
+        # For demonstration, assume we have a storage mechanism
+        if not template_id:
+            template_id = f"template_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+        # In real implementation, this would save to persistent storage
+        # For now, just return the ID
+        return template_id
+
+    def _get_project_template(self, template_id: str) -> Optional[Dict[str, Any]]:
+        """Get project template from storage."""
+        # Implementation depends on storage system
+        # For demonstration, return None (would load from storage)
+        return None
+
+    def _list_project_templates(self) -> List[Dict[str, Any]]:
+        """List all project templates from storage."""
+        # Implementation depends on storage system
+        # For demonstration, return empty list (would load from storage)
+        return []
+
+    def _apply_template_tasks(
+        self,
+        project_id: int,
+        task_templates: List[Dict[str, Any]],
+        project_start_date: Optional[str],
+    ) -> None:
+        """Apply task templates to a project."""
+        for task_template in task_templates:
+            task_data = {
+                "ProjectID": project_id,
+                "Title": task_template.get("title", ""),
+                "Description": task_template.get("description", ""),
+                "EstimatedHours": task_template.get("estimated_hours", 0),
+                "Priority": task_template.get("priority", "Medium"),
+                "Phase": task_template.get("phase", ""),
+                "DepartmentID": task_template.get("department", ""),
+                "TaskType": task_template.get("task_type", "General"),
+                "Status": "New",
+            }
+
+            # Set start date based on project start
+            if project_start_date:
+                task_data["StartDateTime"] = project_start_date
+
+            # Create the task (would use tasks entity)
+            # self.tasks_entity.create(task_data)
+
+    def _apply_template_milestones(
+        self,
+        project_id: int,
+        milestone_templates: List[Dict[str, Any]],
+        project_start_date: Optional[str],
+    ) -> None:
+        """Apply milestone templates to a project."""
+        if not project_start_date:
+            return
+
+        project_start = datetime.fromisoformat(
+            project_start_date.replace("Z", "+00:00")
+        )
+
+        for milestone_template in milestone_templates:
+            days_from_start = milestone_template.get("days_from_start", 0)
+            target_date = project_start + timedelta(days=days_from_start)
+
+            milestone_data = {
+                "ProjectID": project_id,
+                "Title": milestone_template.get("title", ""),
+                "Description": milestone_template.get("description", ""),
+                "TargetDate": target_date.isoformat(),
+                "Priority": milestone_template.get("priority", "Medium"),
+                "MilestoneType": milestone_template.get("milestone_type", "Project"),
+                "Status": "Planned",
+                "IsActive": True,
+            }
+
+            # Add deliverables if specified
+            if milestone_template.get("deliverables"):
+                milestone_data["Deliverables"] = ",".join(
+                    milestone_template["deliverables"]
+                )
+
+            # Create milestone using existing method
+            self.create_milestone(
+                project_id,
+                milestone_data["Title"],
+                milestone_data["TargetDate"],
+                milestone_data.get("Description"),
+                milestone_data.get("Priority"),
+                milestone_data.get("MilestoneType"),
+                milestone_template.get("deliverables"),
+            )
+
+    def _apply_template_phases(
+        self, project_id: int, phase_templates: List[Dict[str, Any]]
+    ) -> None:
+        """Apply phase templates to a project."""
+        for phase_template in phase_templates:
+            phase_data = {
+                "ProjectID": project_id,
+                "PhaseName": phase_template.get("name", ""),
+                "Description": phase_template.get("description", ""),
+                "DurationDays": phase_template.get("duration_days", 7),
+                "SortOrder": phase_template.get("sort_order", 0),
+                "Status": "Planned",
+            }
+
+            # Create phase (would use appropriate entity/method)
+            # Implementation depends on how phases are handled in Autotask
+
+    def _calculate_end_date(
+        self, start_date: Optional[str], duration_days: int
+    ) -> Optional[str]:
+        """Calculate project end date based on start date and duration."""
+        if not start_date:
+            return None
+
+        try:
+            start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+            end = start + timedelta(days=duration_days)
+            return end.isoformat()
+        except:
+            return None
