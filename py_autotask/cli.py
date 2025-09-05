@@ -762,7 +762,7 @@ def _display_bulk_results(result) -> None:
     if result.errors:
         console.print(f"\n[red]❌ Errors ({len(result.errors)}):[/red]")
         for i, error in enumerate(result.errors[:5]):  # Show first 5 errors
-            console.print(f"   {i+1}. {error.get('error', 'Unknown error')}")
+            console.print(f"   {i + 1}. {error.get('error', 'Unknown error')}")
 
         if len(result.errors) > 5:
             console.print(f"   ... and {len(result.errors) - 5} more errors")
@@ -977,7 +977,7 @@ async def _inspect_entity(
                     if sample_size:
                         console.print(f"\n📋 Sample {entity} records:")
                         for i, item in enumerate(sample_response.items[:sample_size]):
-                            console.print(f"\n[bold]Record {i+1}:[/bold]")
+                            console.print(f"\n[bold]Record {i + 1}:[/bold]")
                             for key, value in list(item.items())[
                                 :10
                             ]:  # Limit fields shown
