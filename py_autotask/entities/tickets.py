@@ -9,7 +9,6 @@ from ..constants import (
     TicketStatus,
     validate_status_filter,
 )
-
 from .base import BaseEntity
 
 
@@ -34,7 +33,7 @@ class TicketsEntity(BaseEntity):
         status: Optional[int] = None,
         ticket_type: Optional[int] = None,
         **kwargs,
-    ) -> TicketData:
+    ) -> Dict[str, Any]:
         """
         Create a new ticket with required and optional fields.
 
@@ -75,7 +74,7 @@ class TicketsEntity(BaseEntity):
         account_id: int,
         status_filter: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[TicketData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all tickets for a specific account.
 
@@ -111,7 +110,7 @@ class TicketsEntity(BaseEntity):
         resource_id: int,
         include_completed: bool = False,
         limit: Optional[int] = None,
-    ) -> List[TicketData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get tickets assigned to a specific resource.
 
@@ -135,7 +134,7 @@ class TicketsEntity(BaseEntity):
 
     def get_overdue_tickets(
         self, account_id: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[TicketData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get tickets that are past their due date.
 
@@ -162,7 +161,7 @@ class TicketsEntity(BaseEntity):
 
     def update_ticket_status(
         self, ticket_id: int, status: int, note: Optional[str] = None
-    ) -> TicketData:
+    ) -> Dict[str, Any]:
         """
         Update a ticket's status with optional note.
 
@@ -185,7 +184,7 @@ class TicketsEntity(BaseEntity):
 
     def assign_ticket(
         self, ticket_id: int, resource_id: int, queue_id: Optional[int] = None
-    ) -> TicketData:
+    ) -> Dict[str, Any]:
         """
         Assign a ticket to a resource and optionally change queue.
 
@@ -265,7 +264,7 @@ class TicketsEntity(BaseEntity):
 
     def bulk_update_status(
         self, ticket_ids: List[int], status: int
-    ) -> List[TicketData]:
+    ) -> List[Dict[str, Any]]:
         """
         Update status for multiple tickets.
 
@@ -292,7 +291,7 @@ class TicketsEntity(BaseEntity):
         queue_id: int,
         status_filter: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[TicketData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all tickets in a specific queue.
 
@@ -327,7 +326,7 @@ class TicketsEntity(BaseEntity):
         priority: int,
         include_completed: bool = False,
         limit: Optional[int] = None,
-    ) -> List[TicketData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get tickets by priority level.
 
@@ -353,7 +352,7 @@ class TicketsEntity(BaseEntity):
         ticket_id: int,
         escalation_level: int,
         escalation_note: Optional[str] = None,
-    ) -> TicketData:
+    ) -> Dict[str, Any]:
         """
         Escalate a ticket to a higher level.
 
@@ -382,7 +381,7 @@ class TicketsEntity(BaseEntity):
         ticket_id: int,
         resolution: Optional[str] = None,
         close_note: Optional[str] = None,
-    ) -> TicketData:
+    ) -> Dict[str, Any]:
         """
         Close a ticket with optional resolution.
 
@@ -411,7 +410,7 @@ class TicketsEntity(BaseEntity):
 
     def reopen_ticket(
         self, ticket_id: int, reopen_reason: Optional[str] = None
-    ) -> TicketData:
+    ) -> Dict[str, Any]:
         """
         Reopen a closed ticket.
 
