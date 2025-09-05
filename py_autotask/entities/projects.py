@@ -9,6 +9,7 @@ profitability analysis, templates, and Gantt/dependency management.
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from ..constants import ProjectStatus, ProjectType
 from ..exceptions import AutotaskValidationError
 from ..types import ProjectData, QueryFilter
 from .base import BaseEntity
@@ -17,21 +18,19 @@ from .base import BaseEntity
 class ProjectConstants:
     """Constants for project management."""
 
-    # Project Types
-    PROJECT_TYPE_FIXED_PRICE = 1
-    PROJECT_TYPE_TIME_MATERIALS = 2
-    PROJECT_TYPE_MILESTONE = 3
-    PROJECT_TYPE_BLOCK_HOURS = 4
-    PROJECT_TYPE_RETAINER = 5
+    # Project Types (using centralized constants)
+    PROJECT_TYPE_FIXED_PRICE = ProjectType.FIXED_PRICE
+    PROJECT_TYPE_TIME_MATERIALS = ProjectType.TIME_AND_MATERIALS
+    PROJECT_TYPE_MILESTONE = ProjectType.MILESTONE
+    PROJECT_TYPE_RETAINER = ProjectType.RETAINER
+    PROJECT_TYPE_RECURRING_SERVICE = ProjectType.RECURRING_SERVICE
 
-    # Project Status
-    STATUS_NEW = 1
-    STATUS_IN_PROGRESS = 2
-    STATUS_ON_HOLD = 3
-    STATUS_WAITING = 4
-    STATUS_COMPLETE = 5
-    STATUS_CANCELLED = 7
-    STATUS_INACTIVE = 8
+    # Project Status (using centralized constants)
+    STATUS_NEW = ProjectStatus.NEW
+    STATUS_IN_PROGRESS = ProjectStatus.IN_PROGRESS
+    STATUS_ON_HOLD = ProjectStatus.ON_HOLD
+    STATUS_COMPLETE = ProjectStatus.COMPLETE
+    STATUS_CANCELLED = ProjectStatus.CANCELLED
 
     # Priority Levels
     PRIORITY_LOW = 1
@@ -57,8 +56,8 @@ class ProjectConstants:
             cls.PROJECT_TYPE_FIXED_PRICE: "Fixed Price",
             cls.PROJECT_TYPE_TIME_MATERIALS: "Time & Materials",
             cls.PROJECT_TYPE_MILESTONE: "Milestone",
-            cls.PROJECT_TYPE_BLOCK_HOURS: "Block Hours",
             cls.PROJECT_TYPE_RETAINER: "Retainer",
+            cls.PROJECT_TYPE_RECURRING_SERVICE: "Recurring Service",
         }
 
     @classmethod
@@ -68,10 +67,8 @@ class ProjectConstants:
             cls.STATUS_NEW: "New",
             cls.STATUS_IN_PROGRESS: "In Progress",
             cls.STATUS_ON_HOLD: "On Hold",
-            cls.STATUS_WAITING: "Waiting",
             cls.STATUS_COMPLETE: "Complete",
             cls.STATUS_CANCELLED: "Cancelled",
-            cls.STATUS_INACTIVE: "Inactive",
         }
 
     @classmethod
@@ -114,8 +111,8 @@ class ProjectsEntity(BaseEntity):
         self,
         project_name: str,
         account_id: int,
-        project_type: int = 1,  # 1 = Fixed Price
-        status: int = 1,  # 1 = New
+        project_type: int = ProjectType.FIXED_PRICE,
+        status: int = ProjectStatus.NEW,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         description: Optional[str] = None,
@@ -127,8 +124,8 @@ class ProjectsEntity(BaseEntity):
         Args:
             project_name: Name of the project
             account_id: ID of the associated account/company
-            project_type: Type of project (1=Fixed Price, 2=Time & Materials, etc.)
-            status: Project status (1=New, 2=In Progress, etc.)
+            project_type: Type of project (use ProjectType enum)
+            status: Project status (use ProjectStatus enum)
             start_date: Project start date (ISO format)
             end_date: Project end date (ISO format)
             description: Project description

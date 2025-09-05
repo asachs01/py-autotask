@@ -8,43 +8,9 @@ for contract management including billing, service tracking, milestones, renewal
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
+from ..constants import ContractType, ContractStatus, ContractBillingType
 from ..types import ContractData, CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
-
-
-class ContractTypes:
-    """Constants for contract types."""
-
-    RECURRING_SERVICE = 1
-    FIXED_PRICE = 2
-    TIME_AND_MATERIALS = 3
-    MILESTONE = 4
-    SUBSCRIPTION = 5
-    MAINTENANCE = 6
-    RETAINER = 7
-
-
-class ContractStatuses:
-    """Constants for contract statuses."""
-
-    ACTIVE = 1
-    INACTIVE = 0
-    CANCELLED = 2
-    EXPIRED = 3
-    ON_HOLD = 4
-    PENDING_APPROVAL = 5
-    DRAFT = 6
-
-
-class BillingMethods:
-    """Constants for billing methods."""
-
-    FIXED_PRICE = 1
-    TIME_AND_MATERIALS = 2
-    MILESTONE_BILLING = 3
-    RECURRING_BILLING = 4
-    USAGE_BASED = 5
-    RETAINER = 6
 
 
 class ServiceTypes:
@@ -102,7 +68,7 @@ class ContractsEntity(BaseEntity):
         self,
         contract_name: str,
         account_id: int,
-        contract_type: int = 1,
+        contract_type: int = ContractType.RECURRING_SERVICE,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         contract_value: Optional[float] = None,
@@ -114,7 +80,7 @@ class ContractsEntity(BaseEntity):
         Args:
             contract_name: Name of the contract
             account_id: ID of the associated account/company
-            contract_type: Type of contract (1 = Recurring Service, etc.)
+            contract_type: Type of contract (use ContractType enum)
             start_date: Contract start date (ISO format)
             end_date: Contract end date (ISO format)
             contract_value: Total value of the contract
@@ -1029,7 +995,7 @@ class ContractsEntity(BaseEntity):
 
         filters = [
             QueryFilter(field="EndDate", op="lte", value=future_date),
-            QueryFilter(field="Status", op="eq", value=ContractStatuses.ACTIVE),
+            QueryFilter(field="Status", op="eq", value=ContractStatus.ACTIVE),
         ]
 
         if account_id:
@@ -1128,7 +1094,7 @@ class ContractsEntity(BaseEntity):
             "ContractValue": renewal_data.get(
                 "new_value", original_contract.get("ContractValue")
             ),
-            "Status": ContractStatuses.ACTIVE,
+            "Status": ContractStatus.ACTIVE,
             "ParentContractID": contract_id,
             "RenewalDate": now.isoformat(),
             **{
@@ -1146,7 +1112,7 @@ class ContractsEntity(BaseEntity):
             self.update(
                 contract_id,
                 {
-                    "Status": ContractStatuses.EXPIRED,
+                    "Status": ContractStatus.EXPIRED,
                     "RenewalContractID": renewal_response.get("id"),
                     "RenewalDate": now.isoformat(),
                 },
@@ -2327,13 +2293,9 @@ class ContractsEntity(BaseEntity):
         contract_type = contract_data.get("ContractType")
         if contract_type is not None:
             valid_types = [
-                ContractTypes.RECURRING_SERVICE,
-                ContractTypes.FIXED_PRICE,
-                ContractTypes.TIME_AND_MATERIALS,
-                ContractTypes.MILESTONE,
-                ContractTypes.SUBSCRIPTION,
-                ContractTypes.MAINTENANCE,
-                ContractTypes.RETAINER,
+                ContractType.RECURRING_SERVICE,
+                ContractType.TIME_AND_MATERIALS,
+                ContractType.FIXED_PRICE,
             ]
             if contract_type not in valid_types:
                 validation_result["errors"].append(
@@ -2344,26 +2306,22 @@ class ContractsEntity(BaseEntity):
         status = contract_data.get("Status")
         if status is not None:
             valid_statuses = [
-                ContractStatuses.ACTIVE,
-                ContractStatuses.INACTIVE,
-                ContractStatuses.CANCELLED,
-                ContractStatuses.EXPIRED,
-                ContractStatuses.ON_HOLD,
-                ContractStatuses.PENDING_APPROVAL,
-                ContractStatuses.DRAFT,
+                ContractStatus.ACTIVE,
+                ContractStatus.DRAFT,
+                ContractStatus.ON_HOLD,
             ]
             if status not in valid_statuses:
                 validation_result["errors"].append(f"Invalid contract status: {status}")
 
         # Business logic recommendations
-        if contract_type == ContractTypes.MILESTONE and not contract_data.get(
+        if contract_type == ContractType.TIME_AND_MATERIALS and not contract_data.get(
             "milestones"
         ):
             validation_result["recommendations"].append(
                 "Milestone-based contracts should have defined milestones"
             )
 
-        if contract_type == ContractTypes.RECURRING_SERVICE and not contract_data.get(
+        if contract_type == ContractType.RECURRING_SERVICE and not contract_data.get(
             "billingFrequency"
         ):
             validation_result["recommendations"].append(

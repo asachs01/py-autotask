@@ -175,27 +175,125 @@ ContractData = EntityDict
 
 # Time Entry Related Types
 class TimeEntryData(BaseModel):
-    """Data structure for time entries."""
+    """
+    Comprehensive data structure for time entries in Autotask PSA.
 
-    id: Optional[int] = None
-    resource_id: Optional[int] = None
-    ticket_id: Optional[int] = None
-    project_id: Optional[int] = None
-    task_id: Optional[int] = None
-    start_date_time: Optional[str] = None
-    end_date_time: Optional[str] = None
-    hours_worked: Optional[float] = None
-    hours_to_bill: Optional[float] = None
-    billable_to_account: Optional[bool] = None
-    non_billable: Optional[bool] = None
-    description: Optional[str] = None
-    internal_notes: Optional[str] = None
-    summary_notes: Optional[str] = None
-    type: Optional[int] = None
-    created_date_time: Optional[str] = None
-    last_modified_date_time: Optional[str] = None
-    created_by: Optional[int] = None
-    last_modified_by: Optional[int] = None
+    Includes all fields for time tracking, billing, approvals, and analytics.
+    """
+
+    # Core identification fields
+    id: Optional[int] = Field(None, description="Time entry ID")
+    resource_id: Optional[int] = Field(
+        None, description="ID of resource who logged time"
+    )
+
+    # Associated entity fields
+    ticket_id: Optional[int] = Field(None, description="Associated ticket ID")
+    project_id: Optional[int] = Field(None, description="Associated project ID")
+    task_id: Optional[int] = Field(None, description="Associated task ID")
+    account_id: Optional[int] = Field(None, description="Associated account ID")
+    contract_id: Optional[int] = Field(None, description="Associated contract ID")
+
+    # Time tracking fields
+    date_worked: Optional[str] = Field(
+        None, description="Date work was performed (YYYY-MM-DD)"
+    )
+    start_date_time: Optional[str] = Field(None, description="Start date/time of work")
+    end_date_time: Optional[str] = Field(None, description="End date/time of work")
+    hours_worked: Optional[float] = Field(None, description="Total hours worked")
+    hours_to_bill: Optional[float] = Field(
+        None, description="Hours to bill to customer"
+    )
+
+    # Billing and invoicing fields
+    billable_to_account: Optional[bool] = Field(
+        None, description="Whether entry is billable"
+    )
+    non_billable: Optional[bool] = Field(
+        None, description="Whether entry is non-billable"
+    )
+    billed: Optional[bool] = Field(None, description="Whether entry has been billed")
+    billing_code_id: Optional[int] = Field(None, description="Associated billing code")
+    role_id: Optional[int] = Field(None, description="Role used for billing rates")
+    hourly_rate: Optional[float] = Field(None, description="Hourly rate for billing")
+    total_cost: Optional[float] = Field(None, description="Total cost of time entry")
+
+    # Time entry type and status
+    type: Optional[int] = Field(
+        None, description="Time entry type (1=Regular, 2=Overtime, etc.)"
+    )
+    status: Optional[int] = Field(
+        None, description="Entry status (1=Draft, 2=Submitted, etc.)"
+    )
+
+    # Approval workflow fields
+    submitted_date: Optional[str] = Field(
+        None, description="Date/time submitted for approval"
+    )
+    approved_date: Optional[str] = Field(None, description="Date/time approved")
+    approved_by: Optional[int] = Field(None, description="Resource ID who approved")
+    rejected_date: Optional[str] = Field(None, description="Date/time rejected")
+    rejection_reason: Optional[str] = Field(None, description="Reason for rejection")
+
+    # Description and notes
+    description: Optional[str] = Field(None, description="Work description/summary")
+    internal_notes: Optional[str] = Field(
+        None, description="Internal notes (not customer-visible)"
+    )
+    summary_notes: Optional[str] = Field(
+        None, description="Summary notes (may be customer-visible)"
+    )
+
+    # Overtime and special handling
+    is_overtime: Optional[bool] = Field(
+        None, description="Whether entry qualifies as overtime"
+    )
+    is_holiday: Optional[bool] = Field(None, description="Whether work was on holiday")
+    overtime_multiplier: Optional[float] = Field(
+        None, description="Overtime rate multiplier"
+    )
+
+    # Invoice tracking
+    invoice_id: Optional[int] = Field(None, description="Associated invoice ID")
+    invoice_date: Optional[str] = Field(None, description="Date invoiced")
+
+    # Time sheet tracking
+    time_sheet_id: Optional[int] = Field(None, description="Associated time sheet ID")
+    week_ending_date: Optional[str] = Field(
+        None, description="Week ending date for time sheet"
+    )
+
+    # System tracking fields
+    created_date_time: Optional[str] = Field(None, description="Creation timestamp")
+    last_modified_date_time: Optional[str] = Field(
+        None, description="Last modification timestamp"
+    )
+    created_by: Optional[int] = Field(None, description="Resource ID who created entry")
+    last_modified_by: Optional[int] = Field(
+        None, description="Resource ID who last modified entry"
+    )
+
+    # Analytics and reporting fields
+    utilization_percentage: Optional[float] = Field(
+        None, description="Resource utilization %"
+    )
+    efficiency_rating: Optional[float] = Field(
+        None, description="Work efficiency rating"
+    )
+
+    # Additional metadata
+    work_location: Optional[str] = Field(
+        None, description="Location where work was performed"
+    )
+    device_used: Optional[str] = Field(None, description="Device/equipment used")
+    external_id: Optional[str] = Field(None, description="External system reference ID")
+    tags: Optional[List[str]] = Field(None, description="Tags for categorization")
+
+    class Config:
+        """Pydantic configuration."""
+
+        allow_population_by_field_name = True
+        use_enum_values = True
 
 
 # Attachment Related Types
