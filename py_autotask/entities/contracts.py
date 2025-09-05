@@ -2,10 +2,10 @@
 Contracts entity for Autotask API operations.
 """
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from ..constants import ContractType
-from ..types import ContractData, QueryFilter
+from ..types import QueryFilter
 from .base import BaseEntity
 
 
@@ -29,7 +29,7 @@ class ContractsEntity(BaseEntity):
         end_date: Optional[str] = None,
         contract_value: Optional[float] = None,
         **kwargs,
-    ) -> ContractData:
+    ) -> Dict[str, Any]:
         """
         Create a new contract with required and optional fields.
 
@@ -63,7 +63,7 @@ class ContractsEntity(BaseEntity):
 
     def get_contracts_by_account(
         self, account_id: int, active_only: bool = True, limit: Optional[int] = None
-    ) -> List[ContractData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all contracts for a specific account.
 
@@ -82,7 +82,7 @@ class ContractsEntity(BaseEntity):
 
         return self.query(filters=filters, max_records=limit)
 
-    def get_active_contracts(self, limit: Optional[int] = None) -> List[ContractData]:
+    def get_active_contracts(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Get all active contracts.
 
@@ -97,7 +97,7 @@ class ContractsEntity(BaseEntity):
 
     def get_expiring_contracts(
         self, days_ahead: int = 30, limit: Optional[int] = None
-    ) -> List[ContractData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get contracts expiring within a specified number of days.
 

@@ -4,7 +4,7 @@ Contacts entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import ContactData, QueryFilter
+from ..types import QueryFilter
 from .base import BaseEntity
 
 
@@ -29,7 +29,7 @@ class ContactsEntity(BaseEntity):
         title: Optional[str] = None,
         active: bool = True,
         **kwargs,
-    ) -> ContactData:
+    ) -> Dict[str, Any]:
         """
         Create a new contact with required and optional fields.
 
@@ -70,7 +70,7 @@ class ContactsEntity(BaseEntity):
         last_name: Optional[str] = None,
         exact_match: bool = False,
         limit: Optional[int] = None,
-    ) -> List[ContactData]:
+    ) -> List[Dict[str, Any]]:
         """
         Search for contacts by name.
 
@@ -100,7 +100,7 @@ class ContactsEntity(BaseEntity):
 
     def search_contacts_by_email(
         self, email: str, exact_match: bool = True, limit: Optional[int] = None
-    ) -> List[ContactData]:
+    ) -> List[Dict[str, Any]]:
         """
         Search for contacts by email address.
 
@@ -119,7 +119,7 @@ class ContactsEntity(BaseEntity):
 
     def get_contacts_by_company(
         self, company_id: int, active_only: bool = True, limit: Optional[int] = None
-    ) -> List[ContactData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all contacts for a specific company.
 
@@ -140,7 +140,7 @@ class ContactsEntity(BaseEntity):
 
     def get_primary_contacts(
         self, company_id: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[ContactData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get contacts marked as primary contacts.
 
@@ -208,7 +208,7 @@ class ContactsEntity(BaseEntity):
         phone: Optional[str] = None,
         title: Optional[str] = None,
         mobile_phone: Optional[str] = None,
-    ) -> ContactData:
+    ) -> Dict[str, Any]:
         """
         Update contact information.
 
@@ -244,7 +244,7 @@ class ContactsEntity(BaseEntity):
 
         return self.update_by_id(contact_id, update_data)
 
-    def activate_contact(self, contact_id: int) -> ContactData:
+    def activate_contact(self, contact_id: int) -> Dict[str, Any]:
         """
         Activate a contact.
 
@@ -256,7 +256,7 @@ class ContactsEntity(BaseEntity):
         """
         return self.update_by_id(contact_id, {"Active": True})
 
-    def deactivate_contact(self, contact_id: int) -> ContactData:
+    def deactivate_contact(self, contact_id: int) -> Dict[str, Any]:
         """
         Deactivate a contact.
 
@@ -270,7 +270,7 @@ class ContactsEntity(BaseEntity):
 
     def set_primary_contact(
         self, contact_id: int, is_primary: bool = True
-    ) -> ContactData:
+    ) -> Dict[str, Any]:
         """
         Set or unset a contact as primary contact for their company.
 
@@ -288,7 +288,7 @@ class ContactsEntity(BaseEntity):
         company_id: Optional[int] = None,
         role_filter: str = "all",
         limit: Optional[int] = None,
-    ) -> List[ContactData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get contacts by their role/type.
 
@@ -317,7 +317,7 @@ class ContactsEntity(BaseEntity):
 
     def bulk_update_company(
         self, contact_ids: List[int], new_company_id: int
-    ) -> List[ContactData]:
+    ) -> List[Dict[str, Any]]:
         """
         Move multiple contacts to a different company.
 
@@ -344,7 +344,7 @@ class ContactsEntity(BaseEntity):
         company_id: Optional[int] = None,
         by_email: bool = True,
         by_name: bool = False,
-    ) -> Dict[str, List[ContactData]]:
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Find potential duplicate contacts.
 

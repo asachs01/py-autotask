@@ -5,7 +5,7 @@ Projects entity for Autotask API operations.
 from typing import Any, Dict, List, Optional
 
 from ..constants import ProjectStatus, ProjectType
-from ..types import ProjectData, QueryFilter
+from ..types import QueryFilter
 from .base import BaseEntity
 
 
@@ -30,7 +30,7 @@ class ProjectsEntity(BaseEntity):
         end_date: Optional[str] = None,
         description: Optional[str] = None,
         **kwargs,
-    ) -> ProjectData:
+    ) -> Dict[str, Any]:
         """
         Create a new project with required and optional fields.
 
@@ -69,7 +69,7 @@ class ProjectsEntity(BaseEntity):
         account_id: int,
         status_filter: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[ProjectData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all projects for a specific account.
 
@@ -110,7 +110,7 @@ class ProjectsEntity(BaseEntity):
         manager_id: int,
         include_completed: bool = False,
         limit: Optional[int] = None,
-    ) -> List[ProjectData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get projects managed by a specific resource.
 
@@ -133,7 +133,7 @@ class ProjectsEntity(BaseEntity):
 
         return self.query(filters=filters, max_records=limit)
 
-    def update_project_status(self, project_id: int, status: int) -> ProjectData:
+    def update_project_status(self, project_id: int, status: int) -> Dict[str, Any]:
         """
         Update a project's status.
 
@@ -174,7 +174,7 @@ class ProjectsEntity(BaseEntity):
 
     def get_projects_by_status(
         self, status: int, account_id: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[ProjectData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get projects by status.
 
@@ -195,7 +195,7 @@ class ProjectsEntity(BaseEntity):
 
     def get_active_projects(
         self, account_id: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[ProjectData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get active projects (not complete, cancelled, or on hold).
 
@@ -216,7 +216,7 @@ class ProjectsEntity(BaseEntity):
 
     def get_overdue_projects(
         self, account_id: Optional[int] = None, limit: Optional[int] = None
-    ) -> List[ProjectData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get projects that are past their end date.
 
@@ -276,7 +276,7 @@ class ProjectsEntity(BaseEntity):
 
     def complete_project(
         self, project_id: int, completion_note: Optional[str] = None
-    ) -> ProjectData:
+    ) -> Dict[str, Any]:
         """
         Mark a project as complete.
 
@@ -299,7 +299,9 @@ class ProjectsEntity(BaseEntity):
 
         return self.update_by_id(project_id, update_data)
 
-    def assign_project_manager(self, project_id: int, manager_id: int) -> ProjectData:
+    def assign_project_manager(
+        self, project_id: int, manager_id: int
+    ) -> Dict[str, Any]:
         """
         Assign a project manager to a project.
 

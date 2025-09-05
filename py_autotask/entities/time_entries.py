@@ -4,6 +4,7 @@ Time Entries entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
+from ..types import QueryFilter
 from .base import BaseEntity
 
 
@@ -31,7 +32,7 @@ class TimeEntriesEntity(BaseEntity):
         internal_notes: Optional[str] = None,
         summary_notes: Optional[str] = None,
         **kwargs,
-    ) -> TimeEntryData:
+    ) -> Dict[str, Any]:
         """
         Create a new time entry.
 
@@ -81,7 +82,7 @@ class TimeEntriesEntity(BaseEntity):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[TimeEntryData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get time entries for a specific resource.
 
@@ -108,7 +109,7 @@ class TimeEntriesEntity(BaseEntity):
         ticket_id: int,
         resource_id: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> List[TimeEntryData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get time entries for a specific ticket.
 
@@ -134,7 +135,7 @@ class TimeEntriesEntity(BaseEntity):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[TimeEntryData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get time entries for a specific project.
 
@@ -165,7 +166,7 @@ class TimeEntriesEntity(BaseEntity):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[TimeEntryData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get billable time entries.
 
@@ -196,7 +197,7 @@ class TimeEntriesEntity(BaseEntity):
         resource_id: Optional[int] = None,
         account_id: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> List[TimeEntryData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get time entries for a specific date range.
 
@@ -227,7 +228,7 @@ class TimeEntriesEntity(BaseEntity):
         time_entry_id: int,
         hours_worked: float,
         update_notes: Optional[str] = None,
-    ) -> TimeEntryData:
+    ) -> Dict[str, Any]:
         """
         Update hours worked on a time entry.
 
@@ -246,7 +247,7 @@ class TimeEntriesEntity(BaseEntity):
 
         return self.update_by_id(time_entry_id, update_data)
 
-    def submit_time_entry(self, time_entry_id: int) -> TimeEntryData:
+    def submit_time_entry(self, time_entry_id: int) -> Dict[str, Any]:
         """
         Submit a time entry for approval.
 
@@ -262,7 +263,7 @@ class TimeEntriesEntity(BaseEntity):
 
     def approve_time_entry(
         self, time_entry_id: int, approval_notes: Optional[str] = None
-    ) -> TimeEntryData:
+    ) -> Dict[str, Any]:
         """
         Approve a time entry.
 

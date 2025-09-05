@@ -7,7 +7,7 @@ file attachments for Autotask entities like tickets, projects, and contacts.
 
 import mimetypes
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 
@@ -16,7 +16,6 @@ from ..exceptions import (
     AutotaskTimeoutError,
     AutotaskValidationError,
 )
-from ..types import AttachmentData
 from .base import BaseEntity
 
 
@@ -39,7 +38,7 @@ class AttachmentsEntity(BaseEntity):
         file_path: Union[str, Path],
         title: Optional[str] = None,
         description: Optional[str] = None,
-    ) -> AttachmentData:
+    ) -> Dict[str, Any]:
         """
         Upload a file attachment to an entity.
 
@@ -106,7 +105,7 @@ class AttachmentsEntity(BaseEntity):
                 result = response.json()
 
                 self.logger.info(f"Successfully uploaded attachment: {file_path.name}")
-                return AttachmentData(**result.get("item", result))
+                return Dict[str, Any](**result.get("item", result))
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError(f"Upload timed out for file: {file_path.name}")
@@ -125,7 +124,7 @@ class AttachmentsEntity(BaseEntity):
         content_type: Optional[str] = None,
         title: Optional[str] = None,
         description: Optional[str] = None,
-    ) -> AttachmentData:
+    ) -> Dict[str, Any]:
         """
         Upload file data as an attachment.
 
@@ -173,7 +172,7 @@ class AttachmentsEntity(BaseEntity):
             result = response.json()
 
             self.logger.info(f"Successfully uploaded attachment from data: {filename}")
-            return AttachmentData(**result.get("item", result))
+            return Dict[str, Any](**result.get("item", result))
 
         except Exception as e:
             self.logger.error(f"Failed to upload data as {filename}: {e}")
@@ -219,7 +218,7 @@ class AttachmentsEntity(BaseEntity):
 
     def get_attachments_for_entity(
         self, parent_type: str, parent_id: int
-    ) -> List[AttachmentData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all attachments for a specific entity.
 
@@ -238,7 +237,7 @@ class AttachmentsEntity(BaseEntity):
         }
 
         response = self.query(query)
-        return [AttachmentData(**item) for item in response.items]
+        return [Dict[str, Any](**item) for item in response.items]
 
     def delete_attachment(self, attachment_id: int) -> bool:
         """
@@ -252,7 +251,7 @@ class AttachmentsEntity(BaseEntity):
         """
         return self.delete(attachment_id)
 
-    def get_attachment_info(self, attachment_id: int) -> Optional[AttachmentData]:
+    def get_attachment_info(self, attachment_id: int) -> Optional[Dict[str, Any]]:
         """
         Get attachment metadata without downloading the file.
 
@@ -263,7 +262,7 @@ class AttachmentsEntity(BaseEntity):
             Attachment metadata or None if not found
         """
         data = self.get(attachment_id)
-        return AttachmentData(**data) if data else None
+        return Dict[str, Any](**data) if data else None
 
     def batch_upload(
         self,
@@ -271,7 +270,7 @@ class AttachmentsEntity(BaseEntity):
         parent_id: int,
         file_paths: List[Union[str, Path]],
         batch_size: int = 10,
-    ) -> List[AttachmentData]:
+    ) -> List[Dict[str, Any]]:
         """
         Upload multiple files as attachments.
 

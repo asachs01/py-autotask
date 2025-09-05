@@ -4,7 +4,7 @@ Companies (Accounts) entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
-from ..types import CompanyData, QueryFilter
+from ..types import QueryFilter
 from .base import BaseEntity
 
 
@@ -30,7 +30,7 @@ class CompaniesEntity(BaseEntity):
         postal_code: Optional[str] = None,
         country: Optional[str] = None,
         **kwargs,
-    ) -> CompanyData:
+    ) -> Dict[str, Any]:
         """
         Create a new company with required and optional fields.
 
@@ -72,7 +72,7 @@ class CompaniesEntity(BaseEntity):
 
     def search_companies_by_name(
         self, name: str, exact_match: bool = False, limit: Optional[int] = None
-    ) -> List[CompanyData]:
+    ) -> List[Dict[str, Any]]:
         """
         Search for companies by name.
 
@@ -93,7 +93,7 @@ class CompaniesEntity(BaseEntity):
 
     def get_companies_by_type(
         self, company_type: int, active_only: bool = True, limit: Optional[int] = None
-    ) -> List[CompanyData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get companies by type.
 
@@ -114,7 +114,7 @@ class CompaniesEntity(BaseEntity):
 
     def get_customer_companies(
         self, active_only: bool = True, limit: Optional[int] = None
-    ) -> List[CompanyData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all customer companies.
 
@@ -131,7 +131,7 @@ class CompaniesEntity(BaseEntity):
 
     def get_prospect_companies(
         self, active_only: bool = True, limit: Optional[int] = None
-    ) -> List[CompanyData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get all prospect companies.
 
@@ -253,7 +253,7 @@ class CompaniesEntity(BaseEntity):
         state: Optional[str] = None,
         postal_code: Optional[str] = None,
         country: Optional[str] = None,
-    ) -> CompanyData:
+    ) -> Dict[str, Any]:
         """
         Update company address information.
 
@@ -286,7 +286,7 @@ class CompaniesEntity(BaseEntity):
 
         return self.update_by_id(company_id, update_data)
 
-    def activate_company(self, company_id: int) -> CompanyData:
+    def activate_company(self, company_id: int) -> Dict[str, Any]:
         """
         Activate a company.
 
@@ -298,7 +298,7 @@ class CompaniesEntity(BaseEntity):
         """
         return self.update_by_id(company_id, {"Active": True})
 
-    def deactivate_company(self, company_id: int) -> CompanyData:
+    def deactivate_company(self, company_id: int) -> Dict[str, Any]:
         """
         Deactivate a company.
 
@@ -317,7 +317,7 @@ class CompaniesEntity(BaseEntity):
         country: Optional[str] = None,
         postal_code: Optional[str] = None,
         limit: Optional[int] = None,
-    ) -> List[CompanyData]:
+    ) -> List[Dict[str, Any]]:
         """
         Get companies by location criteria.
 
