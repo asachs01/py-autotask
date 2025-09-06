@@ -7,6 +7,116 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-09-06
+
+### Major Enhancement - Professional Services Automation (PSA) Platform
+
+This release transforms py-autotask from a basic API wrapper into a comprehensive Professional Services Automation platform with enterprise-grade functionality across resource management, contract lifecycle, and project management.
+
+### Added
+
+#### **Resources Entity - Enterprise Resource Management** (4000+ lines)
+- **Capacity Planning System**
+  - `forecast_resource_capacity()` - Historical trend analysis with seasonal adjustments
+  - `optimize_workload_distribution()` - Multi-criteria optimization algorithms
+  - `generate_capacity_recommendations()` - Strategic hiring and training recommendations
+- **Advanced Skill Tracking**
+  - `create_skill_matrix()` - Comprehensive competency mapping with proficiency analysis
+  - `analyze_skill_gaps()` - Gap analysis against target requirements with prioritization
+  - `generate_training_plan()` - Personalized development roadmaps with timelines
+  - `track_competency_assessments()` - Performance evaluation and progress tracking
+- **Utilization Reporting & Analytics**
+  - `generate_utilization_dashboard()` - Executive-level reporting with department breakdowns
+  - `generate_performance_scorecard()` - Individual KPIs with peer comparisons
+  - `analyze_resource_efficiency_trends()` - Long-term trend analysis and insights
+
+#### **Contracts Entity - Contract Lifecycle Management** (1620 lines)
+- **Contract Billing Integration**
+  - `get_contract_billing_summary()` - Comprehensive billing analysis with payment tracking
+  - `generate_contract_invoice()` - Automated invoice generation with line items
+  - Payment status tracking and outstanding balance calculations
+- **Service Level Agreement (SLA) Tracking**
+  - `get_contract_service_levels()` - SLA definition and performance monitoring
+  - `check_service_level_compliance()` - Real-time compliance assessment
+  - Warning thresholds and breach detection
+- **Milestone Management**
+  - `add_contract_milestone()` - Project deliverable creation and tracking
+  - `get_upcoming_milestones()` - Proactive deadline monitoring with priority scoring
+  - Deliverable management and progress tracking
+- **Renewal Management**
+  - `get_contracts_expiring_soon()` - Contract lifecycle monitoring with risk assessment
+  - `set_renewal_alert()` - Automated notification system
+  - `_calculate_renewal_probability()` - Predictive renewal scoring
+  - `_determine_renewal_urgency()` - Risk-based urgency categorization
+- **Usage Tracking & Analytics**
+  - `track_contract_usage()` - Real-time resource utilization monitoring
+  - `get_contract_usage_summary()` - Comprehensive usage analytics with trend analysis
+  - Over-limit detection with automated alerting
+- **Contract Modifications**
+  - `amend_contract()` - Version-controlled amendment system with audit trails
+  - `get_contract_history()` - Complete historical record with timeline visualization
+  - Change tracking with approval workflows
+
+#### **Projects Entity - Advanced Project Management** (1447 lines)
+- **Enhanced Milestone Management**
+  - `create_milestone()` - Milestone lifecycle management with deliverables
+  - `update_milestone()` - Progress tracking and status updates
+  - `delete_milestone()` - Safe milestone removal with dependency checks
+  - `get_milestone_progress()` - Real-time progress analytics
+- **Gantt Chart & Critical Path Method**
+  - `get_gantt_chart_data()` - Full Gantt chart data structure generation
+  - `_calculate_critical_path()` - CPM algorithm with forward/backward pass
+  - Task dependencies and slack calculation
+  - Resource allocation visualization
+- **Project Template System**
+  - `create_project_template()` - Template creation from existing projects
+  - `apply_project_template()` - Rapid project creation from templates
+  - Template versioning and management
+  - Task and milestone template support
+
+#### **New Enumerations & Constants**
+- `ContractStatus` - 8 comprehensive status values
+- `ContractType` - 7 contract type definitions
+- `ServiceLevelStatus` - 4 SLA compliance levels
+- Enhanced resource and project constants
+
+### Changed
+- **Entity Architecture** - All enhanced entities now follow enterprise patterns
+  - Comprehensive error handling with detailed exceptions
+  - Extensive helper methods for complex operations
+  - Full integration with centralized constants
+  - Robust validation throughout
+
+### Testing
+- **Comprehensive Test Coverage**
+  - Resources Entity: 758 lines of tests with 50+ test methods
+  - Contracts Entity: 670 lines of tests with 28 test methods (72.31% coverage)
+  - Projects Entity: 391 lines of tests with 100+ test cases
+  - All tests passing with proper mocking and validation
+
+### Technical Improvements
+- **Performance Optimization**
+  - Efficient algorithms for large datasets
+  - Optimized database queries
+  - Intelligent caching strategies
+- **Code Quality**
+  - Black formatting applied throughout
+  - Comprehensive docstrings and documentation
+  - Type hints and proper error handling
+  - Clean separation of concerns
+
+### Breaking Changes
+- Enhanced entities now require additional parameters for some methods
+- Some method signatures have been updated to support new functionality
+- New required fields in entity creation methods for PSA features
+
+### Migration Guide
+Existing code using basic CRUD operations will continue to work. To leverage new PSA features:
+1. Update to use new enhanced methods for resource management
+2. Implement contract lifecycle methods for contract management
+3. Utilize project template system for standardized project creation
+4. Review new constants and enumerations for proper status handling
+
 ## [1.0.3] - 2025-08-31
 
 ### Fixed
