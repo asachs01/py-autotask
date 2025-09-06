@@ -2446,7 +2446,7 @@ class ProjectsEntity(BaseEntity):
         self, project_id: int, action: str, description: str
     ) -> None:
         """Log milestone activity for audit trail."""
-        try:            # Log to project notes or activity log
+        try:  # Log to project notes or activity log
             self.add_project_note(project_id, f"[Milestone Activity] {description}")
         except Exception:
             # Fail silently for logging
