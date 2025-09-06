@@ -2405,7 +2405,7 @@ class ProjectsEntity(BaseEntity):
                                 "days_overdue": (now - target).days,
                             }
                         )
-                except:
+                except Exception:
                     pass
 
             # Track critical milestones
@@ -2446,18 +2446,9 @@ class ProjectsEntity(BaseEntity):
         self, project_id: int, action: str, description: str
     ) -> None:
         """Log milestone activity for audit trail."""
-        try:
-            activity_data = {
-                "ProjectID": project_id,
-                "ActivityType": "Milestone",
-                "Action": action,
-                "Description": description,
-                "Timestamp": datetime.now().isoformat(),
-                "UserID": getattr(self, "current_user_id", None),
-            }
-            # Log to project notes or activity log
+        try:            # Log to project notes or activity log
             self.add_project_note(project_id, f"[Milestone Activity] {description}")
-        except:
+        except Exception:
             # Fail silently for logging
             pass
 
@@ -2606,7 +2597,7 @@ class ProjectsEntity(BaseEntity):
         try:
             # Query task dependencies from Autotask
             # This is a placeholder - actual implementation would depend on Autotask schema
-            dep_filters = [{"field": "ProjectID", "op": "eq", "value": project_id}]
+            # dep_filters = [{"field": "ProjectID", "op": "eq", "value": project_id}]
             # task_deps = self.entity.query_dependencies(dep_filters)
 
             # For demonstration, create sample dependency structure
@@ -2888,7 +2879,7 @@ class ProjectsEntity(BaseEntity):
             start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
             end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
             return (end - start).total_seconds() / 3600
-        except:
+        except Exception:
             return 0.0
 
     def create_project_template(
@@ -3271,17 +3262,9 @@ class ProjectsEntity(BaseEntity):
     ) -> None:
         """Apply phase templates to a project."""
         for phase_template in phase_templates:
-            phase_data = {
-                "ProjectID": project_id,
-                "PhaseName": phase_template.get("name", ""),
-                "Description": phase_template.get("description", ""),
-                "DurationDays": phase_template.get("duration_days", 7),
-                "SortOrder": phase_template.get("sort_order", 0),
-                "Status": "Planned",
-            }
-
             # Create phase (would use appropriate entity/method)
             # Implementation depends on how phases are handled in Autotask
+            pass
 
     def _calculate_end_date(
         self, start_date: Optional[str], duration_days: int
@@ -3294,5 +3277,5 @@ class ProjectsEntity(BaseEntity):
             start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
             end = start + timedelta(days=duration_days)
             return end.isoformat()
-        except:
+        except Exception:
             return None

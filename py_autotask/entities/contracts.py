@@ -5,7 +5,7 @@ Contracts entity for Autotask API operations.
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ..types import ContractData, EntityDict, QueryFilter
 from .base import BaseEntity
@@ -806,7 +806,7 @@ class ContractsEntity(BaseEntity):
                 "CustomRenewalMessage": custom_message,
             }
 
-            updated_contract = self.update(update_data)
+            self.update(update_data)
 
             self.logger.info(f"Renewal alert configured for contract {contract_id}")
             return alert_config
@@ -1063,7 +1063,7 @@ class ContractsEntity(BaseEntity):
             # Apply changes to contract if auto-approved
             if kwargs.get("auto_approve", False):
                 update_data = {"id": contract_id, **changes}
-                updated_contract = self.update(update_data)
+                self.update(update_data)
 
                 # Update amendment status
                 self.client.update(
@@ -1307,7 +1307,7 @@ class ContractsEntity(BaseEntity):
                     try:
                         end_dt = datetime.fromisoformat(end_date.replace("Z", ""))
                         days_remaining = (end_dt - datetime.now()).days
-                    except:
+                    except Exception:
                         pass
 
                 enhanced_contract = {
@@ -1408,7 +1408,7 @@ class ContractsEntity(BaseEntity):
                                     float(new_values["ContractValue"]) - base_value
                                 )
                                 amendment_total += value_change
-                        except:
+                        except Exception:
                             pass
 
                 calculations["amendment_adjustments"] = amendment_total
@@ -1718,7 +1718,7 @@ class ContractsEntity(BaseEntity):
             if amendment_response.items:
                 base_probability += 0.15  # Recent amendments indicate engagement
 
-        except:
+        except Exception:
             pass
 
         return min(1.0, base_probability)  # Cap at 100%
@@ -1743,7 +1743,7 @@ class ContractsEntity(BaseEntity):
                 return "medium"
             else:
                 return "low"
-        except:
+        except Exception:
             return "unknown"
 
     def _get_contract_allocations(self, contract: Dict[str, Any]) -> Dict[str, float]:

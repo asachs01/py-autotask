@@ -5,9 +5,8 @@ This test suite covers all the advanced PSA features including capacity planning
 skill tracking, utilization reporting, and performance metrics.
 """
 
-import json
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -639,11 +638,14 @@ class TestResourcesEntityEnhanced:
             self.resources_entity, "get_resource_skills"
         ) as mock_skills, patch.object(
             self.resources_entity, "get_resource_certifications"
-        ) as mock_certs:
+        ) as mock_certs, patch.object(
+            self.resources_entity, "get_active_resources"
+        ) as mock_active:
 
             mock_get.return_value = self.sample_resource
             mock_skills.return_value = self.sample_skills
             mock_certs.return_value = []
+            mock_active.return_value = [self.sample_resource]
 
             # 1. Create skill matrix
             matrix = self.resources_entity.create_skill_matrix([123])
@@ -749,6 +751,8 @@ class TestResourcesEntityEnhanced:
         ) as mock_entries:
 
             mock_get.return_value = None  # No resource found
+            mock_util.return_value = None
+            mock_entries.return_value = []
 
             result = self.resources_entity.generate_utilization_dashboard(
                 resource_ids=[999]  # Non-existent resource
