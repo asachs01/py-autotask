@@ -2576,7 +2576,7 @@ class ProjectsEntity(BaseEntity):
             # For demonstration, create sample dependency structure
             dependencies = [
                 {
-                    "id": f"dep_1",
+                    "id": "dep_1",
                     "predecessor_id": None,  # Would be populated from actual data
                     "successor_id": None,  # Would be populated from actual data
                     "dependency_type": "finish_to_start",  # finish_to_start, start_to_start, etc.
