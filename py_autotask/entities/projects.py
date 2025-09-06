@@ -2324,7 +2324,6 @@ class ProjectsEntity(BaseEntity):
         except Exception as e:
             raise Exception(f"Failed to delete milestone: {str(e)}")
 
-
     def get_milestone_progress(self, project_id: int) -> Dict[str, Any]:
         """
         Get milestone progress summary for a project.
