@@ -6,9 +6,10 @@ skill tracking, utilization reporting, and performance metrics.
 """
 
 import json
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 from py_autotask.entities.resources import ResourcesEntity
 from py_autotask.types import QueryFilter

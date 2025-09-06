@@ -2,12 +2,12 @@
 Contracts entity for Autotask API operations.
 """
 
+import logging
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-import logging
 
-from ..types import ContractData, QueryFilter, EntityDict
+from ..types import ContractData, EntityDict, QueryFilter
 from .base import BaseEntity
 
 logger = logging.getLogger(__name__)
