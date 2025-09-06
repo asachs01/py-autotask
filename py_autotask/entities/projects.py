@@ -2324,32 +2324,6 @@ class ProjectsEntity(BaseEntity):
         except Exception as e:
             raise Exception(f"Failed to delete milestone: {str(e)}")
 
-    def get_project_milestones(
-        self,
-        project_id: int,
-        status_filter: Optional[str] = None,
-        include_inactive: bool = False,
-    ) -> List[Dict[str, Any]]:
-        """
-        Get all milestones for a project.
-
-        Args:
-            project_id: ID of the project
-            status_filter: Optional status filter (Planned, In Progress, Completed, etc.)
-            include_inactive: Include inactive/deleted milestones
-
-        Returns:
-            List of milestone data
-        """
-        filters = [{"field": "ProjectID", "op": "eq", "value": project_id}]
-
-        if not include_inactive:
-            filters.append({"field": "IsActive", "op": "eq", "value": True})
-
-        if status_filter:
-            filters.append({"field": "Status", "op": "eq", "value": status_filter})
-
-        return self.entity.query(filters)
 
     def get_milestone_progress(self, project_id: int) -> Dict[str, Any]:
         """
@@ -2603,7 +2577,7 @@ class ProjectsEntity(BaseEntity):
             # For demonstration, create sample dependency structure
             dependencies = [
                 {
-                    "id": f"dep_{i}",
+                    "id": f"dep_1",
                     "predecessor_id": None,  # Would be populated from actual data
                     "successor_id": None,  # Would be populated from actual data
                     "dependency_type": "finish_to_start",  # finish_to_start, start_to_start, etc.
@@ -2864,7 +2838,7 @@ class ProjectsEntity(BaseEntity):
                         allocation["total_allocated_hours"] / estimated_capacity
                     ) * 100
 
-        except Exception as e:
+        except Exception:
             # Return basic structure on error
             pass
 

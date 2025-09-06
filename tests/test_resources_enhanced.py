@@ -11,7 +11,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from py_autotask.entities.resources import ResourcesEntity
-from py_autotask.types import QueryFilter
 
 
 class TestResourcesEntityEnhanced:

@@ -1797,7 +1797,7 @@ class ContractsEntity(BaseEntity):
                 )
                 daily_totals[day_key] = daily_totals.get(day_key, 0) + usage_amount
 
-            except Exception as e:
+            except Exception:
                 continue
 
         trends["monthly_usage"] = monthly_totals

@@ -2176,7 +2176,7 @@ class ResourcesEntity(BaseEntity):
             required_hours = requirement.get("hours", 0)
             required_skills = requirement.get("skills", [])
             priority = requirement.get("priority", 3)  # 1=high, 3=medium, 5=low
-            deadline = requirement.get("deadline")
+            # deadline = requirement.get("deadline")  # Not used currently
 
             # Find suitable resources
             suitable_resources = []
@@ -2651,11 +2651,11 @@ class ResourcesEntity(BaseEntity):
                 "max_level": max(levels) if levels else 0,
                 "min_level": min(levels) if levels else 0,
                 "level_distribution": {
-                    "beginner": len([l for l in levels if l == 1]),
-                    "intermediate": len([l for l in levels if l == 2]),
-                    "advanced": len([l for l in levels if l == 3]),
-                    "expert": len([l for l in levels if l == 4]),
-                    "master": len([l for l in levels if l == 5]),
+                    "beginner": len([level for level in levels if level == 1]),
+                    "intermediate": len([level for level in levels if level == 2]),
+                    "advanced": len([level for level in levels if level == 3]),
+                    "expert": len([level for level in levels if level == 4]),
+                    "master": len([level for level in levels if level == 5]),
                 },
             }
 
@@ -3986,7 +3986,7 @@ class ResourcesEntity(BaseEntity):
                         # Placeholder for project completion rate
                         month_data["metrics"]["project_completion_rate"].append(85.0)
 
-                except Exception as e:
+                except Exception:
                     continue
 
             # Calculate averages for the month
