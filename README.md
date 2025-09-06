@@ -2,7 +2,7 @@
 
 A comprehensive Python SDK for the Autotask REST API providing **100% complete API coverage** with 193 entity implementations.
 
-[![PyPI version](https://badge.fury.io/py/py-autotask.svg)](https://badge.fury.io/py/py-autotask)
+[![PyPI version](https://img.shields.io/badge/PyPI-v2.0.0-blue)](https://pypi.org/project/py-autotask/2.0.0/)
 [![Python Version](https://img.shields.io/pypi/pyversions/py-autotask.svg)](https://pypi.org/project/py-autotask/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Test Coverage](https://codecov.io/gh/asachs01/py-autotask/branch/main/graph/badge.svg)](https://codecov.io/gh/asachs01/py-autotask)
