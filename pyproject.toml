@@ -219,6 +219,7 @@ skips = ["B101", "B601"]
 
 [dependency-groups]
 dev = [
+    "isort>=5.13.2",
     "pytest>=8.3.5",
     "pytest-cov>=5.0.0",
     "responses>=0.25.8",

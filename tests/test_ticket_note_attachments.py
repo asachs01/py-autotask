@@ -5,7 +5,7 @@ This module tests file upload, download, and management operations
 for Autotask ticket note attachments.
 """
 
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -234,7 +234,9 @@ class TestTicketNoteAttachmentsEntity:
         """Test updating attachment title."""
         updated_response = sample_attachment_response.copy()
         updated_response["title"] = "New Title"
-        ticket_note_attachments_entity.update_by_id = Mock(return_value=updated_response)
+        ticket_note_attachments_entity.update_by_id = Mock(
+            return_value=updated_response
+        )
 
         result = ticket_note_attachments_entity.update_attachment_title(
             attachment_id=12345, new_title="New Title"
