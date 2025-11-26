@@ -7,7 +7,7 @@ capacity planning, skill tracking, scheduling, billing, and role management.
 """
 
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -70,21 +70,30 @@ class TestResourcesEntityEnhanced:
         """Test getting resource availability."""
         start_date = datetime(2024, 12, 1)
         end_date = datetime(2024, 12, 7)
-        
-        # Mock resource data
-        self.resources_entity.get = Mock(return_value={"FirstName": "John", "LastName": "Doe"})
-        
-        # Mock time entries
-        self.resources_entity.get_resource_time_entries = Mock(return_value=[
-            {"DateWorked": "2024-12-02", "HoursWorked": 8.0}
-        ])
-        
-        # Mock scheduled tasks query
-        self.mock_client.query = Mock(return_value=[
-            {"startDateTime": "2024-12-03T10:00:00", "endDateTime": "2024-12-03T14:00:00"}
-        ])
 
-        result = self.resources_entity.get_resource_availability(123, start_date, end_date)
+        # Mock resource data
+        self.resources_entity.get = Mock(
+            return_value={"FirstName": "John", "LastName": "Doe"}
+        )
+
+        # Mock time entries
+        self.resources_entity.get_resource_time_entries = Mock(
+            return_value=[{"DateWorked": "2024-12-02", "HoursWorked": 8.0}]
+        )
+
+        # Mock scheduled tasks query
+        self.mock_client.query = Mock(
+            return_value=[
+                {
+                    "startDateTime": "2024-12-03T10:00:00",
+                    "endDateTime": "2024-12-03T14:00:00",
+                }
+            ]
+        )
+
+        result = self.resources_entity.get_resource_availability(
+            123, start_date, end_date
+        )
 
         assert "available_slots" in result
         assert "busy_slots" in result
@@ -98,14 +107,18 @@ class TestResourcesEntityEnhanced:
 
         # Mock resource data
         self.resources_entity.get = Mock(return_value={"workingHoursPerWeek": 40})
-        
-        # Mock time entries query
-        self.resources_entity.get_resource_time_entries = Mock(return_value=[
-            {"HoursWorked": 8.0, "DateWorked": "2024-12-02T09:00:00"},
-            {"HoursWorked": 6.5, "DateWorked": "2024-12-03T09:00:00"},
-        ])
 
-        result = self.resources_entity.calculate_utilization(123, period="custom", custom_start=period_start, custom_end=period_end)
+        # Mock time entries query
+        self.resources_entity.get_resource_time_entries = Mock(
+            return_value=[
+                {"HoursWorked": 8.0, "DateWorked": "2024-12-02T09:00:00"},
+                {"HoursWorked": 6.5, "DateWorked": "2024-12-03T09:00:00"},
+            ]
+        )
+
+        result = self.resources_entity.calculate_utilization(
+            123, period="custom", custom_start=period_start, custom_end=period_end
+        )
 
         assert "utilization_percentage" in result
         assert "total_hours_worked" in result
@@ -116,29 +129,37 @@ class TestResourcesEntityEnhanced:
     def test_get_workload_summary(self):
         """Test getting workload summary."""
         # Mock resource data
-        self.resources_entity.get = Mock(return_value={"FirstName": "John", "LastName": "Doe"})
-        
+        self.resources_entity.get = Mock(
+            return_value={"FirstName": "John", "LastName": "Doe"}
+        )
+
         # Mock active tickets
-        self.resources_entity.get_resource_tickets = Mock(return_value=[
-            {"id": 1, "title": "Ticket 1"},
-            {"id": 2, "title": "Ticket 2"}
-        ])
-        
+        self.resources_entity.get_resource_tickets = Mock(
+            return_value=[
+                {"id": 1, "title": "Ticket 1"},
+                {"id": 2, "title": "Ticket 2"},
+            ]
+        )
+
         # Mock active tasks query
-        self.mock_client.query = Mock(return_value=[
-            {"projectID": 100, "estimatedHours": 40, "hoursWorked": 25},
-            {"projectID": 101, "estimatedHours": 20, "hoursWorked": 5},
-        ])
-        
+        self.mock_client.query = Mock(
+            return_value=[
+                {"projectID": 100, "estimatedHours": 40, "hoursWorked": 25},
+                {"projectID": 101, "estimatedHours": 20, "hoursWorked": 5},
+            ]
+        )
+
         # Mock calculate_utilization and get_resource_availability
-        self.resources_entity.calculate_utilization = Mock(return_value={
-            "utilization": {"total_utilization": 75.0}
-        })
-        self.resources_entity.get_resource_availability = Mock(return_value={
-            "utilization_percentage": 80.0,
-            "status": "well_utilized",
-            "hours_summary": {"free_hours": 20.0}
-        })
+        self.resources_entity.calculate_utilization = Mock(
+            return_value={"utilization": {"total_utilization": 75.0}}
+        )
+        self.resources_entity.get_resource_availability = Mock(
+            return_value={
+                "utilization_percentage": 80.0,
+                "status": "well_utilized",
+                "hours_summary": {"free_hours": 20.0},
+            }
+        )
 
         result = self.resources_entity.get_workload_summary(123)
 
@@ -182,7 +203,9 @@ class TestResourcesEntityEnhanced:
         self.resources_entity.query.assert_called_once()
         filters = self.resources_entity.query.call_args[1]["filters"]
         assert any(f.field == "skillID" and f.value == 50 for f in filters)
-        assert any(f.field == "skillLevel" and f.op == "gte" and f.value == 3 for f in filters)
+        assert any(
+            f.field == "skillLevel" and f.op == "gte" and f.value == 3 for f in filters
+        )
 
     def test_match_resources_to_requirements(self):
         """Test matching resources to skill requirements."""
@@ -192,17 +215,21 @@ class TestResourcesEntityEnhanced:
         ]
 
         # Mock skill queries
-        self.resources_entity.query = Mock(side_effect=[
-            [{"resourceID": 1}, {"resourceID": 2}],  # Resources with skill 50
-            [{"resourceID": 1}, {"resourceID": 3}],  # Resources with skill 51
-        ])
+        self.resources_entity.query = Mock(
+            side_effect=[
+                [{"resourceID": 1}, {"resourceID": 2}],  # Resources with skill 50
+                [{"resourceID": 1}, {"resourceID": 3}],  # Resources with skill 51
+            ]
+        )
 
         # Mock resource details
-        self.mock_client.get = Mock(side_effect=[
-            {"id": 1, "firstName": "John", "lastName": "Doe"},
-            {"id": 2, "firstName": "Jane", "lastName": "Smith"},
-            {"id": 3, "firstName": "Bob", "lastName": "Wilson"},
-        ])
+        self.mock_client.get = Mock(
+            side_effect=[
+                {"id": 1, "firstName": "John", "lastName": "Doe"},
+                {"id": 2, "firstName": "Jane", "lastName": "Smith"},
+                {"id": 3, "firstName": "Bob", "lastName": "Wilson"},
+            ]
+        )
 
         result = self.resources_entity.match_resources_to_requirements(requirements)
 
@@ -216,13 +243,17 @@ class TestResourcesEntityEnhanced:
         end_time = datetime(2024, 12, 15, 17, 0)
 
         # Mock conflict check
-        self.resources_entity.check_conflicts = Mock(return_value={"has_conflicts": False})
+        self.resources_entity.check_conflicts = Mock(
+            return_value={"has_conflicts": False}
+        )
         self.mock_client.create = Mock(return_value={"id": 456})
 
         result = self.resources_entity.schedule_resource(123, 789, start_time, end_time)
 
         assert result["id"] == 456
-        self.resources_entity.check_conflicts.assert_called_once_with(123, start_time, end_time)
+        self.resources_entity.check_conflicts.assert_called_once_with(
+            123, start_time, end_time
+        )
         self.mock_client.create.assert_called_once()
 
     def test_schedule_resource_with_conflict(self):
@@ -231,7 +262,9 @@ class TestResourcesEntityEnhanced:
         end_time = datetime(2024, 12, 15, 17, 0)
 
         # Mock conflict check with conflicts
-        self.resources_entity.check_conflicts = Mock(return_value={"has_conflicts": True})
+        self.resources_entity.check_conflicts = Mock(
+            return_value={"has_conflicts": True}
+        )
 
         with pytest.raises(ValueError, match="Resource has scheduling conflicts"):
             self.resources_entity.schedule_resource(123, 789, start_time, end_time)
@@ -242,12 +275,16 @@ class TestResourcesEntityEnhanced:
         end_date = datetime(2024, 12, 31)
 
         # Mock scheduled tasks and time entries
-        self.resources_entity.query_scheduled_tasks = Mock(return_value=[
-            {"id": 1, "taskID": 100, "startDateTime": "2024-12-02T09:00:00"},
-        ])
-        self.resources_entity.query_time_entries = Mock(return_value=[
-            {"id": 2, "ticketID": 200, "startDateTime": "2024-12-03T10:00:00"},
-        ])
+        self.resources_entity.query_scheduled_tasks = Mock(
+            return_value=[
+                {"id": 1, "taskID": 100, "startDateTime": "2024-12-02T09:00:00"},
+            ]
+        )
+        self.resources_entity.query_time_entries = Mock(
+            return_value=[
+                {"id": 2, "ticketID": 200, "startDateTime": "2024-12-03T10:00:00"},
+            ]
+        )
 
         result = self.resources_entity.get_resource_calendar(123, start_date, end_date)
 
@@ -261,9 +298,14 @@ class TestResourcesEntityEnhanced:
         end_time = datetime(2024, 12, 15, 17, 0)
 
         # Mock existing schedules with conflict
-        self.resources_entity.query = Mock(return_value=[
-            {"startDateTime": "2024-12-15T08:00:00", "endDateTime": "2024-12-15T16:00:00"},
-        ])
+        self.resources_entity.query = Mock(
+            return_value=[
+                {
+                    "startDateTime": "2024-12-15T08:00:00",
+                    "endDateTime": "2024-12-15T16:00:00",
+                },
+            ]
+        )
 
         result = self.resources_entity.check_conflicts(123, start_time, end_time)
 
@@ -292,9 +334,11 @@ class TestResourcesEntityEnhanced:
     def test_calculate_resource_cost(self):
         """Test calculating resource cost."""
         # Mock current billing rate
-        self.resources_entity.query = Mock(return_value=[
-            {"hourlyRate": 150.0, "costRate": 100.0, "effectiveDate": "2024-12-01"},
-        ])
+        self.resources_entity.query = Mock(
+            return_value=[
+                {"hourlyRate": 150.0, "costRate": 100.0, "effectiveDate": "2024-12-01"},
+            ]
+        )
 
         result = self.resources_entity.calculate_resource_cost(123, 10.5)
 
@@ -324,7 +368,9 @@ class TestResourcesEntityEnhanced:
         """Test assigning a role to a resource."""
         self.mock_client.update = Mock(return_value={"id": 123})
 
-        result = self.resources_entity.assign_role(123, ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"])
+        self.resources_entity.assign_role(
+            123, ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"]
+        )
 
         call_args = self.mock_client.update.call_args[0][1]
         assert call_args["roleID"] == ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"]
@@ -337,12 +383,18 @@ class TestResourcesEntityEnhanced:
         ]
         self.resources_entity.query = Mock(return_value=expected_resources)
 
-        result = self.resources_entity.get_resources_by_role(ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"])
+        result = self.resources_entity.get_resources_by_role(
+            ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"]
+        )
 
         assert result == expected_resources
         self.resources_entity.query.assert_called_once()
         filters = self.resources_entity.query.call_args[1]["filters"]
-        assert any(f.field == "roleID" and f.value == ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"] for f in filters)
+        assert any(
+            f.field == "roleID"
+            and f.value == ResourcesEntity.RESOURCE_ROLE["PROJECT_MANAGER"]
+            for f in filters
+        )
 
     def test_validate_resource_data(self):
         """Test resource data validation."""
@@ -375,12 +427,18 @@ class TestResourcesEntityEnhanced:
         end_time = datetime(2024, 12, 15, 17, 0)
 
         # Mock no conflicts and valid capacity
-        self.resources_entity.check_conflicts = Mock(return_value={"has_conflicts": False})
-        self.resources_entity.get_resource_availability = Mock(return_value={
-            "daily_summary": [{"date": "2024-12-15", "available_hours": 8}]
-        })
+        self.resources_entity.check_conflicts = Mock(
+            return_value={"has_conflicts": False}
+        )
+        self.resources_entity.get_resource_availability = Mock(
+            return_value={
+                "daily_summary": [{"date": "2024-12-15", "available_hours": 8}]
+            }
+        )
 
-        result = self.resources_entity.validate_resource_schedule(123, start_time, end_time, 8.0)
+        result = self.resources_entity.validate_resource_schedule(
+            123, start_time, end_time, 8.0
+        )
 
         assert result["is_valid"] is True
         assert len(result["errors"]) == 0
@@ -463,7 +521,9 @@ class TestResourcesEntityEnhanced:
     def test_update_resource_prevents_email_conflicts(self):
         """Test that updating a resource prevents email conflicts."""
         # Mock existing resource with same email
-        self.resources_entity.query = Mock(return_value=[{"id": 999, "email": "existing@example.com"}])
+        self.resources_entity.query = Mock(
+            return_value=[{"id": 999, "email": "existing@example.com"}]
+        )
 
         update_data = {"email": "existing@example.com"}
 
