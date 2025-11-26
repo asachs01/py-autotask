@@ -214,13 +214,13 @@ from .ticket_additional_configuration_items import (
 )
 from .ticket_additional_contacts import TicketAdditionalContactsEntity
 from .ticket_attachments import TicketAttachmentsEntity
-from .ticket_note_attachments import TicketNoteAttachmentsEntity
 from .ticket_categories import TicketCategoriesEntity
 from .ticket_change_request_approvals import TicketChangeRequestApprovalsEntity
 from .ticket_checklist_items import TicketChecklistItemsEntity
 from .ticket_checklist_libraries import TicketChecklistLibrariesEntity
 from .ticket_costs import TicketCostsEntity
 from .ticket_history import TicketHistoryEntity
+from .ticket_note_attachments import TicketNoteAttachmentsEntity
 from .ticket_notes import TicketNotesEntity
 from .ticket_priorities import TicketPrioritiesEntity
 from .ticket_secondary_resources import TicketSecondaryResourcesEntity
