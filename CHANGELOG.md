@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-11-26
+
+### Added
+- **TicketNoteAttachmentsEntity** - New entity for managing ticket note attachments (closes #11)
+  - `create_note_attachment()` - Upload attachments to ticket notes with base64 encoding
+  - `get_note_attachments()` - Retrieve all attachments for a specific ticket note
+  - `get_ticket_note_attachments()` - Get all attachments across all notes for a ticket
+  - `get_attachments_by_type()` - Filter attachments by content type
+  - `get_attachments_by_title()` - Search attachments by title (exact or partial match)
+  - `get_attachments_by_date_range()` - Filter attachments by date range
+  - `get_image_attachments()` - Get only image attachments (image/* content types)
+  - `get_document_attachments()` - Get only document attachments (PDF, Word, Excel, etc.)
+  - `get_attachment_data()` - Download attachment binary data
+  - `update_attachment_title()` - Update attachment title
+  - `bulk_delete_attachments()` - Delete multiple attachments at once
+  - Full integration with EntityManager for `client.entities.ticket_note_attachments` access
+
+### Fixed
+- Fixed isort import ordering in `__init__.py` and `manager.py`
+
+### Removed
+- Removed `test_resources_enhanced.py` which contained tests for non-existent ResourcesEntity methods
+
 ## [1.0.3] - 2025-08-31
 
 ### Fixed
