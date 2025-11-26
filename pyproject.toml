@@ -217,5 +217,12 @@ ignore_missing_imports = true
 exclude_dirs = ["tests", "build", "dist"]
 skips = ["B101", "B601"]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-cov>=5.0.0",
+    "responses>=0.25.8",
+]
+
 # Flake8 configuration (in setup.cfg since flake8 doesn't support pyproject.toml)
 # See setup.cfg for flake8 configuration 

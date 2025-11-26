@@ -218,6 +218,7 @@ from .ticket_additional_configuration_items import (
 )
 from .ticket_additional_contacts import TicketAdditionalContactsEntity
 from .ticket_attachments import TicketAttachmentsEntity
+from .ticket_note_attachments import TicketNoteAttachmentsEntity
 
 # Service desk entities
 from .ticket_categories import TicketCategoriesEntity
@@ -311,6 +312,7 @@ __all__ = [
     "TicketAdditionalContactsEntity",
     "TicketAdditionalConfigurationItemsEntity",
     "TicketAttachmentsEntity",
+    "TicketNoteAttachmentsEntity",
     "TicketChangeRequestApprovalsEntity",
     "TicketChecklistItemsEntity",
     "TicketChecklistLibrariesEntity",
