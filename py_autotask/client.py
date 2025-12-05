@@ -126,10 +126,14 @@ class AutotaskClient:
             self._session = self.auth.get_session()
 
             # Configure retry strategy
+            # Note: 500 errors are NOT retried - they indicate server-side issues
+            # that are unlikely to be transient. Retrying them just causes "too many
+            # 500 error responses" from urllib3 and masks the actual error.
+            # Only retry: 429 (rate limit), 502/503/504 (gateway/temporary errors)
             retry_strategy = Retry(
                 total=self.config.max_retries,
                 backoff_factor=self.config.retry_backoff,
-                status_forcelist=[429, 500, 502, 503, 504],
+                status_forcelist=[429, 502, 503, 504],
                 allowed_methods=[
                     "HEAD",
                     "GET",
