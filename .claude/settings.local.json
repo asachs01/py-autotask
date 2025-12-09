@@ -5,7 +5,10 @@
       "WebFetch(domain:www.autotask.net)",
       "mcp__perplexity-ask__perplexity_ask",
       "mcp__notion__notion-update-page",
-      "WebSearch"
+      "WebSearch",
+      "Bash(gh issue view:*)",
+      "mcp__firecrawl__firecrawl_search",
+      "mcp__firecrawl__firecrawl_scrape"
     ],
     "deny": [],
     "ask": []
