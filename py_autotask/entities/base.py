@@ -3,6 +3,9 @@ Base entity class for Autotask API entities.
 
 This module provides the base class that all entity-specific classes
 inherit from, providing common CRUD operations and utilities.
+
+It also provides ChildEntity base class for entities that are children
+of other entities and require parent-relative URLs for write operations.
 """
 
 import logging
@@ -16,6 +19,107 @@ if TYPE_CHECKING:
     from .query_builder import QueryBuilder
 
 logger = logging.getLogger(__name__)
+
+# Mapping of child entities to their parent entity and URL suffix
+# Format: "ChildEntityName": ("ParentEntityName", "child_url_suffix", "parent_id_field")
+# The child_url_suffix is what appears in the URL after /Parent/{id}/
+CHILD_ENTITY_MAPPINGS = {
+    # Ticket children
+    "TicketAdditionalConfigurationItems": (
+        "Tickets",
+        "AdditionalConfigurationItems",
+        "ticketID",
+    ),
+    "TicketAdditionalContacts": ("Tickets", "AdditionalContacts", "ticketID"),
+    "TicketAttachments": ("Tickets", "Attachments", "ticketID"),
+    "TicketChangeRequestApprovals": ("Tickets", "ChangeRequestApprovals", "ticketID"),
+    "TicketCharges": ("Tickets", "Charges", "ticketID"),
+    "TicketChecklistItems": ("Tickets", "ChecklistItems", "ticketID"),
+    "TicketChecklistLibraries": ("Tickets", "ChecklistLibraries", "ticketID"),
+    "TicketNotes": ("Tickets", "Notes", "ticketID"),
+    "TicketNoteAttachments": ("TicketNotes", "Attachments", "noteID"),
+    "TicketRmaCredits": ("Tickets", "RmaCredits", "ticketID"),
+    "TicketSecondaryResources": ("Tickets", "SecondaryResources", "ticketID"),
+    "TicketTagAssociations": ("Tickets", "TagAssociations", "ticketID"),
+    # Company children
+    "CompanyAlerts": ("Companies", "Alerts", "companyID"),
+    "CompanyAttachments": ("Companies", "Attachments", "companyID"),
+    "CompanyContacts": ("Companies", "Contacts", "companyID"),
+    "CompanyLocations": ("Companies", "Locations", "companyID"),
+    "CompanyNotes": ("Companies", "Notes", "companyID"),
+    "CompanyNoteAttachments": ("CompanyNotes", "Attachments", "noteID"),
+    "CompanySiteConfigurations": ("Companies", "SiteConfigurations", "companyID"),
+    "CompanyTeams": ("Companies", "Teams", "companyID"),
+    "CompanyToDos": ("Companies", "ToDos", "companyID"),
+    # Contact children
+    "ContactGroupContacts": ("ContactGroups", "Contacts", "contactGroupID"),
+    # Contract children
+    "ContractBillingRules": ("Contracts", "BillingRules", "contractID"),
+    "ContractBlocks": ("Contracts", "Blocks", "contractID"),
+    "ContractCharges": ("Contracts", "Charges", "contractID"),
+    "ContractExclusionBillingCodes": (
+        "Contracts",
+        "ExclusionBillingCodes",
+        "contractID",
+    ),
+    "ContractExclusionRoles": ("Contracts", "ExclusionRoles", "contractID"),
+    "ContractMilestones": ("Contracts", "Milestones", "contractID"),
+    "ContractNotes": ("Contracts", "Notes", "contractID"),
+    "ContractRates": ("Contracts", "Rates", "contractID"),
+    "ContractRetainers": ("Contracts", "Retainers", "contractID"),
+    "ContractRoleCosts": ("Contracts", "RoleCosts", "contractID"),
+    "ContractServices": ("Contracts", "Services", "contractID"),
+    "ContractServiceAdjustments": ("Contracts", "ServiceAdjustments", "contractID"),
+    "ContractServiceBundles": ("Contracts", "ServiceBundles", "contractID"),
+    "ContractServiceBundleAdjustments": (
+        "Contracts",
+        "ServiceBundleAdjustments",
+        "contractID",
+    ),
+    "ContractServiceBundleUnits": ("Contracts", "ServiceBundleUnits", "contractID"),
+    "ContractServiceUnits": ("Contracts", "ServiceUnits", "contractID"),
+    "ContractTicketPurchases": ("Contracts", "TicketPurchases", "contractID"),
+    # Project children
+    "ProjectCharges": ("Projects", "Charges", "projectID"),
+    "ProjectNotes": ("Projects", "Notes", "projectID"),
+    "ProjectAttachments": ("Projects", "Attachments", "projectID"),
+    # Configuration Item children
+    "ConfigurationItemAttachments": (
+        "ConfigurationItems",
+        "Attachments",
+        "configurationItemID",
+    ),
+    "ConfigurationItemNotes": ("ConfigurationItems", "Notes", "configurationItemID"),
+    "ConfigurationItemNoteAttachments": (
+        "ConfigurationItemNotes",
+        "Attachments",
+        "noteID",
+    ),
+    # Task children
+    "TaskNotes": ("Tasks", "Notes", "taskID"),
+    "TaskSecondaryResources": ("Tasks", "SecondaryResources", "taskID"),
+    # Service Call children
+    "ServiceCallTickets": ("ServiceCalls", "Tickets", "serviceCallID"),
+    "ServiceCallTicketResources": (
+        "ServiceCallTickets",
+        "Resources",
+        "serviceCallTicketID",
+    ),
+    # Opportunity children
+    "OpportunityAttachments": ("Opportunities", "Attachments", "opportunityID"),
+    # Sales Order children
+    "SalesOrderAttachments": ("SalesOrders", "Attachments", "salesOrderID"),
+    # Quote children
+    "QuoteItems": ("Quotes", "Items", "quoteID"),
+    "QuoteLocations": ("Quotes", "Locations", "quoteID"),
+    # Expense Report children
+    "ExpenseItems": ("ExpenseReports", "Items", "expenseReportID"),
+    # Purchase Order children
+    "PurchaseOrderItems": ("PurchaseOrders", "Items", "purchaseOrderID"),
+    # Article children
+    "ArticleAttachments": ("KnowledgebaseArticles", "Attachments", "articleID"),
+    "ArticleNotes": ("KnowledgebaseArticles", "Notes", "articleID"),
+}
 
 
 class BaseEntity:
@@ -277,8 +381,13 @@ class BaseEntity:
         """
         Create a new entity.
 
+        For child entities (like TicketNotes, CompanyNotes, etc.), this method
+        automatically uses the parent-relative URL format required by the
+        Autotask API: /Parent/{parentId}/ChildSuffix
+
         Args:
-            entity_data: Data for the new entity
+            entity_data: Data for the new entity. For child entities, must include
+                        the parent ID field (e.g., ticketID for TicketNotes)
 
         Returns:
             Create response with new entity ID
@@ -289,16 +398,55 @@ class BaseEntity:
                 "companyType": 1,
                 "ownerResourceID": 12345
             })
+
+            # For child entities, parent ID is required:
+            new_note = client.ticket_notes.create({
+                "ticketID": 12345,
+                "title": "Note Title",
+                "description": "Note content",
+                "noteType": 1,
+                "publish": 1
+            })
         """
         self.logger.debug(f"Creating new {self.entity_name}")
+
+        # Check if this is a child entity that requires parent-relative URL
+        if self.entity_name in CHILD_ENTITY_MAPPINGS:
+            parent_entity, child_suffix, parent_id_field = CHILD_ENTITY_MAPPINGS[
+                self.entity_name
+            ]
+
+            # Get the parent ID from the entity data (handle case variations)
+            parent_id = entity_data.get(parent_id_field) or entity_data.get(
+                parent_id_field[0].upper() + parent_id_field[1:]
+            )
+
+            if not parent_id:
+                raise AutotaskValidationError(
+                    f"Child entity {self.entity_name} requires {parent_id_field} "
+                    f"field in entity_data for creation"
+                )
+
+            self.logger.debug(
+                f"Using child entity URL: {parent_entity}/{parent_id}/{child_suffix}"
+            )
+            return self.client.create_child_entity(
+                parent_entity, int(parent_id), child_suffix, entity_data
+            )
+
         return self.client.create_entity(self.entity_name, entity_data)
 
     def update(self, entity_data: EntityDict) -> EntityDict:
         """
         Update an existing entity.
 
+        For child entities (like TicketNotes, CompanyNotes, etc.), this method
+        automatically uses the parent-relative URL format required by the
+        Autotask API.
+
         Args:
-            entity_data: Entity data including ID and fields to update
+            entity_data: Entity data including ID and fields to update.
+                        For child entities, must also include the parent ID field.
 
         Returns:
             Updated entity data
@@ -309,9 +457,41 @@ class BaseEntity:
                 "title": "Updated Title",
                 "priority": 4
             })
+
+            # For child entities, parent ID is required:
+            updated_note = client.ticket_notes.update({
+                "id": 67890,
+                "ticketID": 12345,
+                "description": "Updated content"
+            })
         """
         entity_id = entity_data.get("id")
         self.logger.debug(f"Updating {self.entity_name} with ID {entity_id}")
+
+        # Check if this is a child entity that requires parent-relative URL
+        if self.entity_name in CHILD_ENTITY_MAPPINGS:
+            parent_entity, child_suffix, parent_id_field = CHILD_ENTITY_MAPPINGS[
+                self.entity_name
+            ]
+
+            # Get the parent ID from the entity data (handle case variations)
+            parent_id = entity_data.get(parent_id_field) or entity_data.get(
+                parent_id_field[0].upper() + parent_id_field[1:]
+            )
+
+            if not parent_id:
+                raise AutotaskValidationError(
+                    f"Child entity {self.entity_name} requires {parent_id_field} "
+                    f"field in entity_data for updates"
+                )
+
+            self.logger.debug(
+                f"Using child entity URL: {parent_entity}/{parent_id}/{child_suffix}"
+            )
+            return self.client.update_child_entity(
+                parent_entity, int(parent_id), child_suffix, entity_data
+            )
+
         return self.client.update(self.entity_name, entity_data)
 
     def update_by_id(
@@ -330,20 +510,47 @@ class BaseEntity:
         entity_data = {"id": entity_id, **update_data}
         return self.client.update(self.entity_name, entity_data)
 
-    def delete(self, entity_id: int) -> bool:
+    def delete(self, entity_id: int, parent_id: Optional[int] = None) -> bool:
         """
         Delete an entity by ID.
 
+        For child entities (like TicketNotes, CompanyNotes, etc.), a parent_id
+        must be provided to construct the correct URL.
+
         Args:
             entity_id: ID of entity to delete
+            parent_id: Required for child entities - ID of the parent entity
 
         Returns:
             True if successful
 
         Example:
             success = client.tickets.delete(12345)
+
+            # For child entities, parent_id is required:
+            success = client.ticket_notes.delete(67890, parent_id=12345)
         """
         self.logger.debug(f"Deleting {self.entity_name} with ID {entity_id}")
+
+        # Check if this is a child entity that requires parent-relative URL
+        if self.entity_name in CHILD_ENTITY_MAPPINGS:
+            parent_entity, child_suffix, parent_id_field = CHILD_ENTITY_MAPPINGS[
+                self.entity_name
+            ]
+
+            if not parent_id:
+                raise AutotaskValidationError(
+                    f"Child entity {self.entity_name} requires parent_id "
+                    f"parameter for deletion"
+                )
+
+            self.logger.debug(
+                f"Using child entity URL: {parent_entity}/{parent_id}/{child_suffix}"
+            )
+            return self.client.delete_child_entity(
+                parent_entity, int(parent_id), child_suffix, entity_id
+            )
+
         return self.client.delete(self.entity_name, entity_id)
 
     def count(
