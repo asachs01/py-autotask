@@ -105,7 +105,7 @@ class AttachmentsEntity(BaseEntity):
                 result = response.json()
 
                 self.logger.info(f"Successfully uploaded attachment: {file_path.name}")
-                return Dict[str, Any](**result.get("item", result))
+                return result.get("item", result)
 
         except requests.exceptions.Timeout:
             raise AutotaskTimeoutError(f"Upload timed out for file: {file_path.name}")
@@ -172,7 +172,7 @@ class AttachmentsEntity(BaseEntity):
             result = response.json()
 
             self.logger.info(f"Successfully uploaded attachment from data: {filename}")
-            return Dict[str, Any](**result.get("item", result))
+            return result.get("item", result)
 
         except Exception as e:
             self.logger.error(f"Failed to upload data as {filename}: {e}")
@@ -237,7 +237,7 @@ class AttachmentsEntity(BaseEntity):
         }
 
         response = self.query(query)
-        return [Dict[str, Any](**item) for item in response.items]
+        return [item for item in response.items]
 
     def delete_attachment(self, attachment_id: int) -> bool:
         """
@@ -262,7 +262,7 @@ class AttachmentsEntity(BaseEntity):
             Attachment metadata or None if not found
         """
         data = self.get(attachment_id)
-        return Dict[str, Any](**data) if data else None
+        return data if data else None
 
     def batch_upload(
         self,

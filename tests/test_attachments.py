@@ -91,7 +91,7 @@ class TestAttachmentsEntity:
                 title="Test File",
             )
 
-            assert isinstance(result, AttachmentData)
+            assert isinstance(result, dict)
             mock_client.session.post.assert_called_once()
 
     @patch("py_autotask.entities.attachments.Path")
@@ -136,7 +136,7 @@ class TestAttachmentsEntity:
                         parent_type="Ticket", parent_id=67890, file_path=temp_file_path
                     )
 
-                    assert isinstance(result, AttachmentData)
+                    assert isinstance(result, dict)
         finally:
             # Clean up
             os.unlink(temp_file_path)
@@ -165,7 +165,7 @@ class TestAttachmentsEntity:
             title="Test Data File",
         )
 
-        assert isinstance(result, AttachmentData)
+        assert isinstance(result, dict)
         mock_client.session.post.assert_called_once()
 
     def test_upload_from_data_too_large(self, attachments_entity):
@@ -187,7 +187,7 @@ class TestAttachmentsEntity:
                 filename="large.txt",
             )
 
-            assert isinstance(result, AttachmentData)
+            assert isinstance(result, dict)
 
     def test_download_file_success(self, attachments_entity, mock_client):
         """Test successful file download."""
@@ -228,7 +228,7 @@ class TestAttachmentsEntity:
         result = attachments_entity.get_attachments_for_entity("Ticket", 67890)
 
         assert len(result) == 1
-        assert isinstance(result[0], AttachmentData)
+        assert isinstance(result[0], dict)
         mock_client.query.assert_called_once()
 
     def test_get_attachment_info(
@@ -239,8 +239,8 @@ class TestAttachmentsEntity:
 
         result = attachments_entity.get_attachment_info(12345)
 
-        assert isinstance(result, AttachmentData)
-        assert result.id == 12345
+        assert isinstance(result, dict)
+        assert result["id"] == 12345
         mock_client.get.assert_called_once()
 
     def test_delete_attachment_success(self, attachments_entity, mock_client):
