@@ -13,6 +13,42 @@ from ..types import ContractData, CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
 
+# Re-export constants with names expected by tests and external code
+class ContractTypes:
+    """Contract type constants."""
+
+    RECURRING_SERVICE = 1
+    FIXED_PRICE = 2
+    TIME_AND_MATERIALS = 3
+    MILESTONE = 4
+    SUBSCRIPTION = 5
+    MAINTENANCE = 6
+    RETAINER = 7
+
+
+class ContractStatuses:
+    """Contract status constants."""
+
+    INACTIVE = 0
+    ACTIVE = 1
+    CANCELLED = 2
+    EXPIRED = 3
+    ON_HOLD = 4
+    PENDING_APPROVAL = 5
+    DRAFT = 6
+
+
+class BillingMethods:
+    """Billing method constants."""
+
+    FIXED_PRICE = 1
+    TIME_AND_MATERIALS = 2
+    MILESTONE_BILLING = 3
+    RECURRING_BILLING = 4
+    USAGE_BASED = 5
+    RETAINER = 6
+
+
 class ServiceTypes:
     """Constants for service types."""
 
@@ -870,10 +906,10 @@ class ContractsEntity(BaseEntity):
                 if started_date and completed_date:
                     try:
                         started = datetime.fromisoformat(
-                            started_date.replace("Z", "+00: 00")
+                            started_date.replace("Z", "+00:00")
                         )
                         completed = datetime.fromisoformat(
-                            completed_date.replace("Z", "+00: 00")
+                            completed_date.replace("Z", "+00:00")
                         )
                         completion_time = (
                             completed - started
@@ -887,7 +923,7 @@ class ContractsEntity(BaseEntity):
             # Overdue tracking
             if due_date and status not in ["completed", "cancelled"]:
                 try:
-                    deadline = datetime.fromisoformat(due_date.replace("Z", "+00: 00"))
+                    deadline = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
                     if deadline < now:
                         analytics["by_status"]["overdue"] += 1
                         analytics["overdue_milestones"].append(
@@ -1010,7 +1046,7 @@ class ContractsEntity(BaseEntity):
             if end_date:
                 try:
                     contract_end = datetime.fromisoformat(
-                        end_date.replace("Z", "+00: 00")
+                        end_date.replace("Z", "+00:00")
                     )
                     days_until_expiry = (contract_end - datetime.now()).days
 
@@ -1075,7 +1111,7 @@ class ContractsEntity(BaseEntity):
 
         if current_end:
             try:
-                end_date = datetime.fromisoformat(current_end.replace("Z", "+00: 00"))
+                end_date = datetime.fromisoformat(current_end.replace("Z", "+00:00"))
                 new_start = end_date + timedelta(days=1)
             except ValueError:
                 new_start = now
@@ -1283,7 +1319,7 @@ class ContractsEntity(BaseEntity):
         end_date = contract.get("EndDate", "")
         if end_date:
             try:
-                contract_end = datetime.fromisoformat(end_date.replace("Z", "+00: 00"))
+                contract_end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
                 days_until_expiry = (contract_end - datetime.now()).days
 
                 if days_until_expiry <= 14:
@@ -1588,7 +1624,7 @@ class ContractsEntity(BaseEntity):
             if usage_date:
                 try:
                     date_obj = datetime.fromisoformat(
-                        usage_date.replace("Z", "+00: 00")
+                        usage_date.replace("Z", "+00:00")
                     )
                     period_key = date_obj.strftime("%Y-%m")
 
@@ -2074,10 +2110,10 @@ class ContractsEntity(BaseEntity):
             if created_date and approved_date:
                 try:
                     created = datetime.fromisoformat(
-                        created_date.replace("Z", "+00: 00")
+                        created_date.replace("Z", "+00:00")
                     )
                     approved = datetime.fromisoformat(
-                        approved_date.replace("Z", "+00: 00")
+                        approved_date.replace("Z", "+00:00")
                     )
                     approval_time = (approved - created).total_seconds() / 86400  # Days
                     approval_times.append(approval_time)
@@ -2103,7 +2139,7 @@ class ContractsEntity(BaseEntity):
             if created_date:
                 try:
                     month_key = datetime.fromisoformat(
-                        created_date.replace("Z", "+00: 00")
+                        created_date.replace("Z", "+00:00")
                     ).strftime("%Y-%m")
                     if month_key not in analytics["trends"]["monthly_amendments"]:
                         analytics["trends"]["monthly_amendments"][month_key] = 0
@@ -2146,7 +2182,7 @@ class ContractsEntity(BaseEntity):
             return 0
 
         try:
-            created = datetime.fromisoformat(created_date.replace("Z", "+00: 00"))
+            created = datetime.fromisoformat(created_date.replace("Z", "+00:00"))
             # Convert to naive datetime for comparison
             created_naive = created.replace(tzinfo=None)
             return (datetime.now() - created_naive).days
@@ -2164,7 +2200,7 @@ class ContractsEntity(BaseEntity):
             if created_date:
                 try:
                     dates.append(
-                        datetime.fromisoformat(created_date.replace("Z", "+00: 00"))
+                        datetime.fromisoformat(created_date.replace("Z", "+00:00"))
                     )
                 except ValueError:
                     pass
@@ -2245,8 +2281,8 @@ class ContractsEntity(BaseEntity):
 
         if start_date and end_date:
             try:
-                start_dt = datetime.fromisoformat(start_date.replace("Z", "+00: 00"))
-                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00: 00"))
+                start_dt = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
 
                 if end_dt <= start_dt:
                     validation_result["errors"].append(
@@ -2420,7 +2456,7 @@ class ContractsEntity(BaseEntity):
         end_date = contract.get("EndDate")
         if end_date:
             try:
-                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00: 00"))
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
                 days_remaining = (end_dt - datetime.now()).days
 
                 if days_remaining <= 30:
@@ -2560,7 +2596,7 @@ class ContractsEntity(BaseEntity):
         end_date = contract.get("EndDate")
         if end_date:
             try:
-                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00: 00"))
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
                 days_remaining = (end_dt - datetime.now()).days
 
                 if days_remaining <= 0:

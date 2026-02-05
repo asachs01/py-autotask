@@ -73,7 +73,7 @@ class TestBillingAndInvoicing:
         self.client.create.return_value = {"success": True, "id": 456}
 
         period = {
-            "start_date": "2024-01-01T00: 00: 00Z", "end_date": "2024-01-31T23: 59: 59Z"
+            "start_date": "2024-01-01T00:00:00Z", "end_date": "2024-01-31T23:59:59Z"
         }
 
         result = self.contracts.generate_invoice(123, period)
@@ -162,7 +162,7 @@ class TestServiceLevelTracking:
     def test_track_service_delivery_success(self):
         """Test successful service delivery tracking."""
         service_data = {
-            "service_type": "support", "delivery_date": "2024-01-01T12: 00: 00Z", "metrics": {"response_time": 30, "resolution_time": 120}, "sla_target": 60, "actual_performance": 50
+            "service_type": "support", "delivery_date": "2024-01-01T12:00:00Z", "metrics": {"response_time": 30, "resolution_time": 120}, "sla_target": 60, "actual_performance": 50
         }
 
         self.client.create.return_value = {"success": True, "id": 789}
@@ -177,7 +177,7 @@ class TestServiceLevelTracking:
         assert args[0] == "ServiceDeliveryRecords"
 
         expected_data = {
-            "contractID": 123, "serviceType": "support", "deliveryDate": "2024-01-01T12: 00: 00Z", "metrics": {"response_time": 30, "resolution_time": 120}, "sla_target": 60, "actual_performance": 50
+            "contractID": 123, "serviceType": "support", "deliveryDate": "2024-01-01T12:00:00Z", "metrics": {"response_time": 30, "resolution_time": 120}, "sla_target": 60, "actual_performance": 50
         }
 
         # Check all fields except recordedDate
@@ -185,7 +185,7 @@ class TestServiceLevelTracking:
             assert args[1][key] == value
 
         # Check recordedDate is close to now
-        recorded_time = datetime.fromisoformat(args[1]["recordedDate"].replace('Z', '+00: 00'))
+        recorded_time = datetime.fromisoformat(args[1]["recordedDate"].replace('Z', '+00:00'))
         now = datetime.now()
         time_diff = abs((recorded_time.replace(tzinfo = None) - now).total_seconds())
         assert time_diff < 2  # Within 2 seconds
@@ -255,7 +255,7 @@ class TestMilestoneManagement:
     def test_add_milestone_success(self):
         """Test successful milestone addition."""
         milestone_data = {
-            "title": "Phase 1 Completion", "description": "Complete initial development phase", "due_date": "2024-06-01T00: 00: 00Z", "value": 25000
+            "title": "Phase 1 Completion", "description": "Complete initial development phase", "due_date": "2024-06-01T00:00:00Z", "value": 25000
         }
 
         self.client.create.return_value = {"success": True, "id": 456}
@@ -270,7 +270,7 @@ class TestMilestoneManagement:
         assert args[0] == "ContractMilestones"
 
         expected_data = {
-            "contractID": 123, "title": "Phase 1 Completion", "description": "Complete initial development phase", "dueDate": "2024-06-01T00: 00: 00Z", "value": 25000, "status": "pending", "progress": 0
+            "contractID": 123, "title": "Phase 1 Completion", "description": "Complete initial development phase", "dueDate": "2024-06-01T00:00:00Z", "value": 25000, "status": "pending", "progress": 0
         }
 
         # Check all fields except createdDate
@@ -278,7 +278,7 @@ class TestMilestoneManagement:
             assert args[1][key] == value
 
         # Check createdDate is close to now
-        created_time = datetime.fromisoformat(args[1]["createdDate"].replace('Z', '+00: 00'))
+        created_time = datetime.fromisoformat(args[1]["createdDate"].replace('Z', '+00:00'))
         now = datetime.now()
         time_diff = abs((created_time.replace(tzinfo = None) - now).total_seconds())
         assert time_diff < 2  # Within 2 seconds
@@ -322,9 +322,9 @@ class TestMilestoneManagement:
         """Test getting upcoming milestones."""
         mock_milestones = [
             {
-                "id": 1, "title": "Phase 1", "dueDate": "2024-03-15T00: 00: 00Z", "status": "pending"
+                "id": 1, "title": "Phase 1", "dueDate": "2024-03-15T00:00:00Z", "status": "pending"
             }, {
-                "id": 2, "title": "Phase 2", "dueDate": "2024-04-01T00: 00: 00Z", "status": "in_progress"
+                "id": 2, "title": "Phase 2", "dueDate": "2024-04-01T00:00:00Z", "status": "in_progress"
             }
         ]
         self.client.query.return_value = mock_milestones
@@ -374,7 +374,7 @@ class TestRenewalManagement:
     def test_schedule_renewal_alert_success(self):
         """Test successful renewal alert scheduling."""
         alert_data = {
-            "alert_date": "2024-05-01T00: 00: 00Z", "alert_type": "email", "recipients": ["manager@company.com", "sales@company.com"], "message": "Contract renewal due in 30 days"
+            "alert_date": "2024-05-01T00:00:00Z", "alert_type": "email", "recipients": ["manager@company.com", "sales@company.com"], "message": "Contract renewal due in 30 days"
         }
 
         self.client.create.return_value = {"success": True, "id": 789}
@@ -389,7 +389,7 @@ class TestRenewalManagement:
         assert args[0] == "ContractRenewalAlerts"
 
         expected_data = {
-            "contractID": 123, "alertDate": "2024-05-01T00: 00: 00Z", "alertType": "email", "recipients": ["manager@company.com", "sales@company.com"], "status": "scheduled", "message": "Contract renewal due in 30 days"
+            "contractID": 123, "alertDate": "2024-05-01T00:00:00Z", "alertType": "email", "recipients": ["manager@company.com", "sales@company.com"], "status": "scheduled", "message": "Contract renewal due in 30 days"
         }
 
         # Check all fields except createdDate
@@ -397,7 +397,7 @@ class TestRenewalManagement:
             assert args[1][key] == value
 
         # Check createdDate is close to now
-        created_time = datetime.fromisoformat(args[1]["createdDate"].replace('Z', '+00: 00'))
+        created_time = datetime.fromisoformat(args[1]["createdDate"].replace('Z', '+00:00'))
         now = datetime.now()
         time_diff = abs((created_time.replace(tzinfo = None) - now).total_seconds())
         assert time_diff < 2  # Within 2 seconds
@@ -426,7 +426,7 @@ class TestRenewalManagement:
     def test_renew_contract_success(self):
         """Test successful contract renewal."""
         original_contract = {
-            "id": 123, "ContractName": "Original Contract", "AccountID": 456, "ContractType": ContractTypes.RECURRING_SERVICE, "EndDate": "2024-03-31T23: 59: 59Z", "ContractValue": 50000
+            "id": 123, "ContractName": "Original Contract", "AccountID": 456, "ContractType": ContractTypes.RECURRING_SERVICE, "EndDate": "2024-03-31T23:59:59Z", "ContractValue": 50000
         }
         self.contracts.get = MagicMock(return_value = original_contract)
         self.contracts.create = MagicMock(return_value = {"success": True, "id": 789})
@@ -488,7 +488,7 @@ class TestUsageTracking:
     def test_track_usage_success(self):
         """Test successful usage tracking."""
         usage_data = {
-            "usage_type": "hours", "amount": 40, "period": "week", "date": "2024-01-15T00: 00: 00Z", "unit_cost": 100, "billable": True
+            "usage_type": "hours", "amount": 40, "period": "week", "date": "2024-01-15T00:00:00Z", "unit_cost": 100, "billable": True
         }
 
         self.client.create.return_value = {"success": True, "id": 456}
@@ -503,7 +503,7 @@ class TestUsageTracking:
         assert args[0] == "ContractUsageRecords"
 
         expected_data = {
-            "contractID": 123, "usageType": "hours", "amount": 40, "period": "week", "usageDate": "2024-01-15T00: 00: 00Z", "billable": True, "unit_cost": 100
+            "contractID": 123, "usageType": "hours", "amount": 40, "period": "week", "usageDate": "2024-01-15T00:00:00Z", "billable": True, "unit_cost": 100
         }
 
         # Check all fields except recordedDate
@@ -511,7 +511,7 @@ class TestUsageTracking:
             assert args[1][key] == value
 
         # Check recordedDate is close to now
-        recorded_time = datetime.fromisoformat(args[1]["recordedDate"].replace('Z', '+00: 00'))
+        recorded_time = datetime.fromisoformat(args[1]["recordedDate"].replace('Z', '+00:00'))
         now = datetime.now()
         time_diff = abs((recorded_time.replace(tzinfo = None) - now).total_seconds())
         assert time_diff < 2  # Within 2 seconds
@@ -554,9 +554,9 @@ class TestUsageTracking:
         """Test usage report generation."""
         mock_records = [
             {
-                "usageType": "hours", "amount": 40, "unitCost": 100, "billable": True, "usageDate": "2024-01-01T00: 00: 00Z"
+                "usageType": "hours", "amount": 40, "unitCost": 100, "billable": True, "usageDate": "2024-01-01T00:00:00Z"
             }, {
-                "usageType": "hours", "amount": 30, "unitCost": 100, "billable": False, "usageDate": "2024-01-15T00: 00: 00Z"
+                "usageType": "hours", "amount": 30, "unitCost": 100, "billable": False, "usageDate": "2024-01-15T00:00:00Z"
             }
         ]
         self.client.query.return_value = mock_records
@@ -605,7 +605,7 @@ class TestContractModifications:
         self.contracts.get = MagicMock(return_value = mock_contract)
 
         amendment_data = {
-            "amendment_type": "value_change", "description": "Increase contract value due to scope expansion", "effective_date": "2024-03-01T00: 00: 00Z", "value_change": 75000
+            "amendment_type": "value_change", "description": "Increase contract value due to scope expansion", "effective_date": "2024-03-01T00:00:00Z", "value_change": 75000
         }
 
         self.client.create.return_value = {"success": True, "id": 456}
@@ -620,7 +620,7 @@ class TestContractModifications:
         assert args[0] == "ContractAmendments"
 
         expected_data = {
-            "contractID": 123, "amendmentType": "value_change", "description": "Increase contract value due to scope expansion", "effectiveDate": "2024-03-01T00: 00: 00Z", "status": "pending", "createdBy": "system", "approvalRequired": True, "value_change": 75000
+            "contractID": 123, "amendmentType": "value_change", "description": "Increase contract value due to scope expansion", "effectiveDate": "2024-03-01T00:00:00Z", "status": "pending", "createdBy": "system", "approvalRequired": True, "value_change": 75000
         }
 
         # Check all fields except createdDate
@@ -628,7 +628,7 @@ class TestContractModifications:
             assert args[1][key] == value
 
         # Check createdDate is close to now
-        created_time = datetime.fromisoformat(args[1]["createdDate"].replace('Z', '+00: 00'))
+        created_time = datetime.fromisoformat(args[1]["createdDate"].replace('Z', '+00:00'))
         now = datetime.now()
         time_diff = abs((created_time.replace(tzinfo = None) - now).total_seconds())
         assert time_diff < 2  # Within 2 seconds
@@ -661,14 +661,14 @@ class TestContractModifications:
     def test_get_contract_history(self):
         """Test getting complete contract history."""
         mock_contract = {
-            "id": 123, "ContractName": "Test Contract", "CreateDate": "2023-01-01T00: 00: 00Z", "Status": ContractStatuses.ACTIVE, "ContractValue": 50000
+            "id": 123, "ContractName": "Test Contract", "CreateDate": "2023-01-01T00:00:00Z", "Status": ContractStatuses.ACTIVE, "ContractValue": 50000
         }
         self.contracts.get = MagicMock(return_value = mock_contract)
 
         # Mock amendments
         mock_amendments = [
             {
-                "effectiveDate": "2023-06-01T00: 00: 00Z", "amendmentType": "value_change", "description": "Value increase", "status": "approved", "valueChange": 60000
+                "effectiveDate": "2023-06-01T00:00:00Z", "amendmentType": "value_change", "description": "Value increase", "status": "approved", "valueChange": 60000
             }
         ]
         self.client.query.return_value = mock_amendments
@@ -676,7 +676,7 @@ class TestContractModifications:
         # Mock renewals
         mock_renewals = [
             {
-                "id": 789, "ContractName": "Test Contract - Renewal 2024", "RenewalDate": "2024-01-01T00: 00: 00Z", "ContractValue": 65000
+                "id": 789, "ContractName": "Test Contract - Renewal 2024", "RenewalDate": "2024-01-01T00:00:00Z", "ContractValue": 65000
             }
         ]
         self.contracts.query = MagicMock(return_value = mock_renewals)
@@ -696,9 +696,9 @@ class TestContractModifications:
         """Test amendment analytics generation."""
         mock_amendments = [
             {
-                "amendmentType": "value_change", "status": "approved", "createdDate": "2024-01-15T00: 00: 00Z", "approvedDate": "2024-01-20T00: 00: 00Z", "valueChange": 60000, "originalValue": 50000
+                "amendmentType": "value_change", "status": "approved", "createdDate": "2024-01-15T00:00:00Z", "approvedDate": "2024-01-20T00:00:00Z", "valueChange": 60000, "originalValue": 50000
             }, {
-                "amendmentType": "term_extension", "status": "pending", "createdDate": "2024-02-01T00: 00: 00Z"
+                "amendmentType": "term_extension", "status": "pending", "createdDate": "2024-02-01T00:00:00Z"
             }
         ]
         self.client.query.return_value = mock_amendments
@@ -726,7 +726,7 @@ class TestValidationAndHelpers:
     def test_validate_contract_data_valid(self):
         """Test validation with valid contract data."""
         valid_data = {
-            "ContractName": "Test Contract", "AccountID": 123, "StartDate": "2024-01-01T00: 00: 00Z", "EndDate": "2024-12-31T23: 59: 59Z", "ContractValue": 50000, "ContractType": ContractTypes.RECURRING_SERVICE, "Status": ContractStatuses.ACTIVE
+            "ContractName": "Test Contract", "AccountID": 123, "StartDate": "2024-01-01T00:00:00Z", "EndDate": "2024-12-31T23:59:59Z", "ContractValue": 50000, "ContractType": ContractTypes.RECURRING_SERVICE, "Status": ContractStatuses.ACTIVE
         }
 
         result = self.contracts.validate_contract_data(valid_data)
@@ -751,7 +751,7 @@ class TestValidationAndHelpers:
     def test_validate_contract_data_invalid_dates(self):
         """Test validation with invalid date range."""
         invalid_data = {
-            "ContractName": "Test Contract", "AccountID": 123, "StartDate": "2024-06-01T00: 00: 00Z", "EndDate": "2024-01-01T00: 00: 00Z"  # End before start
+            "ContractName": "Test Contract", "AccountID": 123, "StartDate": "2024-06-01T00:00:00Z", "EndDate": "2024-01-01T00:00:00Z"  # End before start
         }
 
         result = self.contracts.validate_contract_data(invalid_data)
