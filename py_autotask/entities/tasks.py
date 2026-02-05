@@ -51,7 +51,7 @@ class TaskConstants:
     # Status mapping
     STATUS_NAMES = {
         STATUS_NEW: "new",
-        STATUS_IN_PROGRESS: "in_progress", 
+        STATUS_IN_PROGRESS: "in_progress",
         STATUS_WAITING: "waiting",
         STATUS_CANCELLED: "cancelled",
         STATUS_COMPLETE: "complete",
@@ -413,7 +413,11 @@ class TasksEntity(BaseEntity):
         elif percent_complete > TaskConstants.MIN_PERCENT_COMPLETE:
             # Mark as in progress if not already
             task = self.get(task_id)
-            if task and task.get("status", TaskConstants.STATUS_NEW) == TaskConstants.STATUS_NEW:
+            if (
+                task
+                and task.get("status", TaskConstants.STATUS_NEW)
+                == TaskConstants.STATUS_NEW
+            ):
                 update_data["status"] = TaskConstants.STATUS_IN_PROGRESS
                 update_data["actualStartDate"] = datetime.now().isoformat()
 

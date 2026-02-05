@@ -64,13 +64,14 @@ class TestProjectsEntity:
 
     # Basic CRUD Operations Tests
 
-    def test_create_project_basic(self, projects_entity, mock_client, sample_create_response):
+    def test_create_project_basic(
+        self, projects_entity, mock_client, sample_create_response
+    ):
         """Test basic project creation with required fields."""
         mock_client.create_entity.return_value = sample_create_response
 
         result = projects_entity.create_project(
-            project_name="Test Project",
-            account_id=67890
+            project_name="Test Project", account_id=67890
         )
 
         assert result == sample_create_response
@@ -84,7 +85,9 @@ class TestProjectsEntity:
         assert project_data["Type"] == 1  # Default Fixed Price
         assert project_data["Status"] == 1  # Default New
 
-    def test_create_project_with_all_fields(self, projects_entity, mock_client, sample_create_response):
+    def test_create_project_with_all_fields(
+        self, projects_entity, mock_client, sample_create_response
+    ):
         """Test project creation with all optional fields."""
         mock_client.create_entity.return_value = sample_create_response
 
@@ -96,7 +99,7 @@ class TestProjectsEntity:
             start_date="2023-01-01T00:00:00Z",
             end_date="2023-12-31T00:00:00Z",
             description="A comprehensive test project",
-            CustomField1="Custom Value"
+            CustomField1="Custom Value",
         )
 
         assert result == sample_create_response
@@ -111,14 +114,16 @@ class TestProjectsEntity:
         assert project_data["Description"] == "A comprehensive test project"
         assert project_data["CustomField1"] == "Custom Value"
 
-    def test_create_project_without_optional_dates(self, projects_entity, mock_client, sample_create_response):
+    def test_create_project_without_optional_dates(
+        self, projects_entity, mock_client, sample_create_response
+    ):
         """Test project creation without start and end dates."""
         mock_client.create_entity.return_value = sample_create_response
 
         projects_entity.create_project(
             project_name="Test Project",
             account_id=67890,
-            description="Test without dates"
+            description="Test without dates",
         )
 
         call_args = mock_client.create_entity.call_args
@@ -129,7 +134,9 @@ class TestProjectsEntity:
 
     # Project Querying and Filtering Tests
 
-    def test_get_projects_by_account(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_account(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by account ID."""
         mock_client.query.return_value = sample_query_response
 
@@ -145,7 +152,9 @@ class TestProjectsEntity:
         assert filters[0].op == "eq"
         assert filters[0].value == 67890
 
-    def test_get_projects_by_account_with_status_filter(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_account_with_status_filter(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by account with status filtering."""
         mock_client.query.return_value = sample_query_response
 
@@ -162,7 +171,9 @@ class TestProjectsEntity:
         assert filters[1].op == "in"
         assert filters[1].value == [1, 2, 3, 4]  # Active statuses
 
-    def test_get_projects_by_account_with_limit(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_account_with_limit(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by account with limit."""
         mock_client.query.return_value = sample_query_response
 
@@ -172,14 +183,19 @@ class TestProjectsEntity:
         query_request = call_args[0][1]
         assert query_request.max_records == 10
 
-    @pytest.mark.parametrize("status_filter,expected_statuses", [
-        ("completed", [5]),
-        ("new", [1]),
-        ("in_progress", [2]),
-        ("on_hold", [3]),
-        ("active", [1, 2, 3, 4]),
-    ])
-    def test_status_filter_mapping(self, projects_entity, mock_client, status_filter, expected_statuses):
+    @pytest.mark.parametrize(
+        "status_filter,expected_statuses",
+        [
+            ("completed", [5]),
+            ("new", [1]),
+            ("in_progress", [2]),
+            ("on_hold", [3]),
+            ("active", [1, 2, 3, 4]),
+        ],
+    )
+    def test_status_filter_mapping(
+        self, projects_entity, mock_client, status_filter, expected_statuses
+    ):
         """Test various status filter mappings."""
         mock_client.query.return_value = Mock()
         mock_client.query.return_value.items = []
@@ -191,7 +207,7 @@ class TestProjectsEntity:
         filters = query_request.filter
         status_filter_obj = next((f for f in filters if f.field == "Status"), None)
         assert status_filter_obj is not None
-        
+
         if len(expected_statuses) == 1:
             assert status_filter_obj.op == "eq"
             assert status_filter_obj.value == expected_statuses[0]
@@ -199,7 +215,9 @@ class TestProjectsEntity:
             assert status_filter_obj.op == "in"
             assert status_filter_obj.value == expected_statuses
 
-    def test_get_projects_by_manager(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_manager(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by manager resource ID."""
         mock_client.query.return_value = sample_query_response
 
@@ -216,7 +234,9 @@ class TestProjectsEntity:
         assert filters[1].op == "ne"
         assert filters[1].value == 5  # Exclude completed
 
-    def test_get_projects_by_manager_include_completed(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_manager_include_completed(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by manager including completed projects."""
         mock_client.query.return_value = sample_query_response
 
@@ -229,7 +249,9 @@ class TestProjectsEntity:
         assert filters[0].field == "ProjectManagerResourceID"
         assert filters[0].value == 111
 
-    def test_get_projects_by_status(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_status(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by specific status."""
         mock_client.query.return_value = sample_query_response
 
@@ -244,7 +266,9 @@ class TestProjectsEntity:
         assert filters[0].op == "eq"
         assert filters[0].value == 2
 
-    def test_get_projects_by_status_with_account_filter(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_status_with_account_filter(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by status with account filter."""
         mock_client.query.return_value = sample_query_response
 
@@ -259,7 +283,9 @@ class TestProjectsEntity:
         assert filters[1].field == "AccountID"
         assert filters[1].value == 67890
 
-    def test_get_active_projects(self, projects_entity, mock_client, sample_query_response):
+    def test_get_active_projects(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting active projects."""
         mock_client.query.return_value = sample_query_response
 
@@ -274,7 +300,9 @@ class TestProjectsEntity:
         assert filters[0].op == "notIn"
         assert filters[0].value == [3, 5, 7]  # Exclude On Hold, Complete, Cancelled
 
-    def test_get_active_projects_with_account_filter(self, projects_entity, mock_client, sample_query_response):
+    def test_get_active_projects_with_account_filter(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting active projects for specific account."""
         mock_client.query.return_value = sample_query_response
 
@@ -290,7 +318,9 @@ class TestProjectsEntity:
         assert filters[1].field == "AccountID"
         assert filters[1].value == 67890
 
-    def test_get_overdue_projects(self, projects_entity, mock_client, sample_query_response):
+    def test_get_overdue_projects(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting overdue projects."""
         mock_client.query.return_value = sample_query_response
 
@@ -301,19 +331,21 @@ class TestProjectsEntity:
         query_request = call_args[0][1]
         filters = query_request.filter
         assert len(filters) == 2
-        
+
         # Check for end date filter
         end_date_filter = next((f for f in filters if f.field == "EndDate"), None)
         assert end_date_filter is not None
         assert end_date_filter.op == "lt"
-        
+
         # Check for status filter (not completed)
         status_filter = next((f for f in filters if f.field == "Status"), None)
         assert status_filter is not None
         assert status_filter.op == "ne"
         assert status_filter.value == 5  # Not complete
 
-    def test_get_overdue_projects_with_account_filter(self, projects_entity, mock_client, sample_query_response):
+    def test_get_overdue_projects_with_account_filter(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting overdue projects for specific account."""
         mock_client.query.return_value = sample_query_response
 
@@ -326,7 +358,7 @@ class TestProjectsEntity:
         end_date_filter = next((f for f in filters if f.field == "EndDate"), None)
         status_filter = next((f for f in filters if f.field == "Status"), None)
         account_filter = next((f for f in filters if f.field == "AccountID"), None)
-        
+
         assert end_date_filter is not None
         assert status_filter is not None
         assert account_filter is not None
@@ -334,7 +366,9 @@ class TestProjectsEntity:
 
     # Project Status Management Tests
 
-    def test_update_project_status(self, projects_entity, mock_client, sample_project_data):
+    def test_update_project_status(
+        self, projects_entity, mock_client, sample_project_data
+    ):
         """Test updating project status."""
         mock_client.update.return_value = sample_project_data
 
@@ -348,8 +382,10 @@ class TestProjectsEntity:
         assert entity_data["id"] == 12345
         assert entity_data["Status"] == 2
 
-    @patch('datetime.datetime')
-    def test_complete_project_basic(self, mock_datetime, projects_entity, mock_client, sample_project_data):
+    @patch("datetime.datetime")
+    def test_complete_project_basic(
+        self, mock_datetime, projects_entity, mock_client, sample_project_data
+    ):
         """Test completing a project without completion note."""
         mock_now = Mock()
         mock_now.isoformat.return_value = "2023-06-01T00:00:00Z"
@@ -367,8 +403,10 @@ class TestProjectsEntity:
         assert entity_data["EndDate"] == "2023-06-01T00:00:00Z"
         assert "StatusDetail" not in entity_data
 
-    @patch('datetime.datetime')
-    def test_complete_project_with_note(self, mock_datetime, projects_entity, mock_client, sample_project_data):
+    @patch("datetime.datetime")
+    def test_complete_project_with_note(
+        self, mock_datetime, projects_entity, mock_client, sample_project_data
+    ):
         """Test completing a project with completion note."""
         mock_now = Mock()
         mock_now.isoformat.return_value = "2023-06-01T00:00:00Z"
@@ -376,13 +414,17 @@ class TestProjectsEntity:
 
         mock_client.update.return_value = sample_project_data
 
-        result = projects_entity.complete_project(12345, completion_note="Project completed successfully")
+        result = projects_entity.complete_project(
+            12345, completion_note="Project completed successfully"
+        )
 
         call_args = mock_client.update.call_args
         entity_data = call_args[0][1]
         assert entity_data["StatusDetail"] == "Project completed successfully"
 
-    def test_assign_project_manager(self, projects_entity, mock_client, sample_project_data):
+    def test_assign_project_manager(
+        self, projects_entity, mock_client, sample_project_data
+    ):
         """Test assigning a project manager to a project."""
         mock_client.update.return_value = sample_project_data
 
@@ -400,7 +442,7 @@ class TestProjectsEntity:
         """Test getting tasks for a project."""
         mock_tasks = [
             {"id": 1001, "ProjectID": 12345, "Title": "Task 1"},
-            {"id": 1002, "ProjectID": 12345, "Title": "Task 2"}
+            {"id": 1002, "ProjectID": 12345, "Title": "Task 2"},
         ]
         mock_client.query.return_value = mock_tasks
 
@@ -420,7 +462,7 @@ class TestProjectsEntity:
         """Test getting time entries for a project."""
         mock_time_entries = [
             {"id": 2001, "ProjectID": 12345, "HoursWorked": 8.0},
-            {"id": 2002, "ProjectID": 12345, "HoursWorked": 6.5}
+            {"id": 2002, "ProjectID": 12345, "HoursWorked": 6.5},
         ]
         mock_client.query.return_value = mock_time_entries
 
@@ -440,7 +482,7 @@ class TestProjectsEntity:
         """Test getting tickets for a project."""
         mock_tickets = [
             {"id": 3001, "ProjectID": 12345, "Title": "Ticket 1", "Status": 1},
-            {"id": 3002, "ProjectID": 12345, "Title": "Ticket 2", "Status": 8}
+            {"id": 3002, "ProjectID": 12345, "Title": "Ticket 2", "Status": 8},
         ]
         mock_client.query.return_value = mock_tickets
 
@@ -473,12 +515,17 @@ class TestProjectsEntity:
         assert filters[1].op == "in"
         assert filters[1].value == [1, 8, 9, 10, 11]  # Open statuses
 
-    @pytest.mark.parametrize("status_filter,expected_statuses", [
-        ("open", [1, 8, 9, 10, 11]),
-        ("closed", [5]),
-        ("new", [1]),
-    ])
-    def test_get_project_tickets_status_filter_mapping(self, projects_entity, mock_client, status_filter, expected_statuses):
+    @pytest.mark.parametrize(
+        "status_filter,expected_statuses",
+        [
+            ("open", [1, 8, 9, 10, 11]),
+            ("closed", [5]),
+            ("new", [1]),
+        ],
+    )
+    def test_get_project_tickets_status_filter_mapping(
+        self, projects_entity, mock_client, status_filter, expected_statuses
+    ):
         """Test various ticket status filter mappings."""
         mock_client.query.return_value = []
 
@@ -488,7 +535,7 @@ class TestProjectsEntity:
         filters = call_args[1]["filters"]
         status_filter_obj = next((f for f in filters if f.field == "Status"), None)
         assert status_filter_obj is not None
-        
+
         if len(expected_statuses) == 1:
             assert status_filter_obj.op == "eq"
             assert status_filter_obj.value == expected_statuses[0]
@@ -513,11 +560,11 @@ class TestProjectsEntity:
         # This test depends on the actual implementation handling validation
         # The current implementation doesn't validate required fields, so we test
         # that it creates the expected data structure
-        with patch.object(projects_entity, 'create') as mock_create:
+        with patch.object(projects_entity, "create") as mock_create:
             mock_create.return_value = Mock()
-            
+
             projects_entity.create_project("Test", 123)
-            
+
             # Verify that create was called with proper data
             mock_create.assert_called_once()
             call_args = mock_create.call_args
@@ -525,11 +572,15 @@ class TestProjectsEntity:
             assert "ProjectName" in project_data
             assert "AccountID" in project_data
 
-    def test_get_projects_invalid_status_filter(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_invalid_status_filter(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects with invalid status filter (should be ignored)."""
         mock_client.query.return_value = sample_query_response
 
-        result = projects_entity.get_projects_by_account(67890, status_filter="invalid_status")
+        result = projects_entity.get_projects_by_account(
+            67890, status_filter="invalid_status"
+        )
 
         # Should ignore invalid status filter and only apply AccountID filter
         call_args = mock_client.query.call_args
@@ -538,7 +589,9 @@ class TestProjectsEntity:
         assert len(filters) == 1  # Only AccountID filter
         assert filters[0].field == "AccountID"
 
-    def test_get_projects_by_manager_zero_id(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_by_manager_zero_id(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects by manager with zero ID."""
         mock_client.query.return_value = sample_query_response
 
@@ -549,7 +602,9 @@ class TestProjectsEntity:
         filters = query_request.filter
         assert filters[0].value == 0
 
-    def test_update_project_status_negative_status(self, projects_entity, mock_client, sample_project_data):
+    def test_update_project_status_negative_status(
+        self, projects_entity, mock_client, sample_project_data
+    ):
         """Test updating project status with negative status ID."""
         mock_client.update.return_value = sample_project_data
 
@@ -561,7 +616,9 @@ class TestProjectsEntity:
 
     # Performance and Optimization Tests
 
-    def test_get_projects_with_large_limit(self, projects_entity, mock_client, sample_query_response):
+    def test_get_projects_with_large_limit(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test getting projects with large limit value."""
         mock_client.query.return_value = sample_query_response
 
@@ -571,16 +628,18 @@ class TestProjectsEntity:
         query_request = call_args[0][1]
         assert query_request.max_records == 10000
 
-    def test_multiple_filter_combinations(self, projects_entity, mock_client, sample_query_response):
+    def test_multiple_filter_combinations(
+        self, projects_entity, mock_client, sample_query_response
+    ):
         """Test complex filter combinations work correctly."""
         mock_client.query.return_value = sample_query_response
 
         # Test get_overdue_projects with account filter
-        with patch('datetime.datetime') as mock_datetime:
+        with patch("datetime.datetime") as mock_datetime:
             mock_now = Mock()
             mock_now.isoformat.return_value = "2023-06-01T00:00:00Z"
             mock_datetime.now.return_value = mock_now
-            
+
             projects_entity.get_overdue_projects(account_id=67890, limit=50)
 
             call_args = mock_client.query.call_args
@@ -591,7 +650,9 @@ class TestProjectsEntity:
 
     # Integration with BaseEntity Methods
 
-    def test_inherited_get_method(self, projects_entity, mock_client, sample_project_data):
+    def test_inherited_get_method(
+        self, projects_entity, mock_client, sample_project_data
+    ):
         """Test that inherited get method works correctly."""
         mock_client.get.return_value = sample_project_data
 
@@ -600,7 +661,9 @@ class TestProjectsEntity:
         assert result == sample_project_data
         mock_client.get.assert_called_once_with("Projects", 12345)
 
-    def test_inherited_update_by_id_method(self, projects_entity, mock_client, sample_project_data):
+    def test_inherited_update_by_id_method(
+        self, projects_entity, mock_client, sample_project_data
+    ):
         """Test that inherited update_by_id method works correctly."""
         mock_client.update.return_value = sample_project_data
 
@@ -626,7 +689,9 @@ class TestProjectsEntity:
         """Test that inherited count method works correctly."""
         mock_client.count.return_value = 42
 
-        result = projects_entity.count([{"field": "AccountID", "op": "eq", "value": 67890}])
+        result = projects_entity.count(
+            [{"field": "AccountID", "op": "eq", "value": 67890}]
+        )
 
         assert result == 42
         mock_client.count.assert_called_once()
@@ -668,7 +733,9 @@ class TestProjectsEntity:
 
         assert result == empty_response
 
-    def test_none_values_in_optional_fields(self, projects_entity, mock_client, sample_create_response):
+    def test_none_values_in_optional_fields(
+        self, projects_entity, mock_client, sample_create_response
+    ):
         """Test creating project with None values for optional fields."""
         mock_client.create_entity.return_value = sample_create_response
 
@@ -677,7 +744,7 @@ class TestProjectsEntity:
             account_id=67890,
             start_date=None,
             end_date=None,
-            description=None
+            description=None,
         )
 
         call_args = mock_client.create_entity.call_args
@@ -686,30 +753,38 @@ class TestProjectsEntity:
         assert "EndDate" not in project_data
         assert "Description" not in project_data
 
-    @pytest.mark.parametrize("field_name,field_value", [
-        ("start_date", ""),
-        ("end_date", ""),
-        ("description", ""),
-    ])
-    def test_empty_string_values_in_optional_fields(self, projects_entity, mock_client, sample_create_response, field_name, field_value):
+    @pytest.mark.parametrize(
+        "field_name,field_value",
+        [
+            ("start_date", ""),
+            ("end_date", ""),
+            ("description", ""),
+        ],
+    )
+    def test_empty_string_values_in_optional_fields(
+        self,
+        projects_entity,
+        mock_client,
+        sample_create_response,
+        field_name,
+        field_value,
+    ):
         """Test creating project with empty string values for optional fields."""
         mock_client.create_entity.return_value = sample_create_response
 
         kwargs = {field_name: field_value}
         projects_entity.create_project(
-            project_name="Test Project",
-            account_id=67890,
-            **kwargs
+            project_name="Test Project", account_id=67890, **kwargs
         )
 
         call_args = mock_client.create_entity.call_args
         project_data = call_args[0][1]
-        
+
         # Empty strings should not be included in the request
         field_mapping = {
             "start_date": "StartDate",
-            "end_date": "EndDate", 
-            "description": "Description"
+            "end_date": "EndDate",
+            "description": "Description",
         }
         mapped_field = field_mapping[field_name]
         assert mapped_field not in project_data

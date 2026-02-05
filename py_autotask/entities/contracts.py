@@ -8,7 +8,7 @@ for contract management including billing, service tracking, milestones, renewal
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
-from ..constants import ContractType, ContractStatus, ContractBillingType
+from ..constants import ContractBillingType, ContractStatus, ContractType
 from ..types import ContractData, CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
@@ -1623,9 +1623,7 @@ class ContractsEntity(BaseEntity):
             # By period aggregation
             if usage_date:
                 try:
-                    date_obj = datetime.fromisoformat(
-                        usage_date.replace("Z", "+00:00")
-                    )
+                    date_obj = datetime.fromisoformat(usage_date.replace("Z", "+00:00"))
                     period_key = date_obj.strftime("%Y-%m")
 
                     if period_key not in report["by_period"]:
