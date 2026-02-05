@@ -171,6 +171,7 @@ jobs:
           # Repository must be configured in PyPI with GitHub OIDC
           print-hash: true
           verbose: true
+          skip-existing: true  # Don't fail if version already exists
 
   publish-test-pypi:
     name: Publish to Test PyPI
