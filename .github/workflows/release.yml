@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   id-token: write  # For trusted publishing to PyPI
+  issues: write    # For creating post-release issues
 
 jobs:
   test:
