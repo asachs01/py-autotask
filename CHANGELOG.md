@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-02-05
+
+### Added
+- **Comprehensive Projects Entity** - Full PSA (Professional Services Automation) functionality
+  - Template-based project creation with `create_project_with_template()`
+  - Project cloning with `clone_project()` for repeatable workflows
+  - Archive/restore functionality with `archive_project()` and `restore_project()`
+  - Resource management with skill-based matching via `assign_resources_to_project()`
+  - Capacity planning with `check_resource_capacity()` and `optimize_resource_allocation()`
+  - Budget creation and cost tracking with `create_project_budget()` and `track_project_costs()`
+  - Profitability analysis with `generate_project_profitability_report()`
+  - Milestone tracking with `create_project_milestones()` and critical path analysis
+  - Gantt chart data generation with `create_project_gantt_data()`
+  - Performance dashboards and portfolio analytics
+
+- **Comprehensive Contracts Entity** - Advanced contract lifecycle management
+  - Billing/invoicing integration with `generate_invoice()` and `get_billing_history()`
+  - Contract value analysis with `calculate_contract_value()`
+  - SLA tracking with `track_service_delivery()` and `check_sla_compliance()`
+  - Milestone management with `add_milestone()` and `update_milestone_progress()`
+  - Renewal management with `schedule_renewal_alert()` and `renew_contract()`
+  - Usage tracking with `track_usage()` and `check_usage_limits()`
+  - Contract modifications with `add_amendment()` and `approve_amendment()`
+  - Comprehensive validation with `validate_contract_data()` and health checks
+  - New constants: `ContractTypes`, `ContractStatuses`, `BillingMethods`
+
+- **Query Helpers Module** - Type-safe query building utilities (`py_autotask/entities/query_helpers.py`)
+  - `build_equality_filter()` - Simple equality comparisons
+  - `build_active_filter()` - Standard active/inactive filters
+  - `build_null_filter()` - Null/not null checks
+  - `build_gte_filter()` / `build_lte_filter()` - Comparison operations
+  - `build_search_filters()` - Contains operations for search
+  - `build_in_filter()` - Multiple value matching
+  - `build_date_range_filters()` - Date range queries
+  - `combine_filters()` - Filter combination with validation
+  - `convert_string_filter_to_query_filter()` - Legacy conversion
+
+### Changed
+- **Query Pattern Standardization** - Refactored 188 entity files to use type-safe QueryFilter objects
+  - Replaced inconsistent string-based filter patterns with centralized helper functions
+  - Improved code maintainability and reduced bugs through type-safe query construction
+  - Better IDE support with proper type hints
+
+### Fixed
+- Fixed malformed ISO datetime strings in contracts entity (`"+00: 00"` → `"+00:00"`)
+- Fixed false positive detection in query pattern validation tests
+
 ## [2.2.0] - 2025-12-09
 
 ### Fixed
