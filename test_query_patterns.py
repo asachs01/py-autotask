@@ -143,18 +143,24 @@ def scan_for_remaining_issues():
         with open(file_path, "r") as f:
             content = f.read()
 
-        # Check for remaining string patterns
-        if 'filter="' in content:
-            issues_found.append(f'{file_path}: Contains filter="..." pattern')
+        # Check for remaining string patterns (exclude false positives like status_filter="...")
+        import re
 
-        if 'filter=f"' in content:
-            issues_found.append(f'{file_path}: Contains filter=f"..." pattern')
+        # Match .query(filter="...) or .query(... filter="...) - the actual problematic pattern
+        if re.search(r'\.query\([^)]*filter=["\']', content):
+            issues_found.append(f'{file_path}: Contains .query(filter="...") pattern')
 
+        # Match .query(filter=f"...) or .query(... filter=f"...)
+        if re.search(r'\.query\([^)]*filter=f["\']', content):
+            issues_found.append(f'{file_path}: Contains .query(filter=f"...") pattern')
+
+        # Match filter=" and ".join( - string concatenation pattern
         if 'filter=" and ".join(' in content:
             issues_found.append(
                 f'{file_path}: Contains filter=" and ".join(...) pattern'
             )
 
+        # Match filter=" or ".join( - string concatenation pattern
         if 'filter=" or ".join(' in content:
             issues_found.append(
                 f'{file_path}: Contains filter=" or ".join(...) pattern'
