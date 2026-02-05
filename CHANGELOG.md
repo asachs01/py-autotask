@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2025-12-09
+
+### Fixed
+- **Critical Bug Fix** - Child entity API endpoints now use correct parent-relative URLs
+  - Fixed TicketNotes to use `/v1.0/Tickets/{ticketId}/Notes` instead of `/v1.0/TicketNotes`
+  - Fixed all 57 child entities to use proper parent-relative URLs for create/update/delete operations
+  - Query operations continue to work with flat endpoints (which is the correct behavior per Autotask API)
+  - Child entities include: TicketNotes, TicketCharges, TicketAttachments, CompanyNotes, ContactNotes,
+    ProjectNotes, TaskNotes, and many more
+
+### Added
+- **Child Entity URL Support** - New infrastructure for parent-relative URL handling
+  - Added `CHILD_ENTITY_MAPPINGS` dictionary mapping 57 child entities to their parent entities
+  - Added `create_child_entity()` method in client for creating child entities
+  - Added `update_child_entity()` method in client for updating child entities
+  - Added `delete_child_entity()` method in client for deleting child entities
+  - BaseEntity now automatically detects child entities and uses correct URL patterns
+  - Parent ID is extracted from entity data (e.g., `ticketID` for TicketNotes)
+
+### Changed
+- **BaseEntity.delete()** - Now requires `parent_id` parameter for child entities
+  - Child entities must provide the parent ID for deletion to construct the correct URL
+  - Non-child entities continue to work without changes
+
+## [2.1.0] - 2025-11-26
+
+### Added
+- **TicketNoteAttachmentsEntity** - New entity for managing ticket note attachments (closes #11)
+  - `create_note_attachment()` - Upload attachments to ticket notes with base64 encoding
+  - `get_note_attachments()` - Retrieve all attachments for a specific ticket note
+  - `get_ticket_note_attachments()` - Get all attachments across all notes for a ticket
+  - `get_attachments_by_type()` - Filter attachments by content type
+  - `get_attachments_by_title()` - Search attachments by title (exact or partial match)
+  - `get_attachments_by_date_range()` - Filter attachments by date range
+  - `get_image_attachments()` - Get only image attachments (image/* content types)
+  - `get_document_attachments()` - Get only document attachments (PDF, Word, Excel, etc.)
+  - `get_attachment_data()` - Download attachment binary data
+  - `update_attachment_title()` - Update attachment title
+  - `bulk_delete_attachments()` - Delete multiple attachments at once
+  - Full integration with EntityManager for `client.entities.ticket_note_attachments` access
+
+### Fixed
+- Fixed isort import ordering in `__init__.py` and `manager.py`
+
+### Removed
+- Removed `test_resources_enhanced.py` which contained tests for non-existent ResourcesEntity methods
+
 ## [1.0.3] - 2025-08-31
 
 ### Fixed

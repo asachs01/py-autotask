@@ -226,6 +226,7 @@ from .ticket_checklist_items import TicketChecklistItemsEntity
 from .ticket_checklist_libraries import TicketChecklistLibrariesEntity
 from .ticket_costs import TicketCostsEntity
 from .ticket_history import TicketHistoryEntity
+from .ticket_note_attachments import TicketNoteAttachmentsEntity
 from .ticket_notes import TicketNotesEntity
 from .ticket_priorities import TicketPrioritiesEntity
 from .ticket_secondary_resources import TicketSecondaryResourcesEntity
@@ -311,6 +312,7 @@ __all__ = [
     "TicketAdditionalContactsEntity",
     "TicketAdditionalConfigurationItemsEntity",
     "TicketAttachmentsEntity",
+    "TicketNoteAttachmentsEntity",
     "TicketChangeRequestApprovalsEntity",
     "TicketChecklistItemsEntity",
     "TicketChecklistLibrariesEntity",

@@ -220,6 +220,7 @@ from .ticket_checklist_items import TicketChecklistItemsEntity
 from .ticket_checklist_libraries import TicketChecklistLibrariesEntity
 from .ticket_costs import TicketCostsEntity
 from .ticket_history import TicketHistoryEntity
+from .ticket_note_attachments import TicketNoteAttachmentsEntity
 from .ticket_notes import TicketNotesEntity
 from .ticket_priorities import TicketPrioritiesEntity
 from .ticket_secondary_resources import TicketSecondaryResourcesEntity
@@ -420,6 +421,7 @@ class EntityManager:
         "TicketCosts": TicketCostsEntity,
         "TicketHistory": TicketHistoryEntity,
         "TicketNotes": TicketNotesEntity,
+        "TicketNoteAttachments": TicketNoteAttachmentsEntity,
         "TicketSecondaryResources": TicketSecondaryResourcesEntity,
         # Third batch of additional entities
         "ServiceLevelAgreementResults": ServiceLevelAgreementResultsEntity,
@@ -742,6 +744,11 @@ class EntityManager:
     def ticket_attachments(self) -> TicketAttachmentsEntity:
         """Access to Ticket Attachments entity operations."""
         return self.get_entity("TicketAttachments")
+
+    @property
+    def ticket_note_attachments(self) -> TicketNoteAttachmentsEntity:
+        """Access to Ticket Note Attachments entity operations."""
+        return self.get_entity("TicketNoteAttachments")
 
     @property
     def ticket_change_request_approvals(self) -> TicketChangeRequestApprovalsEntity:

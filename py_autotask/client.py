@@ -126,10 +126,14 @@ class AutotaskClient:
             self._session = self.auth.get_session()
 
             # Configure retry strategy
+            # Note: 500 errors are NOT retried - they indicate server-side issues
+            # that are unlikely to be transient. Retrying them just causes "too many
+            # 500 error responses" from urllib3 and masks the actual error.
+            # Only retry: 429 (rate limit), 502/503/504 (gateway/temporary errors)
             retry_strategy = Retry(
                 total=self.config.max_retries,
                 backoff_factor=self.config.retry_backoff,
-                status_forcelist=[429, 500, 502, 503, 504],
+                status_forcelist=[429, 502, 503, 504],
                 allowed_methods=[
                     "HEAD",
                     "GET",
@@ -380,6 +384,51 @@ class AutotaskClient:
         except requests.exceptions.HTTPError:
             handle_api_error(response)
 
+    def create_child_entity(
+        self,
+        parent_entity: str,
+        parent_id: int,
+        child_suffix: str,
+        entity_data: EntityDict,
+    ) -> CreateResponse:
+        """
+        Create a new child entity using parent-relative URL.
+
+        For child entities in Autotask (like TicketNotes, CompanyNotes, etc.),
+        create/update/delete operations must use the parent URL format:
+        /Parent/{parentId}/ChildSuffix
+
+        Args:
+            parent_entity: Parent entity name (e.g., 'Tickets')
+            parent_id: Parent entity ID
+            child_suffix: Child URL suffix (e.g., 'Notes')
+            entity_data: Entity data to create
+
+        Returns:
+            Create response with new entity ID
+        """
+        url = (
+            f"{self.auth.api_url.rstrip('/')}/v1.0/"
+            f"{parent_entity}/{parent_id}/{child_suffix}"
+        )
+
+        try:
+            response = self.session.post(
+                url, json=entity_data, timeout=self.config.timeout
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            return CreateResponse(**data)
+
+        except requests.exceptions.Timeout:
+            raise AutotaskTimeoutError("Request timed out")
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
+            handle_api_error(response)
+
     def update(self, entity: str, entity_data: EntityDict) -> EntityDict:
         """
         Update an existing entity.
@@ -414,6 +463,51 @@ class AutotaskClient:
         except requests.exceptions.HTTPError:
             handle_api_error(response)
 
+    def update_child_entity(
+        self,
+        parent_entity: str,
+        parent_id: int,
+        child_suffix: str,
+        entity_data: EntityDict,
+    ) -> EntityDict:
+        """
+        Update a child entity using parent-relative URL.
+
+        Args:
+            parent_entity: Parent entity name (e.g., 'Tickets')
+            parent_id: Parent entity ID
+            child_suffix: Child URL suffix (e.g., 'Notes')
+            entity_data: Entity data with ID and fields to update
+
+        Returns:
+            Updated entity data
+        """
+        entity_id = entity_data.get("id")
+        if not entity_id:
+            raise ValueError("Entity data must include 'id' field for updates")
+
+        url = (
+            f"{self.auth.api_url.rstrip('/')}/v1.0/"
+            f"{parent_entity}/{parent_id}/{child_suffix}/{entity_id}"
+        )
+
+        try:
+            response = self.session.patch(
+                url, json=entity_data, timeout=self.config.timeout
+            )
+
+            response.raise_for_status()
+            data = response.json()
+
+            return data.get("item", {})
+
+        except requests.exceptions.Timeout:
+            raise AutotaskTimeoutError("Request timed out")
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
+            handle_api_error(response)
+
     def delete(self, entity: str, entity_id: int) -> bool:
         """
         Delete an entity by ID.
@@ -426,6 +520,42 @@ class AutotaskClient:
             True if successful
         """
         url = f"{self.auth.api_url.rstrip('/')}/v1.0/{entity}/{entity_id}"
+
+        try:
+            response = self.session.delete(url, timeout=self.config.timeout)
+            response.raise_for_status()
+            return True
+
+        except requests.exceptions.Timeout:
+            raise AutotaskTimeoutError("Request timed out")
+        except requests.exceptions.ConnectionError:
+            raise AutotaskConnectionError("Connection error")
+        except requests.exceptions.HTTPError:
+            handle_api_error(response)
+
+    def delete_child_entity(
+        self,
+        parent_entity: str,
+        parent_id: int,
+        child_suffix: str,
+        entity_id: int,
+    ) -> bool:
+        """
+        Delete a child entity using parent-relative URL.
+
+        Args:
+            parent_entity: Parent entity name (e.g., 'Tickets')
+            parent_id: Parent entity ID
+            child_suffix: Child URL suffix (e.g., 'Notes')
+            entity_id: Child entity ID to delete
+
+        Returns:
+            True if successful
+        """
+        url = (
+            f"{self.auth.api_url.rstrip('/')}/v1.0/"
+            f"{parent_entity}/{parent_id}/{child_suffix}/{entity_id}"
+        )
 
         try:
             response = self.session.delete(url, timeout=self.config.timeout)
