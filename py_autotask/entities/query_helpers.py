@@ -6,7 +6,7 @@ and handle common query patterns across all entities.
 """
 
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from ..types import FilterOperation, QueryFilter
 

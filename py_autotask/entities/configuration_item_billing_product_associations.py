@@ -5,6 +5,7 @@ Configuration Item Billing Product Associations entity for Autotask API operatio
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from ..types import QueryFilter
 from .base import BaseEntity
 
 

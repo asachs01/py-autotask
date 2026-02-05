@@ -5,6 +5,7 @@ Configuration Item DNS Records entity for Autotask API operations.
 import re
 from typing import Any, Dict, List, Optional
 
+from ..types import QueryFilter
 from .base import BaseEntity
 
 

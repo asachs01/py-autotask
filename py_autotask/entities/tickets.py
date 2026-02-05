@@ -9,6 +9,7 @@ from ..constants import (
     TicketStatus,
     validate_status_filter,
 )
+from ..types import QueryFilter
 from .base import BaseEntity
 
 

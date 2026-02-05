@@ -12,7 +12,14 @@ import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from ..exceptions import AutotaskValidationError
-from ..types import CreateResponse, EntityDict, EntityList, QueryRequest, QueryResponse
+from ..types import (
+    CreateResponse,
+    EntityDict,
+    EntityList,
+    QueryFilter,
+    QueryRequest,
+    QueryResponse,
+)
 
 if TYPE_CHECKING:
     from ..client import AutotaskClient

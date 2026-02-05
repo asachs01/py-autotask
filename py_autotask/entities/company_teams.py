@@ -4,6 +4,7 @@ CompanyTeams entity for Autotask API operations.
 
 from typing import Any, Dict, List, Optional
 
+from ..types import QueryFilter
 from .base import BaseEntity
 
 
@@ -78,7 +79,7 @@ class CompanyTeamsEntity(BaseEntity):
         filters = [QueryFilter(field="CompanyID", op="eq", value=company_id)]
 
         if active_only:
-            from datetime import datetime
+            pass
 
             # Active assignments: no end date or end date in future
             filters.append(QueryFilter(field="EndDate", op="isNull", value=None))
@@ -106,7 +107,7 @@ class CompanyTeamsEntity(BaseEntity):
         filters = [QueryFilter(field="TeamID", op="eq", value=team_id)]
 
         if active_only:
-            from datetime import datetime
+            pass
 
             filters.append(QueryFilter(field="EndDate", op="isNull", value=None))
 

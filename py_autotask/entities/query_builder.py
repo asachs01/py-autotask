@@ -409,7 +409,6 @@ class QueryBuilder:
 # Add query builder method to BaseEntity
 def add_query_builder_to_base_entity():
     """Add query builder method to BaseEntity class."""
-    from .base import BaseEntity
 
 
 def query_builder(self) -> "QueryBuilder":
@@ -431,6 +430,6 @@ def query_builder(self) -> "QueryBuilder":
 
 
 # Add method to BaseEntity class
-from .base import BaseEntity
+from .base import BaseEntity  # noqa: F811, E402
 
 BaseEntity.query_builder = query_builder

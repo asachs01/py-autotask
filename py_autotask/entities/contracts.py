@@ -6,9 +6,9 @@ for contract management including billing, service tracking, milestones, renewal
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from ..constants import ContractBillingType, ContractStatus, ContractType
+from ..constants import ContractStatus, ContractType
 from ..types import ContractData, CreateResponse, QueryFilter, UpdateResponse
 from .base import BaseEntity
 
@@ -173,30 +173,6 @@ class ContractsEntity(BaseEntity):
             List of active contracts
         """
         filters = [QueryFilter(field="Status", op="eq", value=1)]  # Active
-        return self.query(filters=filters, max_records=limit)
-
-    def get_expiring_contracts(
-        self, days_ahead: int = 30, limit: Optional[int] = None
-    ) -> List[ContractData]:
-        """
-        Get contracts expiring within a specified number of days.
-
-        Args:
-            days_ahead: Number of days to look ahead for expiring contracts
-            limit: Maximum number of contracts to return
-
-        Returns:
-            List of expiring contracts
-        """
-        from datetime import datetime, timedelta
-
-        future_date = (datetime.now() + timedelta(days=days_ahead)).isoformat()
-
-        filters = [
-            QueryFilter(field="EndDate", op="lte", value=future_date),
-            QueryFilter(field="Status", op="eq", value=1),
-        ]
-
         return self.query(filters=filters, max_records=limit)
 
     # ======================================== Billing and Invoicing Integration
@@ -616,7 +592,7 @@ class ContractsEntity(BaseEntity):
         Returns:
             Dictionary with SLA compliance status and violations
         """
-        contract = self._get_contract_or_raise(contract_id)
+        self._get_contract_or_raise(contract_id)
 
         # Get recent service metrics (default evaluation period)
         end_date = datetime.now()

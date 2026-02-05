@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from ..constants import (
-    TaskConstants,
     TaskDependencyType,
     TaskPriority,
     TaskStatus,
@@ -614,21 +613,6 @@ class TasksEntity(BaseEntity):
             "overdue_count": 0,
             "on_time_completion_rate": 0,
         }
-
-        task_data = {
-            "estimated_hours": [],
-            "actual_hours": [],
-            "completion_times": [],
-            "on_time_completions": 0,
-            "completed_tasks": 0,
-        }
-
-        for task in tasks:
-            self._analyze_single_task(task, analytics, task_data)
-
-        self._calculate_analytics_metrics(task_data, analytics)
-
-        return analytics
 
     def _analyze_tasks(
         self, tasks: List[Dict[str, Any]], analytics: Dict[str, Any]

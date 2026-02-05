@@ -11,8 +11,7 @@ This module provides comprehensive PSA functionality for project management incl
 """
 
 from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from ..types import ProjectData, QueryFilter
 from .base import BaseEntity
@@ -1085,7 +1084,7 @@ class ProjectsEntity(BaseEntity):
         # Create milestones
         milestone_map = {}
         for i, milestone_data in enumerate(milestones):
-            milestone_id = f"ms_{project_id}_{i+1}"
+            milestone_id = f"ms_{project_id}_{i + 1}"
             created_milestone = {
                 "milestone_id": milestone_id,
                 "project_id": project_id,
@@ -1201,7 +1200,7 @@ class ProjectsEntity(BaseEntity):
         """
         # Get project tasks and milestones
         tasks = self.get_project_tasks(project_id)
-        milestones = self._get_project_milestones(project_id)
+        self._get_project_milestones(project_id)
 
         cpa_analysis = {
             "project_id": project_id,

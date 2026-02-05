@@ -10,13 +10,10 @@ from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Union
 
+from ..types import QueryFilter
 from .base import BaseEntity
 from .query_helpers import (
-    build_active_filter,
     build_equality_filter,
-    build_in_filter,
-    build_null_filter,
-    build_search_filters,
     combine_filters,
 )
 
@@ -130,9 +127,10 @@ class SubscriptionsEntity(BaseEntity):
         return self.query(
             filters=combine_filters(
                 [
-                    build_equality_filter(
-                        "endDate le {cutoff_date.isoformat()} and status", "Active"
-                    )
+                    QueryFilter(
+                        field="endDate", op="lte", value=cutoff_date.isoformat()
+                    ),
+                    build_equality_filter("status", "Active"),
                 ]
             )
         )

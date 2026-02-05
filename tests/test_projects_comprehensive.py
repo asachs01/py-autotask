@@ -6,14 +6,11 @@ including CRUD operations, status management, resource assignment,
 search and filtering, integration with related entities, and error handling.
 """
 
-from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 
 from py_autotask.entities.projects import ProjectsEntity
-from py_autotask.exceptions import AutotaskValidationError
-from py_autotask.types import QueryFilter
 
 
 class TestProjectsEntity:
@@ -414,7 +411,7 @@ class TestProjectsEntity:
 
         mock_client.update.return_value = sample_project_data
 
-        result = projects_entity.complete_project(
+        projects_entity.complete_project(
             12345, completion_note="Project completed successfully"
         )
 
@@ -578,9 +575,7 @@ class TestProjectsEntity:
         """Test getting projects with invalid status filter (should be ignored)."""
         mock_client.query.return_value = sample_query_response
 
-        result = projects_entity.get_projects_by_account(
-            67890, status_filter="invalid_status"
-        )
+        projects_entity.get_projects_by_account(67890, status_filter="invalid_status")
 
         # Should ignore invalid status filter and only apply AccountID filter
         call_args = mock_client.query.call_args
