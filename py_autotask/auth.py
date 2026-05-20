@@ -178,37 +178,25 @@ class AutotaskAuth:
 
             if response.status_code == 404:
                 logger.error(f"Zone detection endpoint not found at {response.url}")
-                # Try with HTTP as a fallback in case of environment-specific issues
-                # Also try without user parameter as a second fallback
-                if response.url.startswith("https://"):
-                    http_url = response.url.replace("https://", "http://", 1)
-                    logger.warning(f"Trying HTTP fallback: {http_url}")
-                    try:
-                        http_response = session.get(
-                            http_url, timeout=30, allow_redirects=True
-                        )
-                        if http_response.ok:
-                            response = http_response
-                            logger.info("HTTP fallback succeeded")
-                        else:
-                            raise AutotaskConnectionError(
-                                f"Zone detection endpoint not found at either HTTPS or HTTP.\n"
-                                f"HTTPS URL: {response.url} (404)\n"
-                                f"HTTP URL: {http_url} ({http_response.status_code})\n"
-                                "Please ensure you have the latest version of py-autotask."
-                            )
-                    except requests.exceptions.RequestException:
-                        raise AutotaskConnectionError(
-                            f"Zone detection endpoint not found. URL: {response.url}\n"
-                            "This may indicate an API endpoint change. Please ensure you have "
-                            "the latest version of py-autotask or check Autotask API documentation."
-                        )
-                else:
+                # SECURITY: never downgrade to http:// here. The session carries
+                # live API credentials (Secret/UserName/ApiIntegrationCode) and
+                # an unencrypted request would leak them in plaintext.
+                # Zone detection must only ever occur over HTTPS.
+                if not response.url.startswith("https://"):
                     raise AutotaskConnectionError(
-                        f"Zone detection endpoint not found. URL: {response.url}\n"
-                        "This may indicate an API endpoint change. Please ensure you have "
-                        "the latest version of py-autotask or check Autotask API documentation."
+                        "Zone detection refused: endpoint did not resolve over "
+                        f"HTTPS (got {response.url}). Credentialed requests are "
+                        "never sent over an unencrypted connection."
                     )
+                # The HTTPS endpoint returned 404. Fall back to heuristic zone
+                # detection over known HTTPS zone URLs rather than retrying
+                # over an insecure transport.
+                logger.warning(
+                    "HTTPS zone detection endpoint returned 404; "
+                    "using heuristic zone detection over HTTPS."
+                )
+                self._fallback_zone_detection()
+                return
             elif response.status_code == 401:
                 raise AutotaskAuthError(
                     "Authentication failed during zone detection. "
@@ -287,7 +275,9 @@ class AutotaskAuth:
     def _fallback_zone_detection(self) -> None:
         """
         Fallback zone detection using intelligent heuristics.
-        Tries HTTP if HTTPS fails as some environments may have redirect issues.
+
+        Selects a known HTTPS zone URL based on the username's email domain.
+        This never uses an unencrypted (http://) transport.
         """
         logger.info("Using fallback zone detection strategy")
 
