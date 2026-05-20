@@ -4,15 +4,16 @@ Comprehensive tests for enhanced ContractsEntity.
 Tests all PSA features including billing, service tracking, milestones, renewals, usage tracking, amendments, and validation.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from py_autotask.entities.contracts import (
-    ContractsEntity,
-    ContractTypes,
-    ContractStatuses,
     BillingMethods,
+    ContractsEntity,
+    ContractStatuses,
+    ContractTypes,
     ServiceTypes,
 )
 from py_autotask.types import QueryFilter

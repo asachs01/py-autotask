@@ -5,11 +5,12 @@ Tests cover budgeting, cost tracking, resource allocation, milestone management,
 profitability analysis, templates, and Gantt/dependency functionality.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-from py_autotask.entities.projects import ProjectsEntity, ProjectConstants
+import pytest
+
+from py_autotask.entities.projects import ProjectConstants, ProjectsEntity
 from py_autotask.exceptions import AutotaskValidationError
 
 # This module exercises the unmerged "enhance-projects" feature (budgeting, cost
