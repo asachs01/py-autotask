@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Zone detection now only ever occurs over HTTPS; a 404 instead triggers the
   existing heuristic fallback that selects a known HTTPS zone URL.
 
+### Changed
+- **mypy is now an enforceable gate.** The `[tool.mypy]` config was relaxed
+  from an always-failing strict mode (which produced thousands of pre-existing
+  errors) to a sane non-strict baseline. `mypy py_autotask/` now exits 0, so
+  type regressions are detectable. Per-module `ignore_errors` overrides cover
+  the modules with pre-existing tech debt (notably `py_autotask.entities.*`);
+  these should be removed incrementally and strict mode restored over time.
+
 ## [2.3.0] - 2026-02-05
 
 ### Added
