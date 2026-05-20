@@ -704,7 +704,9 @@ class CompaniesEntity(BaseEntity):
         # This would typically involve querying ServiceLevelAgreements
         # and filtering by AccountID
         filters = [QueryFilter(field="AccountID", op="eq", value=company_id)]
-        return _query_items(self.client.query("ServiceLevelAgreements", filters=filters))
+        return _query_items(
+            self.client.query("ServiceLevelAgreements", filters=filters)
+        )
 
     def assign_sla_to_company(
         self,
@@ -1303,9 +1305,7 @@ class CompaniesEntity(BaseEntity):
                     filters.append(QueryFilter(field="Stage", op="in", value=stage_ids))
 
         return _query_items(
-            self.client.query(
-                "Opportunities", filters=filters, max_records=limit
-            )
+            self.client.query("Opportunities", filters=filters, max_records=limit)
         )
 
     # =============================================================================
