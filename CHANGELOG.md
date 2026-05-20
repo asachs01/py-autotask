@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Removed HTTPS→HTTP credential-leak fallback in zone detection** - The zone
+  detection logic in `py_autotask/auth.py` previously, on a 404 response,
+  retried the request over an unencrypted `http://` connection. Because the
+  session carries live API credentials (`Secret`, `UserName`,
+  `ApiIntegrationCode`) as headers, this transmitted credentials in plaintext.
+  Zone detection now only ever occurs over HTTPS; a 404 instead triggers the
+  existing heuristic fallback that selects a known HTTPS zone URL.
+
 ## [2.3.0] - 2026-02-05
 
 ### Added

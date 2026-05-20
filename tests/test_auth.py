@@ -243,32 +243,33 @@ class TestAutotaskAuth:
         assert auth._session is None
 
     @responses.activate
-    def test_zone_detection_404_with_http_fallback(self, sample_credentials):
-        """Test zone detection handles 404 and tries HTTP fallback."""
-        # Build URLs with user parameter
+    def test_zone_detection_404_uses_https_heuristic_no_http_downgrade(
+        self, sample_credentials
+    ):
+        """A 404 must NOT trigger an http:// request; credentials never leak.
+
+        On a 404 from the HTTPS zone endpoint, zone detection falls back to
+        heuristic selection of a known HTTPS zone URL. No request is ever
+        sent over an unencrypted (http://) connection.
+        """
         zone_url_with_user = (
             f"{AutotaskAuth.ZONE_INFO_URL}?user={sample_credentials.username}"
         )
 
-        # HTTPS returns 404
+        # HTTPS returns 404. Note: no http:// URL is registered, so if the
+        # code attempted an HTTP downgrade the request would raise a
+        # ConnectionError from the `responses` mock.
         responses.add(responses.GET, zone_url_with_user, status=404)
-
-        # HTTP fallback succeeds
-        http_url = zone_url_with_user.replace("https://", "http://")
-        responses.add(
-            responses.GET,
-            http_url,
-            json={
-                "url": "https://webservices123.autotask.net/atservicesrest",
-                "dataBaseType": "Production",
-                "ciLevel": "1",
-            },
-            status=200,
-        )
 
         auth = AutotaskAuth(sample_credentials)
 
-        # This should succeed with HTTP fallback
+        # Resolves via heuristic HTTPS fallback, not an HTTP downgrade.
         api_url = auth.api_url
         assert auth._zone_info is not None
-        assert api_url == "https://webservices123.autotask.net/atservicesrest"
+        assert api_url.startswith("https://")
+        assert api_url in AutotaskAuth.ZONE_URLS.values()
+
+        # Exactly one request was made (HTTPS), and it was never http://.
+        assert len(responses.calls) == 1
+        for call in responses.calls:
+            assert call.request.url.startswith("https://")
