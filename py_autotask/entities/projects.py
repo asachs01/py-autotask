@@ -17,6 +17,76 @@ from ..types import ProjectData, QueryFilter
 from .base import BaseEntity
 
 
+class ProjectConstants:
+    """
+    Named constants for Autotask Project entities.
+
+    Provides project type, status, priority, and phase-status codes along
+    with helper class methods that expose human-readable label mappings.
+    """
+
+    # Project type codes
+    PROJECT_TYPE_FIXED_PRICE = 1
+    PROJECT_TYPE_TIME_MATERIALS = 2
+    PROJECT_TYPE_MILESTONE = 3
+    PROJECT_TYPE_BLOCK_HOURS = 4
+    PROJECT_TYPE_RETAINER = 5
+
+    # Project status codes
+    STATUS_NEW = 1
+    STATUS_IN_PROGRESS = 2
+    STATUS_ON_HOLD = 3
+    STATUS_WAITING = 4
+    STATUS_COMPLETE = 5
+    STATUS_CANCELLED = 7
+    STATUS_INACTIVE = 8
+
+    # Project priority codes
+    PRIORITY_LOW = 1
+    PRIORITY_NORMAL = 2
+    PRIORITY_HIGH = 3
+    PRIORITY_CRITICAL = 4
+
+    # Project phase status codes
+    PHASE_STATUS_NEW = 1
+    PHASE_STATUS_IN_PROGRESS = 2
+    PHASE_STATUS_COMPLETE = 3
+
+    @classmethod
+    def get_project_types(cls) -> Dict[int, str]:
+        """Return a mapping of project type codes to display names."""
+        return {
+            cls.PROJECT_TYPE_FIXED_PRICE: "Fixed Price",
+            cls.PROJECT_TYPE_TIME_MATERIALS: "Time & Materials",
+            cls.PROJECT_TYPE_MILESTONE: "Milestone",
+            cls.PROJECT_TYPE_BLOCK_HOURS: "Block Hours",
+            cls.PROJECT_TYPE_RETAINER: "Retainer",
+        }
+
+    @classmethod
+    def get_status_names(cls) -> Dict[int, str]:
+        """Return a mapping of project status codes to display names."""
+        return {
+            cls.STATUS_NEW: "New",
+            cls.STATUS_IN_PROGRESS: "In Progress",
+            cls.STATUS_ON_HOLD: "On Hold",
+            cls.STATUS_WAITING: "Waiting",
+            cls.STATUS_COMPLETE: "Complete",
+            cls.STATUS_CANCELLED: "Cancelled",
+            cls.STATUS_INACTIVE: "Inactive",
+        }
+
+    @classmethod
+    def get_priority_names(cls) -> Dict[int, str]:
+        """Return a mapping of project priority codes to display names."""
+        return {
+            cls.PRIORITY_LOW: "Low",
+            cls.PRIORITY_NORMAL: "Normal",
+            cls.PRIORITY_HIGH: "High",
+            cls.PRIORITY_CRITICAL: "Critical",
+        }
+
+
 class ProjectsEntity(BaseEntity):
     """
     Comprehensive Professional Services Automation (PSA) Projects entity.
