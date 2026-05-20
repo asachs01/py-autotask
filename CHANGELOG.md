@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Zone detection now only ever occurs over HTTPS; a 404 instead triggers the
   existing heuristic fallback that selects a known HTTPS zone URL.
 
+### Added
+- `LICENSE` file (MIT) matching the license declared in `pyproject.toml`.
+- `CONTRIBUTING.md` with development setup and contribution guidelines.
+- `CODE_OF_CONDUCT.md` (Contributor Covenant).
+
 ### Changed
 - **mypy is now an enforceable gate.** The `[tool.mypy]` config was relaxed
   from an always-failing strict mode (which produced thousands of pre-existing
@@ -23,6 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   type regressions are detectable. Per-module `ignore_errors` overrides cover
   the modules with pre-existing tech debt (notably `py_autotask.entities.*`);
   these should be removed incrementally and strict mode restored over time.
+- Moved root-level test files into `tests/` so they run under `pytest`:
+  `test_contracts_enhanced.py`, `test_projects_enhanced.py`,
+  `test_query_functionality.py`, `test_query_patterns.py`.
+- Moved `example_usage.py` into `examples/`.
+
+### Removed
+- Stray one-off refactoring scripts at the repo root:
+  `comprehensive_import_fix.py`, `fix_query_helpers.py`,
+  `fix_unused_imports.py`, `refactoring_validation.py`.
+- `setup.py` — `pyproject.toml` (PEP 621) is the single source of truth for
+  packaging metadata.
 
 ## [2.3.0] - 2026-02-05
 

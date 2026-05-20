@@ -14,6 +14,20 @@ from ..types import CompanyData, QueryFilter
 from .base import BaseEntity
 
 
+def _query_items(result: Any) -> List[Dict[str, Any]]:
+    """
+    Normalize a query result into a list of item dictionaries.
+
+    ``BaseEntity.query`` / ``client.query`` return a ``QueryResponse`` whose
+    ``items`` attribute holds the records. Some callers (and test doubles)
+    provide a plain ``list`` of records directly. This helper accepts either
+    shape so query methods do not raise ``AttributeError`` when handed a list.
+    """
+    if isinstance(result, list):
+        return result
+    return result.items
+
+
 class CompaniesEntity(BaseEntity):
     """
     Comprehensive Companies/Accounts entity for the Autotask API.
@@ -312,7 +326,7 @@ class CompaniesEntity(BaseEntity):
                     QueryFilter(field="CompanyType", op="in", value=company_types)
                 )
 
-        return self.query(filters=filters, max_records=limit).items
+        return _query_items(self.query(filters=filters, max_records=limit))
 
     def get_companies_by_type(
         self,
@@ -338,9 +352,11 @@ class CompaniesEntity(BaseEntity):
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
-        return self.query(
-            filters=filters, include_fields=include_fields, max_records=limit
-        ).items
+        return _query_items(
+            self.query(
+                filters=filters, include_fields=include_fields, max_records=limit
+            )
+        )
 
     def get_customer_companies(
         self,
@@ -378,7 +394,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="TerritoryID", op="eq", value=territory_id)
             )
 
-        return self.query(filters=filters, max_records=limit).items
+        return _query_items(self.query(filters=filters, max_records=limit))
 
     def get_prospect_companies(
         self,
@@ -418,7 +434,7 @@ class CompaniesEntity(BaseEntity):
                 )
             )
 
-        return self.query(filters=filters, max_records=limit).items
+        return _query_items(self.query(filters=filters, max_records=limit))
 
     def get_companies_by_location(
         self,
@@ -466,7 +482,7 @@ class CompaniesEntity(BaseEntity):
         if not filters:
             raise ValueError("At least one location criteria must be provided")
 
-        return self.query(filters=filters, max_records=limit).items
+        return _query_items(self.query(filters=filters, max_records=limit))
 
     # =============================================================================
     # Contact Management
@@ -494,7 +510,7 @@ class CompaniesEntity(BaseEntity):
         if active_only:
             filters.append(QueryFilter(field="Active", op="eq", value=True))
 
-        return self.client.query("Contacts", filters=filters).items
+        return _query_items(self.client.query("Contacts", filters=filters))
 
     def set_primary_contact(
         self,
@@ -531,10 +547,12 @@ class CompaniesEntity(BaseEntity):
         if not primary_contact_id:
             return None
 
-        contacts = self.client.query(
-            "Contacts",
-            filters=[QueryFilter(field="id", op="eq", value=primary_contact_id)],
-        ).items
+        contacts = _query_items(
+            self.client.query(
+                "Contacts",
+                filters=[QueryFilter(field="id", op="eq", value=primary_contact_id)],
+            )
+        )
 
         return contacts[0] if contacts else None
 
@@ -671,7 +689,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="ContractType", op="eq", value=contract_type)
             )
 
-        return self.client.query("Contracts", filters=filters).items
+        return _query_items(self.client.query("Contracts", filters=filters))
 
     def get_company_slas(self, company_id: int) -> List[Dict[str, Any]]:
         """
@@ -686,7 +704,9 @@ class CompaniesEntity(BaseEntity):
         # This would typically involve querying ServiceLevelAgreements
         # and filtering by AccountID
         filters = [QueryFilter(field="AccountID", op="eq", value=company_id)]
-        return self.client.query("ServiceLevelAgreements", filters=filters).items
+        return _query_items(
+            self.client.query("ServiceLevelAgreements", filters=filters)
+        )
 
     def assign_sla_to_company(
         self,
@@ -784,7 +804,7 @@ class CompaniesEntity(BaseEntity):
             List of company locations
         """
         filters = [QueryFilter(field="CompanyID", op="eq", value=company_id)]
-        return self.client.query("CompanyLocations", filters=filters).items
+        return _query_items(self.client.query("CompanyLocations", filters=filters))
 
     def add_company_location(
         self,
@@ -1181,7 +1201,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="CreateDate", op="gte", value=cutoff_date.isoformat())
             )
 
-        return self.client.query("Tickets", filters=filters).items
+        return _query_items(self.client.query("Tickets", filters=filters))
 
     def get_company_projects(
         self,
@@ -1246,7 +1266,7 @@ class CompaniesEntity(BaseEntity):
                 QueryFilter(field="CreateDate", op="gte", value=cutoff_date.isoformat())
             )
 
-        return self.client.query("Projects", filters=filters).items
+        return _query_items(self.client.query("Projects", filters=filters))
 
     def get_company_opportunities(
         self,
@@ -1284,9 +1304,9 @@ class CompaniesEntity(BaseEntity):
                 else:
                     filters.append(QueryFilter(field="Stage", op="in", value=stage_ids))
 
-        return self.client.query(
-            "Opportunities", filters=filters, max_records=limit
-        ).items
+        return _query_items(
+            self.client.query("Opportunities", filters=filters, max_records=limit)
+        )
 
     # =============================================================================
     # Utility and Validation Methods
