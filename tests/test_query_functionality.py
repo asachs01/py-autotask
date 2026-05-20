@@ -8,7 +8,7 @@ work correctly without requiring a live API connection.
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 # Add the project root to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -96,7 +96,7 @@ def test_entity_query_methods():
     accounts.query = Mock(return_value=mock_response["items"])
 
     # Test that methods call query with filters parameter
-    result = accounts.get_customer_accounts(include_inactive=False)
+    accounts.get_customer_accounts(include_inactive=False)
     accounts.query.assert_called_once()
     call_args = accounts.query.call_args
     assert "filters" in call_args.kwargs
@@ -110,7 +110,7 @@ def test_entity_query_methods():
 
     # Call a method that should use the new patterns
     if hasattr(companies, "get_companies_by_type"):
-        result = companies.get_companies_by_type("Customer")
+        companies.get_companies_by_type("Customer")
         companies.query.assert_called_once()
         call_args = companies.query.call_args
         assert "filters" in call_args.kwargs
@@ -125,7 +125,7 @@ def test_backwards_compatibility():
 
     # Test that we can still import all entities
     try:
-        from py_autotask.entities import (
+        from py_autotask.entities import (  # noqa: F401 - import smoke test
             AccountsEntity,
             CompaniesEntity,
             ProjectsEntity,

@@ -5,8 +5,7 @@ Tests cover budgeting, cost tracking, resource allocation, milestone management,
 profitability analysis, templates, and Gantt/dependency functionality.
 """
 
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -435,8 +434,8 @@ class TestMilestoneAndPhaseManagement:
         assert len(result) == 2
         assert result[0]["milestone_id"] == 1
         assert result[0]["title"] == "Project Kickoff Milestone"
-        assert result[0]["is_completed"] == True
-        assert result[1]["is_completed"] == False
+        assert result[0]["is_completed"] is True
+        assert result[1]["is_completed"] is False
 
         # Should be sorted by due date
         assert result[0]["due_date"] <= result[1]["due_date"]
@@ -463,7 +462,7 @@ class TestMilestoneAndPhaseManagement:
 
         assert result["milestone_id"] == 1
         assert result["project_id"] == 12345
-        assert result["is_completed"] == True
+        assert result["is_completed"] is True
         assert result["dependent_tasks"] == 0
         assert "impact_analysis" in result
         assert "completion_probability" in result["impact_analysis"]
@@ -827,7 +826,7 @@ class TestHelperMethods:
         # Adding dependency from task 1 to task 2 would create circular reference
         # (task 1 -> task 2, but task 2 already depends on task 1)
         has_circular = projects_entity._has_circular_dependency(1, 2)
-        assert has_circular == True
+        assert has_circular is True
 
         # No circular dependency
         projects_entity.client.query = Mock(
@@ -837,7 +836,7 @@ class TestHelperMethods:
         )
 
         has_circular = projects_entity._has_circular_dependency(1, 2)
-        assert has_circular == False
+        assert has_circular is False
 
 
 if __name__ == "__main__":

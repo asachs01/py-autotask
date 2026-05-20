@@ -9,9 +9,6 @@ and that the query helpers work correctly.
 import sys
 from pathlib import Path
 
-# Add the project root to Python path
-sys.path.insert(0, str(Path(__file__).parent))
-
 from py_autotask.entities.query_helpers import (
     build_active_filter,
     build_equality_filter,
@@ -23,7 +20,10 @@ from py_autotask.entities.query_helpers import (
     combine_filters,
     convert_string_filter_to_query_filter,
 )
-from py_autotask.types import FilterOperation, QueryFilter
+from py_autotask.types import FilterOperation
+
+# Add the project root to Python path
+sys.path.insert(0, str(Path(__file__).parent))
 
 
 def test_query_helpers():
@@ -104,7 +104,9 @@ def test_entity_imports():
     try:
         from py_autotask.entities.accounts import AccountsEntity
         from py_autotask.entities.companies import CompaniesEntity
-        from py_autotask.entities.tickets import TicketsEntity
+        from py_autotask.entities.tickets import (  # noqa: F401 - import smoke test
+            TicketsEntity,
+        )
 
         print("  ✓ Core entities import successfully")
 

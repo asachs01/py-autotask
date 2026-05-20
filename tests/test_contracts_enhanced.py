@@ -5,7 +5,7 @@ Tests all PSA features including billing, service tracking, milestones, renewals
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -110,7 +110,7 @@ class TestBillingAndInvoicing:
         self.contracts.get = MagicMock(return_value={"id": 123})
         self.client.create.return_value = {"success": True}
 
-        result = self.contracts.generate_invoice(123)
+        self.contracts.generate_invoice(123)
 
         # Check that default period was used
         call_args = self.client.create.call_args[0][1]
